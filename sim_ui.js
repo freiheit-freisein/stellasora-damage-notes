@@ -7,7 +7,7 @@
   const pct = n => (Math.round(n * 1000) / 10) + "%";
   const clone = o => JSON.parse(JSON.stringify(o));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const KEY = "stellasora-sim-v1", KEY_B = "stellasora-sim-builds", KEY_M = "stellasora-sim-memo";
+  const KEY = "stellasora-sim-v2", KEY_B = "stellasora-sim-builds", KEY_M = "stellasora-sim-memo";
   const SLOTS = [["main", "主力"], ["s1", "支援1"], ["s2", "支援2"]];
   const TK = en => TREKKERS.find(x => x.en === en);
   const chOf = id => S.CH.find(c => c.id === id);
@@ -151,7 +151,7 @@
         ${fld("支援スキルLv", inp(`${p}.skillLv.support`, { min: 1, max: 13, step: 1, w: 70 }))}
         ${fld("必殺技Lv", inp(`${p}.skillLv.ult`, { min: 1, max: 13, step: 1, w: 70 }), "11〜は推定")}
         ${fld("信頼ボーナスLv", inp(`${p}.trustLv`, { min: 0, max: 99, step: 1, w: 70 }))}
-        ${fld("心相（0〜10）", inp(`${p}.talent`, { min: 0, max: 10, step: 1, w: 70 }), "解放進捗")}
+        ${fld("心相（段階）", inp(`${p}.talent`, { min: 0, max: 50, step: TK(c.en).rarity >= 5 ? 10 : 5, w: 70 }), `0〜50／${Math.floor((G.chars[id].talent || 0) / 10)}凸`)}
         ${fld("ステータス", inp(`${p}.mode`, { sel: [["auto", "選択から計算"], ["manual", "画面の値を手入力"]], str: true }))}
         <div class="sel-row"><button class="obtn" data-act="panel:emb:${k}" style="width:auto">徽章</button><button class="obtn" data-act="panel:pot:${k}" style="width:auto">素質</button><button class="obtn" data-act="panel:add:${k}" style="width:auto">加算(その他)</button></div>
         ${cardHtml(id)}

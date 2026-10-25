@@ -1,4 +1,5 @@
-// 汎用計算ページ（sim.html）のデータ。検証済みの式を使うキャラ6人と敵2体。
+// 汎用計算ページ（sim.html）のデータ。心相は「段階」（0〜50。星5は10ずつ、星4は5ずつ。10段階=1凸）で持ち、ステータスの表は 5段階=1つ分（0〜10）で引く。talentBonus は1つ分(5段階)あたりのダメージ種別の加算。
+// 検証済みの式を使うキャラ6人と敵2体。
 // ヒットの定義: s=スキル番号(0通常 1主力 2支援 3必殺) / n=Wikiの倍率配列の番号 / c=ヒット数 / t=種別(basic通常・skill スキル・ult必殺・mark印) / name
 // 倍率はスキルレベルごとにWiki(data/trekkers.js)の nums から取る。Lv11以上は平均の傾きで延長（セイナ主力 Lv13=123 と一致を確認、推定）。
 window.SIM = window.SIM || {};
@@ -7,7 +8,7 @@ window.SIM = window.SIM || {};
   const H = (s, n, c, t, name, id, tags) => ({ s, n, c, t, name, id, tags: tags || [] });
 
   S.CH = [
-    { id: "willow", en: "Suntide Willow", jp: "ウィロー（水着）", el: "水", ref: "atk", role: "サポーター", trust0: 26, talent0: 10, talentBonus: { skill: 0.021, ult: 0.043 },
+    { id: "willow", en: "Suntide Willow", jp: "ウィロー（水着）", el: "水", ref: "atk", role: "サポーター", trust0: 26, talent0: 50, talentBonus: { skill: 0.021, ult: 0.043 },
       hits: {
         basic: [H(0, 0, 3, "basic", "バブルガン 1〜3撃目"), H(0, 1, 1, "basic", "バブルガン 4撃目")],
         main: [H(1, 0, 1, "skill", "バブルフロッグ（着地ごと）", "frog")],
@@ -28,7 +29,7 @@ window.SIM = window.SIM || {};
         support: [H(2, 0, 9, "skill", "跳びはね爆発", "jump"), H(2, 1, 1, "basic", "ドローンの弾（通常攻撃扱い・1発）", "drone")],
         ult: [H(3, 0, 14, "ult", "ロケット弾")],
       } },
-    { id: "noya", en: "Firstlight Noya", jp: "セイナ(原点)", el: "光", ref: "hp", role: "ヴァンガード", trust0: 18, talent0: 4, talentBonus: { basic: 0.021, skill: 0.021, elem: 0.015 },
+    { id: "noya", en: "Firstlight Noya", jp: "セイナ(原点)", el: "光", ref: "hp", role: "ヴァンガード", trust0: 18, talent0: 20, talentBonus: { basic: 0.021, skill: 0.021, elem: 0.015, crit: 0.03 },
       // Wikiにステータスが無いので、基礎値は手元の画面の値。信頼・心相の表は他のキャラの表を流用（要確認）。
       manual: { baseHp: 94662, baseAtk: 6966, tables: "Nazuka", talent: { hp: 690, atk: 0 } },
       // 4撃目の突進は、Wikiでは「スキルダメージ ×3」だが、手元の実測の組み立て(光チームのページ)では「通常攻撃 ×1」で一致していたので、そちらに合わせている。
@@ -41,7 +42,7 @@ window.SIM = window.SIM || {};
         ult: [H(3, 0, 5, "basic", "必殺 大剣形態 連撃", "uG1", ["great"]), H(3, 1, 1, "basic", "必殺 大剣形態 最後", "uG2", ["great"]), H(3, 2, 7, "skill", "必殺 長剣形態 連撃", "uL1", ["long"]),
           H(3, 3, 7, "skill", "必殺 長剣形態 天剣陣", "uL2", ["long"]), { s: -1, fixed: 70, c: 1, t: "mark", name: "印ダメージ（ルーセント）", tags: [] }],
       } },
-    { id: "firefly", en: "Firefly", jp: "ホタル", el: "光", ref: "atk", role: "バランサー", trust0: 4, talent0: 4, talentBonus: { skill: 0.021 },
+    { id: "firefly", en: "Firefly", jp: "ホタル", el: "光", ref: "atk", role: "バランサー", trust0: 4, talent0: 20, talentBonus: { skill: 0.021 },
       hits: {
         basic: [H(0, 0, 1, "basic", "1撃目", "f1"), H(0, 1, 1, "basic", "2撃目", "f2"), H(0, 2, 4, "basic", "3撃目", "f3")],
         main: [H(1, 0, 1, "skill", "浮遊砲（1発）", "cannon", ["cannon"])],
@@ -49,7 +50,7 @@ window.SIM = window.SIM || {};
           H(2, 3, 5, "basic", "4撃目", "sw4", ["giant"]), H(2, 4, 1, "skill", "飛ぶ刃（1発）", "blade", ["blade"])],
         ult: [H(3, 0, 2, "ult", "砲撃（1回）", "u1"), H(3, 1, 1, "ult", "斬撃 1", "u2"), H(3, 2, 1, "ult", "斬撃 2", "u3")],
       } },
-    { id: "tilia", en: "Tilia", jp: "ティリア", el: "光", ref: "atk", role: "サポーター", trust0: 15, talent0: 10, talentBonus: { skill: 0.021 },
+    { id: "tilia", en: "Tilia", jp: "ティリア", el: "光", ref: "atk", role: "サポーター", trust0: 15, talent0: 50, talentBonus: { skill: 0.021, ult: 0.043 },
       hits: {
         basic: [H(0, 0, 1, "basic", "1撃目"), H(0, 1, 1, "basic", "2撃目"), H(0, 2, 1, "basic", "3撃目"), H(0, 3, 1, "basic", "4撃目")],
         main: [H(1, 0, 1, "skill", "反撃", "counter")],

@@ -100,7 +100,7 @@
     const rec = recordBonus(G.recordLv || 0);
     const w = TK(c.en), wst = w && w.stats;
     const tab = (wst || TK(c.manual.tables).stats);
-    const tl = clamp(cs.trustLv || 0, 0, 99), tu = clamp(cs.talent || 0, 0, 10);
+    const tl = clamp(cs.trustLv || 0, 0, 99), tu = clamp((cs.talent || 0) / 5, 0, 10);   // 心相は段階(0〜50)で持つ。表は5段階ごと
     const baseHp0 = wst ? last(wst.hp) : c.manual.baseHp, baseAtk0 = wst ? last(wst.atk) : c.manual.baseAtk;
     const trustHp = tab.trust.hp[tl], trustAtk = tab.trust.atk[tl];
     const trustPct = wst ? tab.trust.atkPct[tl] : tab.trust.atkPct[tl] * 0.5;   // 手入力キャラは推定（セイナ: 信頼HP+6%）
@@ -128,7 +128,7 @@
       ultAdd: (em.ultDmg || 0) + nt.ultDmg + (o.ult || 0) + tu * (tb.ult || 0),
       markAdd: (em.markDmg || 0) + (o.mark || 0),
       critRate: 0.05 + nt.critRate + (em.critRate || 0) + (o.critRate || 0),
-      critDmg: 1.5 + nt.critDmg + (em.critDmg || 0) + (o.critDmg || 0),
+      critDmg: 1.5 + nt.critDmg + (em.critDmg || 0) + (o.critDmg || 0) + tu * (tb.crit || 0),
       pen: (em.resPen || 0) + (o.pen || 0) + ag.pen,
       rateAdd: { basic: em.basicCritRate || 0, skill: em.skillCritRate || 0, ult: em.ultCritRate || 0, mark: em.markCritRate || 0 },
       mode: "auto",
