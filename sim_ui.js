@@ -245,7 +245,14 @@
         <div class="lv">Lv ${inp(`${p}.pots2.${x.name.replace(/[^A-Za-z0-9]/g, "_")}`, { min: 0, max: 9, step: 1 })}</div></div>`).join("")).join("");
       note = "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「加算(その他)」に手で入れられます。";
     }
-    return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3><div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
+    const hs = (S.HEART_SPEC || {})[id];
+    const heart = hs ? `<h3 style="margin:4px 0 6px;font-size:14px">心相（凸）の戦闘中の効果 <span class="muted">段階 ${cs.talent || 0}（${Math.floor((cs.talent || 0) / 10)}凸）</span></h3>
+      <div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-bottom:10px">${hs.map(h => {
+        const un = (cs.talent || 0) >= h.n * 10, key = "heart" + h.n, onv = (cs.pon || {})[key], on = onv == null ? !h.off : onv;
+        return `<div class="pot${un ? " core" : ""}"><b>${h.n} ${esc(h.name)}</b>${un ? '<span class="tag-ok">解放済み</span>' : '<span class="tag-ng">未解放</span>'}
+          <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}</div>`;
+      }).join("")}</div>` : "";
+    return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3>${heart}<div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
   }
   function renderRecord() {
     const r = E.recordBonus(G.recordLv);

@@ -92,7 +92,7 @@ window.SIM = window.SIM || {};
       "Knight Oath: Skyfall": { txt: "ティリアの必殺技ダメージ＋", e: [{ k: "Bu", n: 0 }] },
       "Knight Oath: Chalk Armor": { txt: "盾（火力には影響しない）", e: [] },
       "Knight Oath: Courage": { txt: "必殺技後、全員の攻撃力%", e: [{ k: "atkPct", n: 0, to: "all" }] },
-      "Holy Inscription": { txt: "（栄光の凱旋）盾が当たると光の球ができ、中の敵の光被ダメージ +18%", e: [{ k: "taken", raw: 0.18, to: "enemy" }] },
+      "Holy Inscription": { txt: "（栄光の凱旋）盾が当たると光の球ができ、球の中の敵の光被ダメージ +18%。実測では効いていないので既定は反映しない", off: true, e: [{ k: "taken", raw: 0.18, to: "enemy" }] },
       "Renewed Spectrum": { txt: "（光の系譜）盾が当たると支援スキルのCT -1秒（火力には影響しない）", e: [] },
       "Enemy Counter": { txt: "（ナイトパンチ）盾が当たるたび 5.7〜15.2%（スキル）＋敵の光被ダメージ＋（スタン無効の敵）", e: [X("support", "追加（Enemy Counter）", { n: 0, c: 6, tags: ["shield"] }), { k: "taken", n: 1, to: "enemy" }] },
       "Blinding Beam": { txt: "（眩い正義）光明の付与から5秒、敵の印被ダメージ＋（Lv7=345%）", e: [{ k: "takenMark", n: 0, to: "enemy" }] },
@@ -126,14 +126,73 @@ window.SIM = window.SIM || {};
     return arr[arr.length - 1] + (arr[arr.length - 1] - arr[arr.length - 2]) * (lv - arr.length);
   };
 
+  // 心相（凸）の戦闘中の効果。段階が 10×n 以上で有効。説明文はゲームの画面から。
+  const HEART = {
+    firefly: [
+      { n: 1, name: "無邪気な光", txt: "チーム内が光の印を発動した後6秒、敵の光被ダメージ +14%", e: [{ k: "taken", raw: 0.14, to: "enemy" }] },
+      { n: 2, name: "適合者の才能", txt: "ホタルのスキル発動後30秒、攻撃力 +20%", e: [{ k: "atkPct", raw: 0.20 }] },
+      { n: 3, name: "師の教え", txt: "ホタルが敵にダメージを与えた後8秒、敵の光被ダメージ +2%（最大7重）", e: [{ k: "taken", raw: 0.02, stk: 7, to: "enemy" }] },
+      { n: 4, name: "感情の萌芽", txt: "チーム内が光の印を付与した後10秒、ホタルの攻撃力 +20%", e: [{ k: "atkPct", raw: 0.20 }] },
+      { n: 5, name: "友のための剣", txt: "エリート以上の敵に、ホタルの光属性ダメージ +24%", e: [{ k: "W", raw: 0.24 }] },
+    ],
+    tilia: [
+      { n: 1, name: "聖槍の制裁", txt: "光の印が付いた敵にダメージを与えた後6秒、チーム全体の攻撃力 +8.4%", e: [{ k: "atkPct", raw: 0.084, to: "all" }] },
+      { n: 2, name: "栄光の集う場所", txt: "主力が必殺技を発動した後15秒、主力の攻撃力 +24%（必殺後なので既定は反映しない）", off: true, e: [{ k: "atkPct", raw: 0.24, to: "main" }] },
+      { n: 3, name: "騎士への憧憬", txt: "ティリアが光の印を付与した後6秒、チーム全体の必殺技ダメージ +28%", e: [{ k: "Bu", raw: 0.28, to: "all" }] },
+      { n: 4, name: "思い描く夢", txt: "光の印を発動した後6秒、主力の必殺技ダメージ +12%", e: [{ k: "Bu", raw: 0.12, to: "main" }] },
+      { n: 5, name: "正義とともに", txt: "光属性が3人のとき、チーム全体のスキルダメージ +13%", e: [{ k: "Bs", raw: 0.13, to: "all", cond: "allLux" }] },
+    ],
+  };
+  S.HEART_SPEC = HEART;
+
   // チーム全体の効果の集計。返り値: id → 集計
+  // 敵の光被ダメージ(taken)は、足し算の1つの束にする（実測: ホタル心相1 +14% を含む束に ナイトパンチ +57% を足すと、印の増幅 ×6.67 と一致）。
   function collect(G, team) {
     const chs = team.map(id => S.CH.find(c => c.id === id));
     const luxN = chs.filter(c => c.el === "光").length;
     const allLux = luxN === chs.length;
     const out = {};
-    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, hpFlat: 0, atkFlat: 0, pen: 0, taken: 1, takenMark: 1, takenSkill: 1, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
+    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
     const cond = k => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? allLux : true);
+    const recvOf = (to, oid) => {
+      if (to === "lux") return team.filter((id, i) => chs[i].el === "光");
+      if (to === "all") return team.slice();
+      if (to === "main") return [team[0]];
+      if (to === "luxVers") return team.filter((id, i) => chs[i].el === "光" && chs[i].role === "バランサー");
+      if (to === "enemy") return team.filter((id, i) => chs[i].el === "光");
+      return [oid];
+    };
+    // 1件の効果の適用。key=状態のキー、ei=効果の番号、info=Wikiの数値
+    const apply = (e, ei, key, oid, cs, lv, info) => {
+      if (!cond(e.cond)) return;
+      let v = 0;
+      if (e.raw != null) v = e.raw;
+      else if (e.arr) v = (e.over && e.over[lv] != null ? e.over[lv] : lvVal(e.arr, lv)) / (e.k === "extra" ? 1 : 100);
+      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over) / (e.flat || e.k === "extra" ? 1 : 100);
+      const skey = key + (e.sk ? ":" + e.sk : "");
+      let stk = (cs.pstk || {})[skey];
+      if (stk == null || stk === "") stk = e.stk || 1;
+      v *= stk;
+      if (e.perLux) v *= luxN;
+      recvOf(e.to, oid).forEach(rid => {
+        const a = out[rid];
+        if (e.k === "count") { a.count[e.hit] = (a.count[e.hit] || 0) + e.add; return; }
+        if (e.k === "drop") { a.drop[e.hit] = true; return; }
+        if (e.k === "extra") {
+          let cnt = e.c;
+          const cc = (cs.pcnt || {})[key + "#" + ei];
+          if (cc != null && cc !== "") cnt = +cc;
+          a.xhits.push({ group: e.group, name: e.name, m: e.m != null ? e.m : v, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, owner: oid, key: key + "#" + ei });
+          return;
+        }
+        if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; return; }
+        if (e.k === "takenMark") { if (G.markDebuff !== false) a.takenMark *= 1 + v; return; }
+        if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
+        if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || (e.tags && (e.k === "Bs" || e.k === "Bb"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, cond: e.cond || null }); return; }
+        if (e.k === "mark") { a.markAdd += v; return; }
+        if (a[e.k] != null) a[e.k] += v;
+      });
+    };
     team.forEach((oid, oi) => {
       const c = chs[oi], cs = G.chars[oid], spec = SPEC[oid];
       if (!spec) return;
@@ -145,47 +204,16 @@ window.SIM = window.SIM || {};
         const onSet = (cs.pon || {})[key];
         if (onSet == null ? sp.off : !onSet) return;
         const info = numsOf(c, name);
-        const recv = to => {
-          if (to === "lux") return team.filter((id, i) => chs[i].el === "光");
-          if (to === "all") return team.slice();
-          if (to === "main") return [team[0]];
-          if (to === "luxVers") return team.filter((id, i) => chs[i].el === "光" && chs[i].role === "バランサー");
-          if (to === "enemy") return team.filter((id, i) => chs[i].el === "光");
-          return [oid];
-        };
-        sp.e.forEach((e, ei) => {
-          if (!cond(e.cond)) return;
-          let v = 0;
-          if (e.raw != null) v = e.raw;
-          else if (e.arr) v = (e.over && e.over[lv] != null ? e.over[lv] : lvVal(e.arr, lv)) / (e.k === "extra" ? 1 : 100);
-          else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over) / (e.flat || e.k === "extra" ? 1 : 100);
-          const skey = key + (e.sk ? ":" + e.sk : "");
-          let stk = (cs.pstk || {})[skey];
-          if (stk == null || stk === "") stk = e.stk || 1;
-          v *= stk;
-          if (e.perLux) v *= luxN;
-          const targets = recv(e.to);
-          targets.forEach(rid => {
-            const a = out[rid];
-            if (e.k === "count") { a.count[e.hit] = (a.count[e.hit] || 0) + e.add; return; }
-            if (e.k === "drop") { a.drop[e.hit] = true; return; }
-            if (e.k === "extra") {
-              let m = e.m != null ? e.m : v;
-              let cnt = e.c;
-              const cc = (cs.pcnt || {})[key + "#" + ei];
-              if (cc != null && cc !== "") cnt = +cc;
-              a.xhits.push({ group: e.group, name: e.name, m, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, owner: oid, key: key + "#" + ei });
-              return;
-            }
-            if (e.k === "taken") { a.taken *= 1 + v; return; }
-            if (e.k === "takenMark") { if (G.markDebuff !== false) a.takenMark *= 1 + v; return; }
-            if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
-            if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || (e.tags && (e.k === "Bs" || e.k === "Bb"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, cond: e.cond || null }); return; }
-            if (e.k === "mark") { a.markAdd += v; return; }
-            if (a[e.k] != null) a[e.k] += v;
-          });
-        });
+        sp.e.forEach((e, ei) => apply(e, ei, key, oid, cs, lv, info));
         out[oid].applied.push(name);
+      });
+      (HEART[oid] || []).forEach(h => {
+        if ((cs.talent || 0) < h.n * 10) return;
+        const key = "heart" + h.n;
+        const onSet = (cs.pon || {})[key];
+        if (onSet == null ? h.off : !onSet) return;
+        h.e.forEach((e, ei) => apply(e, ei, key, oid, cs, 1, { nums: [] }));
+        out[oid].applied.push("心相" + h.n);
       });
     });
     return out;
