@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ダメージ計算ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  /* 配色・部品は素質ノート（プリセット共有サイト）に合わせる */
+  :root {
+    --bg: #F3F4FA; --grid: #E4E7F3; --surface: #FFFFFF; --surface-soft: #EEF0F8; --surface-on: #E6F7F8;
+    --border: #D9DCED; --border-strong: #B9BEDB;
+    --text: #1E2250; --indigo: #4B5082; --muted: #5F6492;
+    --accent: #0ABEC5; --link: #08808A; --link-hover: #05626A;
+    --tag-bg: #E6F7F8; --tag-text: #05626A;
+    --pink: #EDA3B2; --pink-line: #C9637A; --pink-soft: #FBE4E9;
+    --yellow: #F4C84A; --danger: #B3364F; --ok: #05626A;
+    --font: 'Noto Sans JP', sans-serif; --font-en: 'Bebas Neue', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.7;
+    background-color: var(--bg);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 32px 32px; min-height: 100vh; display: flex; flex-direction: column;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .wrap { width: 100%; max-width: none; margin: 0 auto; padding: 0 12px; }
+  main { flex: 1; }
+
+  .site-header { background: var(--surface); border-bottom: 1px solid var(--border); }
+  .site-header .wrap { padding-top: 12px; padding-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .logo-ja { font-weight: 900; font-size: 21px; font-style: italic; letter-spacing: .02em; color: var(--indigo); }
+  .logo-en { font-family: var(--font-en); font-size: 15px; letter-spacing: .08em; color: var(--muted); padding-top: 3px; }
+
+  .hero { padding: 28px 0 22px; }
+  .eyebrow { margin: 0; font-family: var(--font-en); font-size: 18px; letter-spacing: .14em; color: var(--link); display: flex; align-items: center; gap: 8px; }
+  .eyebrow svg { width: 16px; height: 16px; }
+  .h1 { margin: 0; font-weight: 900; font-style: italic; font-size: clamp(28px, 4.2vw, 46px); line-height: 1.25; color: var(--indigo); }
+  .lead { margin: 8px 0 0; color: var(--muted); font-size: 14px; max-width: none; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .tag { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 999px; background: var(--tag-bg); color: var(--tag-text); font-weight: 700; font-size: 13px; }
+  .tag.indigo { background: var(--indigo); color: #fff; }
+
+  .grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 40%) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } .wrap { padding: 0 16px; } }
+  .card { background: var(--surface); border: 2px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
+  .card h2 { margin: 0 0 12px; font-size: 18px; font-weight: 900; color: var(--indigo); display: flex; flex-direction: column; }
+  .card h2 .en { font-family: var(--font-en); font-weight: 400; font-size: 14px; letter-spacing: .14em; color: var(--link); }
+  .dotted-rule { border: 0; border-top: 2px dotted var(--accent); margin: 0 0 14px; }
+
+  label { display: block; font-size: 13px; font-weight: 700; color: var(--indigo); margin: 10px 0 4px; }
+  select, input[type=number] { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--border); background: var(--surface); }
+  select:focus, input[type=number]:focus { border-color: var(--indigo); outline: none; }
+  input[type=checkbox] { accent-color: var(--accent); width: 20px; height: 20px; flex: none; }
+
+  .emb { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 2px solid var(--border); border-radius: 14px; margin: 0 0 10px; cursor: pointer; font-weight: 400; color: var(--text); }
+  .emb:has(input:checked) { border-color: var(--accent); background: var(--surface-on); }
+  .emb b { font-size: 14px; color: var(--indigo); }
+  .emb small { display: block; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .emb input { margin-top: 3px; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 700; margin-top: 4px; }
+
+  .notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 12px; }
+  .notes label { margin: 8px 0 3px; }
+  .notes .tip { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .stat { background: var(--surface-soft); border-radius: 14px; padding: 10px 12px; }
+  .stat span { display: block; font-size: 12px; color: var(--muted); font-weight: 700; }
+  .stat b { font-size: 18px; font-weight: 900; color: var(--indigo); }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; }
+  th { color: var(--muted); font-weight: 700; font-size: 12px; }
+  tr.sum td { font-weight: 700; background: var(--surface-soft); color: var(--indigo); }
+  .badge { display: inline-block; font-size: 11px; padding: 0 8px; border-radius: 999px; background: var(--pink-soft); color: var(--text); font-weight: 700; margin-left: 6px; white-space: nowrap; line-height: 20px; }
+  .badge.ok { background: var(--tag-bg); color: var(--tag-text); }
+  .ok { color: var(--ok); font-weight: 700; } .ng { color: var(--danger); font-weight: 700; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .warn { background: var(--pink-soft); border: 1px solid var(--pink); border-radius: 12px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
+  details summary { cursor: pointer; font-weight: 700; color: var(--indigo); min-height: 28px; }
+  ul.plain { margin: 8px 0 0; padding-left: 1.3em; font-size: 13px; color: var(--muted); }
+
+  .site-footer { background: var(--indigo); color: #E4E7F3; margin-top: 40px; }
+  .site-footer .wrap { padding-top: 28px; padding-bottom: 28px; font-size: 13px; }
+  .site-footer p { margin: 0; max-width: none; }
+  .btn-add { white-space: nowrap; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid var(--border); background: var(--surface); color: var(--indigo); font-weight: 700; cursor: pointer; }
+  .btn-add:hover { border-color: var(--indigo); }
+
+  /* 入力と結果を2列に並べ、それぞれ独立してスクロール（PC）。タブで項目を切り替える */
+  .col { min-width: 0; }
+  @media (min-width: 861px) {
+    .col { position: sticky; top: 8px; max-height: calc(100vh - 76px); overflow-y: auto; padding-right: 4px; }
+  }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; padding: 6px; margin-bottom: 14px; background: var(--surface); border: 2px solid var(--border); border-radius: 999px; position: sticky; top: 0; z-index: 5; scrollbar-width: thin; }
+  .tab { flex: none; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; color: var(--indigo); font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .tab:hover { background: var(--surface-soft); }
+  .tab[aria-selected="true"] { background: var(--indigo); color: #fff; }
+  .quick { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--indigo); color: #fff; padding: 8px 16px; font-size: 13px; display: flex; gap: 6px 18px; flex-wrap: wrap; justify-content: center; }
+  .quick b { font-weight: 900; }
+  .quick .up { color: #9bf0d0; } .quick .down { color: #ffb4bf; }
+  body { padding-bottom: 52px; }
+  @media (max-width: 860px) { body { padding-bottom: 104px; } }
+  .kv { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: 14px; }
+  .kv dt { color: var(--muted); font-weight: 700; } .kv dd { margin: 0; }
+  .party { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+  .slot { border: 2px solid var(--border); border-radius: 14px; padding: 12px; }
+  .slot-head { display: flex; gap: 8px; align-items: center; font-size: 16px; color: var(--indigo); margin-bottom: 2px; }
+  .slot .kv { grid-template-columns: 112px 1fr; }
+  .slot-dmg { margin-top: 10px; padding-top: 8px; border-top: 1px dotted var(--accent); }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z" fill="#0ABEC5"/></svg>
+    <span class="logo-ja">ダメージ計算ノート</span>
+    <span class="logo-en">DAMAGE CALC</span>
+    <span style="flex:1"></span><a class="btn-add" href="lux.html" style="display:inline-flex;align-items:center;text-decoration:none">光チームの計算へ</a>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+  <section class="hero">
+    <p class="eyebrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z" fill="#0ABEC5"/></svg>TREKKER</p>
+    <h1 class="h1">ウィロー（水着）のダメージ計算</h1>
+    <p class="lead">徽章・ロスレコ・音符を選ぶと、各スキルのダメージを計算します。実測 44 点に誤差 0.02% 以内で一致する式を使っています。スキル・必殺技の部分は仮定です。</p>
+    <div class="tags"><span class="tag indigo">Lv90</span><span class="tag"># 水属性</span><span class="tag"># サポーター</span></div>
+  </section>
+
+  <form class="grid" autocomplete="off" onsubmit="return false">
+    <div class="col" id="colL">
+      <div class="tabs" id="tabsL" role="tablist" aria-label="入力"></div>
+      <div class="card">
+        <h2><span class="en">ENEMY</span>敵</h2>
+        <hr class="dotted-rule">
+        <select id="enemy" aria-label="敵"></select>
+        <div class="note" id="enemyNote"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">EMBLEMS</span>徽章（項目・品質を自由に選択）</h2>
+        <hr class="dotted-rule">
+        <div id="emblems"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">LOST RECORDS</span>ロスレコ（メイン3枚・位置は無関係）</h2>
+        <hr class="dotted-rule">
+        <div id="lrs"></div>
+        <div class="note">サブロスレコは音符の初期値として、下の音符欄に直接入力します。アシスト効果は音符のレベルが解放条件に届くと自動で発動します。</div>
+        <div class="note" id="assistState"></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+          <label>記録の固定加算 攻撃力<input type="number" id="flatAtk" min="0" step="1" value="0"></label>
+          <label>記録の固定加算 最大HP<input type="number" id="flatHp" min="0" step="1" value="0"></label>
+        </div>
+        <div class="note">記録詳細の左下の吹き出し「攻撃力が+N、最大HPが+M」の値。戦闘中、全員の基礎攻撃力・基礎HPに加算されます（ステータス画面には出ません）。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">NOTES</span>音符 Lv（0〜99）</h2>
+        <hr class="dotted-rule">
+        <div class="notes" id="notes"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">POTENTIALS</span>素質（主力・取得したもの）</h2>
+        <hr class="dotted-rule">
+        <div id="pots"></div>
+        <div class="note">レベルは徽章の「素質レベル+N」込みの実効レベルを入れてください（元の素質が Lv1 以上のときだけ有効。Lv7〜9 は推定）。コア素質は1人2枚まで。条件付きの効果は、最大スタックで常時発動として計算します。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">SUPPORT POTENTIALS</span>支援の素質（ナツカ・エレノア）</h2>
+        <hr class="dotted-rule">
+        <label>ウィローのチーム効果の重なり率（%）<input type="number" id="willowStk" min="0" max="100" step="5" value="0"></label>
+        <div class="note">ウィローの素質（七彩・浮光・砕沫の余韻・着地からの跳躍・風に乗る泡雲・ビーチ管制）が、風属性の支援に乗る割合。0=何も発動していない／100=最大スタック。</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
+          <label>フロッグのATK効果の重なり（0〜5）<input type="number" id="willowFrog" min="0" max="5" step="1" value="0"></label>
+          <label>必殺技のATK効果の重なり（0〜5）<input type="number" id="willowUlt" min="0" max="5" step="1" value="0"></label>
+        </div>
+        <div class="note" style="margin-top:6px">ウィローのチーム効果を重なり数で個別に指定（空欄=上の重なり率）。泡雲・ビーチ管制は 0/1。</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label>泡雲<input type="number" id="wn_cumulus" min="0" max="1" style="width:60px"></label>
+          <label>砕沫の余韻<input type="number" id="wn_saibotsu" min="0" max="8" style="width:60px"></label>
+          <label>七彩<input type="number" id="wn_nanairo" min="0" max="8" style="width:60px"></label>
+          <label>浮光<input type="number" id="wn_yurameku" min="0" max="4" style="width:60px"></label>
+          <label>跳躍<input type="number" id="wn_chakuchi" min="0" max="8" style="width:60px"></label>
+          <label>ビーチ管制<input type="number" id="wn_beach" min="0" max="1" style="width:60px"></label>
+          <label>ボスのレベル<input type="number" id="bossLv" min="1" max="30" value="1" style="width:60px"></label>
+        </div>
+        <div id="supPots"></div>
+        <div class="note">「反映」を外すと効果を入れません。「重なり」は重なる回数（空欄=最大）。Lvは徽章込みの実効レベル。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">TEAM BUFFS</span>チームバフ（支援キャラなど）</h2>
+        <hr class="dotted-rule">
+        <div id="teamBuffs"></div>
+        <button type="button" id="addBuff" class="btn-add">＋ バフを追加</button>
+        <div class="note">支援キャラ2人の効果は、ゲーム内の説明を見て、種類と数値（%）を入れてください。チェックで有効/無効を切り替えます。ウィローが主力の火力に乗るものだけを入れます（支援のダメージは含みません）。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">BATTLE STATE</span>戦闘中の状態</h2>
+        <hr class="dotted-rule">
+        <label class="check"><input type="checkbox" id="mark"><span>バブルマーク付与中の敵<br><small style="font-weight:400;color:var(--muted)">水属性ダメージ +25%</small></span></label>
+        <label for="ripple">リプルノート（友との夏休み・1つ +5%、最大2）</label>
+        <select id="ripple"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select>
+        <label for="stack">心相4「波のまにまに」（4秒ごとに+1、最大3）<span class="badge ok">通常攻撃は実測済み</span></label>
+        <select id="stack"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+        <div class="note" style="margin-top:2px">1スタックにつき通常攻撃ダメージ・スキルダメージ +6%（スキルへの効きは未検証）。足元の剣アイコンの数。</div>
+        <label for="frog">フロッグの攻撃力バフ（着地ごとに+1、最大5、1つ +13.3%）<span class="badge ok">実測済み</span></label>
+        <select id="frog"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+        <label for="ult">必殺技の攻撃力バフ（ヒットごとに+1、最大5、1つ +11.5%・20秒）<span class="badge ok">実測済み</span></label>
+        <select id="ult"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+        <label class="check"><input type="checkbox" id="tide"><span>揺らめく光の向こう側：敵の水属性スキル被ダメージ +18%<span class="badge ok">実測済み</span><br><small style="font-weight:400;color:var(--muted)">印を付与した後4秒。スキルダメージのみ・別枠の乗算。</small></span></label>
+        <label class="check"><input type="checkbox" id="skill15"><span>ボス特性「ひび割れた好機」：スキル被ダメージ +15%<span class="badge ok">実測済み</span><br><small style="font-weight:400;color:var(--muted)">暴走のストンプクラブ。主力が必殺技を発動した後15秒間。スキルのみ・別枠の乗算（必殺技自身には乗らない）。</small></span></label>
+        <label class="check"><input type="checkbox" id="deep24"><span>ボス特性「命がけの追撃」：通常攻撃・スキル被ダメージ +24%<span class="badge">未検証</span><br><small style="font-weight:400;color:var(--muted)">深層ノ主。味方が印ダメージを5秒以内に3回与えた後15秒間。必殺技には乗らない仮定。</small></span></label>
+        <div class="note">1発目はマークなし、2発目以降はマークあり（実測 ×1.1838 に一致）。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">RESONANCE</span>心相（凸）の戦闘中効果</h2>
+        <hr class="dotted-rule">
+        <label class="check"><input type="checkbox" id="r1"><span>1 碧に溶ける憩い：チームの水属性ダメージ +30%<span class="badge ok">実測済み</span><br><small style="font-weight:400;color:var(--muted)">ウィローが水属性の印を付与した後6秒。水属性ダメージ加算に足します。</small></span></label>
+        <label class="check"><input type="checkbox" id="r2"><span>2 凪がぬ心：敵の水属性被ダメージ +27%<span class="badge">未検証</span><br><small style="font-weight:400;color:var(--muted)">チームが印を発動した後8秒。別枠の乗算として仮置き。</small></span></label>
+        <label class="check"><input type="checkbox" id="r3"><span>3 休みて知る：会心ダメージ +32%<span class="badge ok">実測済み</span><br><small style="font-weight:400;color:var(--muted)">印の付いた敵にダメージを与えた後6秒。</small></span></label>
+        <label class="check"><input type="checkbox" id="r5"><span>5 波にさらわれて：敵の水属性被ダメージ +24%<span class="badge ok">実測済み</span><br><small style="font-weight:400;color:var(--muted)">ウィローがスキルダメージを与えた後5秒。別枠の乗算として仮置き。</small></span></label>
+        <div class="note">条件付きの効果なので、ステータス詳細には出ません。既定はOFFです。</div>
+      </div>
+    </div>
+
+    <div class="col" id="colR">
+      <div class="tabs" id="tabsR" role="tablist" aria-label="結果"></div>
+      <div class="card">
+        <h2><span class="en">BUILD</span>ビルドの保存と比較</h2>
+        <hr class="dotted-rule">
+        <label for="buildName">ビルド名（保存・記憶の名前に使います）</label>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+          <input type="text" id="buildName" placeholder="例: 構築1コア＋心相5" style="min-height:44px;padding:0 12px;border-radius:12px;border:2px solid var(--border);background:var(--surface);font:inherit">
+          <button type="button" id="buildSave" class="btn-add">保存</button>
+        </div>
+        <label for="buildSel">保存したビルド</label>
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px">
+          <select id="buildSel"></select>
+          <button type="button" id="buildLoad" class="btn-add">読み込み</button>
+          <button type="button" id="buildDel" class="btn-add">削除</button>
+        </div>
+        <div class="note" id="buildMsg"></div>
+        <hr class="dotted-rule" style="margin:14px 0 10px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" id="snapSet" class="btn-add">現在の状態を記憶（比較用）</button>
+          <button type="button" id="snapClear" class="btn-add">記憶を解除</button>
+        </div>
+        <div class="note" id="snapInfo"></div>
+        <hr class="dotted-rule" style="margin:14px 0 10px">
+        <button type="button" id="loadVerify" class="btn-add">検証ビルド「テスト用2」を読み込む</button>
+        <button type="button" id="loadTest" class="btn-add">検証ビルド「テスト用」を読み込む</button>
+        <div class="note">ロスレコ（メイン風3枚＋サブ3枚）・音符・敵（ストンプクラブ）を、検証したビルドの状態にします。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">STATUS</span>ステータス</h2>
+        <hr class="dotted-rule">
+        <div class="stats" id="stats"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">DAMAGE</span>ダメージ</h2>
+        <hr class="dotted-rule">
+        <div class="tbl-wrap"><table id="dmg"></table></div>
+        <div id="dmgWarn"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">POTENTIAL RANKING</span>素質ランキング</h2>
+        <hr class="dotted-rule">
+        <label for="potLv">比べるレベル（コアは取得）</label>
+        <select id="potLv"></select>
+        <div class="tbl-wrap"><table id="potRank"></table></div>
+        <div class="note">いまの入力に、その素質を<b>1つだけ</b>足した（すでに取っていればそのレベルに置き換えた）ときの期待ダメージの増加率です。最大スタック・常時発動の上限値で、追加攻撃（別枠のダメージ）は含みません。通常攻撃・スキル・必殺技を別々に比べ、各列の1位に色が付きます。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">EMBLEM RANKING</span>徽章の強化項目ランキング</h2>
+        <hr class="dotted-rule">
+        <label for="rankQ">品質</label>
+        <select id="rankQ"></select>
+        <div class="tbl-wrap"><table id="rank"></table></div>
+        <div class="note">いまの入力に、強化項目を<b>1つだけ</b>足したときの期待ダメージの増加率です（会心を含む期待値）。耐性貫通は敵ごとに効きが違うため、ストンプクラブの実測から推定した値です。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">SUPPORT VERIFICATION</span>支援スキルの実測との照合</h2>
+        <hr class="dotted-rule">
+        <div class="tbl-wrap"><table id="supVerify"></table></div>
+        <div class="note">ストンプクラブ戦・検証ビルド「テスト用2」（1Fクリア時点・素質はウィローのコアのみ）の実測です。風属性の敵側補正 D = 0.2012 は花びらから逆算し、残りはその D で予測しました。</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="en">VERIFICATION</span>実測との照合</h2>
+        <hr class="dotted-rule">
+        <div class="tbl-wrap"><table id="verify"></table></div>
+        <div class="note">「D適合」は敵の補正Dの逆算に使った点、「予測」は式だけで出した点です。</div>
+      </div>
+
+      <div class="card">
+        <details>
+          <summary>前提と未検証事項</summary>
+          <ul class="plain">
+            <li>攻撃力 =（基礎+心相+信頼+ロスレコ基礎攻撃）×（1+信頼%+徽章%+コア%+強撃の音符）</li>
+            <li>ダメージ = 攻撃力 × 倍率 × W × B × D。W=1+水属性ダメージ加算、B=1+種別ダメージ加算</li>
+            <li>D（敵の防御・耐性）は敵ごとの実測値。耐性貫通を外すと係数を掛ける（ストンプクラブ以外は近似）</li>
+            <li>会心: 会心ダメージ（150%）がそのまま倍率（×1.5）。実測 14,360 ÷ 9,573 = 1.5001</li>
+            <li>実測済み: 通常攻撃・主力スキル（フロッグ着地）・必殺技の式、フロッグと必殺技の攻撃力バフ、会心（×1.82＝1.5+心相3）、心相1・3・4・5、揺らめくコアのスキル被ダメージ+18%（必殺技には乗らない）</li>
+            <li>未検証: 心相2、HP%の掛け方、バフが切れるタイミングの再現、必殺技中の一部ヒット（168,819）の端数</li>
+            <li>未反映: ロスレコのアシスト効果、素質、支援キャラのダメージ、タイドフリーズなどの敵デバフ</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+  </form>
+</div>
+</main>
+
+<div class="quick" id="quick" aria-live="polite"></div>
+<footer class="site-footer">
+  <div class="wrap">
+    <p>ステラソラの非公式ファンツールです。公式とは関係ありません。数値はゲーム内の表示と実測、およびステラソラWiki（https://stellasora.miraheze.org/ ・https://stellasora.wikiru.jp/）の掲載内容から作っており、仕様変更などで実際と異なる場合があります。</p>
+  </div>
+</footer>
+
+<script src="data/trekkers.js"></script>
+<script src="data.js"></script>
+<script src="data_sup.js"></script>
+<script src="calc.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
