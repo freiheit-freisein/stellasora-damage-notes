@@ -13,6 +13,7 @@
 python -m http.server 8765
 # → http://localhost:8765/        ウィロー(水着)主力 + ナツカ/エレノア支援
 # → http://localhost:8765/lux.html 光チーム（セイナ(原点)主力 + ホタル/ティリア）
+# → http://localhost:8765/sim.html 汎用の計算ページ（6人から3人を選び、徽章・ロスレコ・音符・記録レベルなどを選択式で入力）
 ```
 
 PCの横長画面（1920x1080）前提の簡易UIです。スマホ対応・見た目の整理は、計算が固まってから行う予定です。
@@ -46,6 +47,7 @@ PCの横長画面（1920x1080）前提の簡易UIです。スマホ対応・見�
 |---|---|
 | `index.html` `app.js` `calc.js` `data.js` `data_sup.js` | ウィロー主力＋ナツカ/エレノア支援の計算 |
 | `lux.html` `lux.js` | 光チーム（セイナ(原点)主力）の計算 |
+| `sim.html` `sim_ui.js` `sim_engine.js` `sim_data.js` `sim_pots.js` | 汎用の計算ページ（画面・計算エンジン・キャラと敵のデータ・光チームの素質の効果表）。旧ページの検証済みの式を使い、ウィロー側とは全シナリオで一致を確認 |
 | `record_level.js` | 記録レベルボーナス表（Lv1〜40） |
 | `data/trekkers.json` `data/trekkers.js` | キャラのスキル倍率・ステータス・素質（下記の出典から自動生成） |
 | `tools/` | 上記データを作るスクリプト |
