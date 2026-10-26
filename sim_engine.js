@@ -92,10 +92,10 @@
 
   // 1人分のステータス。cs.mode==="manual" なら画面の値の手入力をそのまま使う
   function stats(c, cs, G, isMain, ag) {
-    ag = ag || { atkFlat: 0, hpFlat: 0, pen: 0 };
+    ag = ag || { atkFlat: 0, hpFlat: 0, pen: 0, hpPct: 0 };
     const el = c.el;
     const em = emblemSum(cs.emb, cs.embOn);
-    const nt = noteSum(G.notes, el);
+    const nt = noteSum(S.notesTotal ? S.notesTotal(G) : G.notes, el);
     const lr = lrSum(G, el);
     const rec = recordBonus(G.recordLv || 0);
     const w = TK(c.en), wst = w && w.stats;
@@ -111,12 +111,14 @@
     let battleHpPct = 0;
     if (c.id === "noya" && tu >= 4) battleHpPct += 0.10;          // 心相2: 最大HP+10%
     if (isMain && G.enemyObj && G.enemyObj.hpBonus) battleHpPct += G.enemyObj.hpBonus;   // 深層ノ主: 主力の最大HP+20%
+    const eo = G.enemyObj || {};      // 防衛戦: 全員の最大HP+15%・攻撃+15%・会心率+10%（実測で確認）
+    battleHpPct += eo.teamHp || 0;
     const o = cs.add || {};
     const tb = c.talentBonus || {};   // 心相で付くダメージ種別の加算（1段階あたり）
     const baseAtk = baseAtk0 + trustAtk + talAtk + lr.baseAtk + rec.atk + (em.baseAtk || 0) + (o.atkFlat || 0) + ag.atkFlat;
     const baseHp = baseHp0 + trustHp + talHp + lr.baseHp + rec.hp + (em.baseHp || 0) + (o.hpFlat || 0) + ag.hpFlat;
-    const atkPct = (c.ref === "atk" ? trustPct : 0) + talPct + (em.atkPct || 0) + lr.atkPct + nt.atkPct + (o.atkPct || 0);
-    const hpPct = (c.ref === "hp" ? trustPct : 0) + (em.hpPct || 0) + nt.hpPct + battleHpPct + (o.hpPct || 0);
+    const atkPct = (c.ref === "atk" ? trustPct : 0) + talPct + (em.atkPct || 0) + lr.atkPct + nt.atkPct + (o.atkPct || 0) + (eo.teamAtk || 0);
+    const hpPct = (c.ref === "hp" ? trustPct : 0) + (em.hpPct || 0) + nt.hpPct + battleHpPct + (o.hpPct || 0) + (ag.hpPct || 0);
     const slot = { atk3: 0, atk4: 1, atk5: 0, hp3: 0, hp4: 1, hp5: 0 };   // ③実数値 ④開幕乗算 ⑤戦闘中の実数値（未発見のため 0・1）
     let atk = (baseAtk * (1 + atkPct) + slot.atk3) * slot.atk4 + slot.atk5;
     let hp = (baseHp * (1 + hpPct) + slot.hp3) * slot.hp4 + slot.hp5;
@@ -127,21 +129,45 @@
       skillAdd: (em.skillDmg || 0) + lr.skillDmg + nt.skillDmg + (o.skill || 0) + tu * (tb.skill || 0),
       ultAdd: (em.ultDmg || 0) + nt.ultDmg + (o.ult || 0) + tu * (tb.ult || 0),
       markAdd: (em.markDmg || 0) + (o.mark || 0),
-      critRate: 0.05 + nt.critRate + (em.critRate || 0) + (o.critRate || 0),
+      critRate: 0.05 + nt.critRate + (em.critRate || 0) + (o.critRate || 0) + (eo.teamCrit || 0),
       critDmg: 1.5 + nt.critDmg + (em.critDmg || 0) + (o.critDmg || 0) + tu * (tb.crit || 0),
       pen: (em.resPen || 0) + (o.pen || 0) + ag.pen,
       rateAdd: { basic: em.basicCritRate || 0, skill: em.skillCritRate || 0, ult: em.ultCritRate || 0, mark: em.markCritRate || 0 },
       mode: "auto",
     };
-    if (cs.mode === "manual") {
-      const m = cs.manual || {};
-      r.mode = "manual";
-      r.atk = m.atk || 0; r.hp = m.hp || 0;
-      r.elemAdd = (m.elem || 0) / 100; r.basicAdd = (m.basic || 0) / 100; r.skillAdd = (m.skill || 0) / 100; r.ultAdd = (m.ult || 0) / 100; r.markAdd = (m.mark || 0) / 100;
-      r.critRate = (m.critRate != null ? m.critRate : 5) / 100; r.critDmg = (m.critDmg != null ? m.critDmg : 150) / 100; r.pen = (m.pen || 0) + ag.pen;
-      r.rateAdd = { basic: 0, skill: 0, ult: 0, mark: 0 };
-    }
+    r.lvBonus = S.emblemExtra(cs.emb, cs.embOn).lv;
+    // 直接入力: 入力のある欄だけ、計算値を上書きする（空欄は計算のまま）
+    const m = cs.manual || {};
+    const has = k => G.directPriority !== false && m[k] != null && m[k] !== "";
+    if (has("hp")) r.hp = +m.hp;
+    if (has("atk")) { r.atk = +m.atk; r.mode = "manual"; }
+    if (has("elem")) r.elemAdd = m.elem / 100;
+    if (has("basic")) r.basicAdd = m.basic / 100;
+    if (has("skill")) r.skillAdd = m.skill / 100;
+    if (has("ult")) r.ultAdd = m.ult / 100;
+    if (has("mark")) r.markAdd = m.mark / 100;
+    if (has("critRate")) r.critRate = m.critRate / 100;
+    if (has("critDmg")) r.critDmg = m.critDmg / 100;
+    if (has("pen")) r.pen = +m.pen + ag.pen;
     return r;
+  }
+
+
+  // 「ステータス画面」の値（外の画面）。ロスレコ・記録・音符・戦闘中の効果は入らない（実測で確認）
+  function outsideStats(c, cs) {
+    const em = emblemSum(cs.emb, cs.embOn);
+    const w = TK(c.en), wst = w && w.stats;
+    const tab = (wst || TK(c.manual.tables).stats);
+    const tl = clamp(cs.trustLv || 0, 0, 99), tu = clamp((cs.talent || 0) / 5, 0, 10);
+    const baseHp0 = wst ? last(wst.hp) : c.manual.baseHp, baseAtk0 = wst ? last(wst.atk) : c.manual.baseAtk;
+    const trustPct = wst ? tab.trust.atkPct[tl] : tab.trust.atkPct[tl] * 0.5;
+    const talHp = wst ? (wst.talent.hp[tu] || 0) : tu * c.manual.talent.hp;
+    const talAtk = wst ? (wst.talent.atk[tu] || 0) : tu * c.manual.talent.atk;
+    const talPct = wst ? (wst.talent.atkPct[tu] || 0) : 0;
+    const tb = c.talentBonus || {};
+    const hp = (baseHp0 + tab.trust.hp[tl] + talHp + (em.baseHp || 0)) * (1 + (c.ref === "hp" ? trustPct : 0) + (em.hpPct || 0));
+    const atk = (baseAtk0 + tab.trust.atk[tl] + talAtk + (em.baseAtk || 0)) * (1 + (c.ref === "atk" ? trustPct : 0) + talPct + (em.atkPct || 0));
+    return { hp, atk, critRate: 0.05 + (em.critRate || 0), critDmg: 1.5 + (em.critDmg || 0) + tu * (tb.crit || 0), elemAdd: (em.elemDmg || 0) + tu * (tb.elem || 0), pen: em.resPen || 0 };
   }
 
   // 素質などの効果（検証済みの分だけ）。返り値は 全ヒット共通の加算と、ヒットごとの加算
@@ -150,7 +176,9 @@
     const inTeam = id => team.indexOf(id) >= 0;
     // ウィローがいるとき: チーム効果（風属性の味方に乗るもの）
     if (c.id !== "willow" && inTeam("willow") && G.chars.willow && G.chars.willow.pots) {
-      const ctx = { willowPots: G.chars.willow.pots, willowStk: G.willowStk != null ? G.willowStk : 1, willowN: G.willowN || {}, willowFrog: G.willowFrog || 0, willowUlt: G.willowUlt || 0 };
+      const wc = S.CH.find(x => x.id === "willow"), wcs = G.chars.willow, wlb = S.emblemExtra(wcs.emb, wcs.embOn).lv;
+      const ctx = { willowPots: G.chars.willow.pots, willowStk: G.willowStk != null ? G.willowStk : 1, willowN: G.willowN || {}, willowFrog: G.willowFrog || 0, willowUlt: G.willowUlt || 0,
+        frogV: skillVal(wc, 1, 1, ((wcs.skillLv || {}).main || 10) + wlb.main) / 100, ultV: skillVal(wc, 3, 2, ((wcs.skillLv || {}).ult || 10) + wlb.ult) / 100 };   // バフの値はスキルLvで変わる
       const wt = willowTeam(ctx);
       e.atkPct += wt.atkPct; e.Bs += wt.skillB; e.taken *= wt.taken;
       e.applied.push("ウィローのチーム効果");
@@ -187,7 +215,7 @@
   // 技グループ（basic/main/support/ult）の全ヒットを計算
   function groupDamage(c, cs, G, team, group, isMain, st, ef) {
     const lvKey = { basic: "basic", main: "main", support: "support", ult: "ult" }[group];
-    const lv = ((cs.skillLv || {})[lvKey]) || 10;
+    const lv = (((cs.skillLv || {})[lvKey]) || 10) + ((st.lvBonus && st.lvBonus[lvKey]) || 0);   // 徽章のスキルレベル上昇を足す
     const en = G.enemyObj;
     const ag = ef.ag || { mods: [], xhits: [], count: {}, drop: {}, markAdd: 0, takenMark: 1, takenSkill: 1 };
     // ヒットの一覧: 基本のヒット（置き換え・回数の加算を反映）＋素質の追加ヒット
@@ -232,6 +260,7 @@
       let taken = ef.taken * (mh.taken || 1) * (other.taken || 1);
       if (type === "mark") taken *= ag.takenMark;
       if (type === "skill") taken *= ag.takenSkill;
+      if (type === "basic") taken *= ag.takenBasic || 1;
       if (traits.crack && type === "skill") taken *= 1.15;
       if (traits.chase && (type === "skill" || type === "basic")) taken *= 1.24;
       const dd = enemyD(en, c.el, st.pen, G);
@@ -270,6 +299,6 @@
     return out;
   }
 
-  S.engine = { calcTeam, stats, skillVal, enemyD, resMult, recordBonus, emblemSum, noteSum, lrSum, TYPE_NAME };
+  S.engine = { calcTeam, outsideStats, stats, skillVal, enemyD, resMult, recordBonus, emblemSum, noteSum, lrSum, TYPE_NAME };
   if (typeof module !== "undefined") module.exports = S.engine;
 })(window.SIM);

@@ -152,7 +152,7 @@ window.SIM = window.SIM || {};
     const luxN = chs.filter(c => c.el === "光").length;
     const allLux = luxN === chs.length;
     const out = {};
-    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
+    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
     const cond = k => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? allLux : true);
     const recvOf = (to, oid) => {
       if (to === "lux") return team.filter((id, i) => chs[i].el === "光");
@@ -198,8 +198,9 @@ window.SIM = window.SIM || {};
       if (!spec) return;
       Object.keys(spec).forEach(name => {
         const key = S.potKey(name);
-        const lv = (cs.pots2 || {})[key] || 0;
-        if (!lv) return;
+        const lv0 = (cs.pots2 || {})[key] || 0;
+        if (!lv0) return;
+        const lv = lv0 + ((S.emblemExtra(cs.emb, cs.embOn).pot[name]) || 0);   // 徽章の素質レベル上昇（取得している素質だけ）
         const sp = spec[name];
         const onSet = (cs.pon || {})[key];
         if (onSet == null ? sp.off : !onSet) return;
@@ -216,8 +217,28 @@ window.SIM = window.SIM || {};
         out[oid].applied.push("心相" + h.n);
       });
     });
+    if (S.lrCollect) S.lrCollect(G, team, chs, out);
+    if (S.skillCollect) S.skillCollect(G, team, chs, out);
     return out;
   }
+  // 徽章の「スキルレベル上昇」「素質レベル上昇」を集計。slot.t = 対象の素質（英語名）
+  const LVKEY = { lvBasic: "basic", lvMain: "main", lvSupport: "support", lvUlt: "ult" };
+  S.emblemExtra = (cfg, on) => {
+    const r = { lv: { basic: 0, main: 0, support: 0, ult: 0 }, pot: {} };
+    (cfg || []).forEach((e, i) => {
+      if (on && on[i] === 0) return;
+      e.slots.forEach(sl => {
+        if (!sl.k) return;
+        const o = EMBLEM_OPTIONS.find(x => x.key === sl.k);
+        if (!o) return;
+        const v = (o.type === "skillLv" || o.type === "potLv") ? ({ gold: 1, rainbow2: 2, rainbow3: 3, rainbow: 3 }[sl.q]) : o.tiers[sl.q];   // レベル上昇: 金 +1／虹 +2・+3
+        if (v == null) return;
+        if (o.type === "skillLv") r.lv[LVKEY[sl.k]] += v;
+        else if (o.type === "potLv" && sl.t) r.pot[sl.t] = (r.pot[sl.t] || 0) + v;
+      });
+    });
+    return r;
+  };
   S.collectPots = collect;
   S.potNums = numsOf;
 })(window.SIM);

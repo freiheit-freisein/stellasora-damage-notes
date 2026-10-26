@@ -37,7 +37,10 @@
   .fld { display: grid; grid-template-columns: 112px 1fr; gap: 4px 8px; align-items: center; margin: 3px 0; font-size: 13px; }
   .fld label { margin: 0; font-size: 12px; }
   .fld input[type=number], .fld select { min-height: 32px; padding: 0 8px; border-radius: 8px; }
-  .card-t { width: 100%; font-size: 12px; margin-top: 8px; }
+  .card-t { width: 100%; font-size: 12px; margin-top: 0; table-layout: fixed; }
+  .card-t td:nth-child(1) { width: 112px; }
+  .card-t td:nth-child(2) { width: 84px; }
+  .box { border: 2px solid var(--border); border-radius: 12px; padding: 8px 10px; margin-top: 8px; background: var(--surface); }
   .card-t td, .card-t th { padding: 2px 6px; }
   .card-t td:first-child { color: var(--muted); font-weight: 700; }
   .wide { border: 2px solid var(--border); border-radius: 14px; padding: 12px; }
@@ -63,6 +66,19 @@
   .emb-row select { min-height: 32px; padding: 0 6px; border-radius: 8px; font-size: 12px; }
   .emb-card { border: 2px solid var(--border); border-radius: 12px; padding: 8px; margin-bottom: 8px; }
   .emb-card h4 { margin: 0 0 4px; font-size: 13px; color: var(--indigo); }
+  /* 結果表示エリアは、スクロールしても画面に付いてくる */
+  #right { position: sticky; top: 8px; max-height: calc(100vh - 16px); overflow-y: auto; align-self: start; }
+  /* 一覧から選ぶ形式（徽章・ロスレコ） */
+  .emb-slot { margin: 4px 0; }
+  .slotbtn { min-height: 34px; padding: 0 12px; border-radius: 10px; border: 2px solid var(--pink-line); background: var(--pink-soft); font-weight: 700; color: var(--text); cursor: pointer; text-align: left; }
+  .slotbtn.on, .slotbtn:hover { background: #f8d3db; }
+  .picker { border: 2px dashed var(--border-strong); border-radius: 12px; padding: 8px; margin: 6px 0 10px; background: var(--surface-soft); }
+  .emb-line { display: grid; grid-template-columns: 80px 150px 230px 130px 200px; gap: 6px; align-items: center; margin: 5px 0; }
+  .emb-line select { width: 100%; min-height: 34px; padding: 0 8px; border-radius: 8px; font-size: 13px; }
+  .emb-line .obtn { width: 100% !important; }
+  .pcat { margin-bottom: 6px; }
+  .pcat-h { font-size: 12px; font-weight: 900; color: var(--indigo); margin: 4px 0 2px; }
+  .sbtn small { font-weight: 400; margin-left: 2px; }
   @media (max-width: 1500px) { .app { grid-template-columns: minmax(0, 1fr) 480px; } .tiles { grid-template-columns: repeat(3, 1fr); } }
 </style>
 </head>
@@ -81,7 +97,7 @@
     <div class="panel"><h2><span class="en">DISPLAY</span>表示エリア</h2><div id="display"></div></div>
   </div>
   <div id="right">
-    <div class="panel"><h2><span class="en">RESULT</span>結果表示エリア<span class="muted">（ピンクをクリックで内訳）</span></h2><div id="result"></div></div>
+    <div class="panel"><h2><span class="en">RESULT</span>結果表示エリア<span class="muted">（ピンクをクリックで内訳）</span><span style="flex:1"></span><span id="cmpbar" style="display:inline-flex;gap:6px;align-items:center"></span></h2><div id="result"></div></div>
     <div class="panel" id="drillPanel" style="display:none"><h2><span class="en">DETAIL</span><span id="drillTitle">内訳</span></h2><div id="drill"></div></div>
   </div>
 </div>
@@ -92,7 +108,10 @@
 <script src="calc.js"></script>
 <script src="sim_data.js"></script>
 <script src="sim_pots.js"></script>
+<script src="sim_lr.js"></script>
 <script src="sim_engine.js"></script>
+<script src="data/potential_ja.js"></script>
+<script src="sim_share.js"></script>
 <script src="sim_ui.js"></script>
 </body>
 </html>

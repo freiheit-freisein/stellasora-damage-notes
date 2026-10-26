@@ -310,7 +310,7 @@ function supEntries(key, ctx) {
 }
 // ウィローのチーム効果（風属性の味方に乗るもの）を最大スタックの willowStk 倍で集計
 function willowTeam(ctx) {
-  const r = { atkPct: (ctx.willowFrog || 0) * 0.133 + (ctx.willowUlt || 0) * 0.115, skillB: 0, taken: 1 }; // バブルフロッグのATK+13.3%/重・必殺技のATK+11.5%/重（チーム全体）
+  const r = { atkPct: (ctx.willowFrog || 0) * (ctx.frogV != null ? ctx.frogV : 0.133) + (ctx.willowUlt || 0) * (ctx.ultV != null ? ctx.ultV : 0.115), skillB: 0, taken: 1 }; // バブルフロッグのATK+13.3%/重・必殺技のATK+11.5%/重（チーム全体）
   const f = Math.min(Math.max(ctx.willowStk || 0, 0), 1);
   const N = ctx.willowN || {};
   const MAXS = { cumulus: 1, beach: 1, saibotsu: 8, nanairo: 8, yurameku: 4, chakuchi: 8 };

@@ -47,8 +47,10 @@ PCの横長画面（1920x1080）前提の簡易UIです。スマホ対応・見�
 |---|---|
 | `index.html` `app.js` `calc.js` `data.js` `data_sup.js` | ウィロー主力＋ナツカ/エレノア支援の計算 |
 | `lux.html` `lux.js` | 光チーム（セイナ(原点)主力）の計算 |
-| `sim.html` `sim_ui.js` `sim_engine.js` `sim_data.js` `sim_pots.js` | 汎用の計算ページ（画面・計算エンジン・キャラと敵のデータ・光チームの素質の効果表）。旧ページの検証済みの式を使い、ウィロー側とは全シナリオで一致を確認 |
+| `sim.html` `sim_ui.js` `sim_engine.js` `sim_data.js` `sim_pots.js` `sim_lr.js` `sim_share.js` | 汎用の計算ページ（画面・計算エンジン・キャラと敵のデータ・光チームの素質の効果表）。旧ページの検証済みの式を使い、ウィロー側とは全シナリオで一致を確認 |
+| `sim_share.js` | 共有コード（入力の差分を辞書で番号にして、圧縮・英数字化。初期値と違う所だけを出すので短い） |
 | `record_level.js` | 記録レベルボーナス表（Lv1〜40） |
+| `data/potential_ja.js` | 素質の日本語名（英語名→日本語名）。プリセット共有サイトの名前データより |
 | `data/trekkers.json` `data/trekkers.js` | キャラのスキル倍率・ステータス・素質（下記の出典から自動生成） |
 | `tools/` | 上記データを作るスクリプト |
 | `SUMMARY.md` | 検証のまとめ（分かっていること・仮説） |
