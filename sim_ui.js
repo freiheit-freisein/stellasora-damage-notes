@@ -91,13 +91,14 @@
       ${row("preset", "プリセットコード", "（ゲーム・プリセット共有サイトと同じ。編成と素質Lvだけ）", "ゲームの素質プリセットのコード")}
       ${row("code", "共有コード", "（この計算ページの入力すべて）", "共有コードを貼り付け")}
       ${row("url", "共有URL", "（共有コードの短縮URL。開くだけで読み込まれます）", "https://sim.stella-tool.com/s/…")}
+      <div class="row"><button class="btn-add xbtn" data-act="share-x">Xで共有</button> <span class="muted">短縮URLを作って、Xの投稿画面を開きます（編成の3人の名前とハッシュタグ入り）</span></div>
       <div class="row sub"><label for="bname">このブラウザに保存 <span class="muted" style="font-weight:400">（名前を付けて保存・読み込み）</span></label>
       <div class="line" style="grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto auto">
         <input type="text" id="bname" placeholder="名前"><button class="btn-add" data-act="bsave">保存</button>
         <select id="bsel"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
         <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></div></div>
       <div class="foot"><button class="btn-add" data-act="dlg-close">閉じる</button></div>`;
-    $("cmpbar").innerHTML = `<button class="btn-add xbtn" data-act="share-x" style="min-height:30px;padding:0 12px;font-size:12px">Xで共有</button><button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
+    $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
   }
 
   // ---- 倍率タイル（種類を問わない共通の倍率） ----
@@ -714,13 +715,13 @@
   // Xで共有: 短縮URLを作って、Xの投稿画面を開く。ポップアップを止められないよう、押した時点で窓を開いておき、URLができたら移動する
   function shareX() {
     const w = window.open("about:blank", "_blank");
-    shareMsg = "Xで共有する準備をしています…"; renderTop();
+    say("url", "Xで共有する準備をしています…");   // メッセージは、ポップアップの共有URLの欄に出す
     makeShort().then(url => {
       const text = `${teamTitle()}を計算しました #巡遊者の計算ノート #ステラソラ`;
       const intent = "https://x.com/intent/post?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
       if (w) w.location.href = intent; else location.href = intent;
-      shareMsg = ""; renderTop();
-    }).catch(e => { if (w) w.close(); shareMsg = e.message; renderTop(); });
+      DV.url = url; say("url", "Xの投稿画面を開きました");
+    }).catch(e => { if (w) w.close(); say("url", e.message, true); });
   }
 
   renderAll();
