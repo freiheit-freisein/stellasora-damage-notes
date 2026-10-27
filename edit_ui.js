@@ -80,6 +80,8 @@
     if (+r.stk > 1) e.stk = +r.stk;
     if (r.ht) e.ht = r.ht;
     if (r.tags) e.tags = r.tags.split(/[\s,、]+/).filter(Boolean);
+    if (r.perLux) e.perLux = true;   // 画面に欄はないが、保存し直しても消さない
+    if (r.el) e.el = r.el;
     return e;
   }
   function fromEngine(e) {
@@ -92,6 +94,7 @@
     r.extcap = e.ext === "cap";
     if (e.over) r.over = [7, 8, 9].map(k => e.over[k]).filter(x => x != null).join(" ");
     r.cond = e.cond || ""; r.stk = e.stk || 1; r.ht = e.ht || ""; r.tags = (e.tags || []).join(" ");
+    r.perLux = !!e.perLux; r.el = e.el || "";
     return r;
   }
 

@@ -65,7 +65,6 @@ window.SPEC_USER = {
   },
   "Cordiality": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -74,17 +73,16 @@ window.SPEC_USER = {
      "stk": 5
     }
    ],
-   "txt": "スキルダメージを与えると、全員の攻撃力 +（6秒・最大5重）"
+   "txt": "スキルダメージを与えると、全員の攻撃力 +（6秒・最大5重）",
+   "verified": "確認済み"
   },
   "Magic Sword Smack": {
    "done": true,
-   "draft": true,
    "e": [],
    "txt": "靭性削りの効率（火力に影響なし）"
   },
   "Muddy Engulf": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "taken",
@@ -93,6 +91,7 @@ window.SPEC_USER = {
     }
    ],
    "txt": "スキルダメージを与えると、敵の水被ダメージ +（6秒）。靭性が壊れていない敵の値を使う",
+   "verified": "確認済み",
    "note": "靭性が壊れている敵は、番号0の値"
   },
   "Stream: Cloud Ring": {
@@ -114,19 +113,17 @@ window.SPEC_USER = {
   },
   "Stream: Drip's Overturn": {
    "done": true,
-   "draft": true,
    "e": [],
-   "txt": "エネルギーの付与（火力に影響なし）"
+   "txt": "エネルギーの付与（火力に影響なし）",
+   "verified": "確認済み"
   },
   "Restarting": {
    "done": true,
-   "draft": true,
    "e": [],
    "txt": "魔盾の付与（火力に影響なし）"
   },
   "Guardsman Blessing": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -143,22 +140,22 @@ window.SPEC_USER = {
     }
    ],
    "txt": "魔盾を得たとき、全員の攻撃力 +（5秒・最大3重）",
+   "verified": "確認済み",
    "note": "データの数値表が空だったので、文章の値を入れた"
   },
   "Magic Sword Siphoning": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "Bs",
      "n": 0
     }
    ],
-   "txt": "スキルダメージ +"
+   "txt": "スキルダメージ +",
+   "verified": "確認済み"
   },
   "Unbreakable Bond": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -167,28 +164,28 @@ window.SPEC_USER = {
      "perLux": true
     }
    ],
-   "txt": "水属性の巡遊者の人数 × 全員の攻撃力 +"
+   "txt": "水属性の巡遊者の人数 × 全員の攻撃力 +",
+   "verified": "確認済み"
   },
   "Power Strike": {
    "done": true,
-   "draft": true,
    "e": [],
-   "txt": "スタン（火力に影響なし）"
+   "txt": "スタン（火力に影響なし）",
+   "verified": "確認済み"
   },
   "Magic Shield Enhancement": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "Bb",
      "n": 0
     }
    ],
-   "txt": "魔盾を得たとき、通常攻撃ダメージ +（8秒）"
+   "txt": "魔盾を得たとき、通常攻撃ダメージ +（8秒）",
+   "verified": "確認済み"
   },
   "Wave Breaker": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "taken",
@@ -196,11 +193,11 @@ window.SPEC_USER = {
      "to": "enemy"
     }
    ],
+   "note": "水属性のみ",
    "txt": "敵の水属性被ダメージ +（必殺技が当たったとき）"
   },
   "Power Unbound": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -208,22 +205,22 @@ window.SPEC_USER = {
      "to": "all"
     }
    ],
-   "txt": "必殺技の発動時、全員の攻撃力 +（20秒）"
+   "txt": "必殺技の発動時、全員の攻撃力 +（20秒）",
+   "verified": "確認済み"
   },
   "Demonic Devour": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "Bu",
      "n": 0
     }
    ],
-   "txt": "必殺技ダメージ +（印が付いた敵）"
+   "txt": "必殺技ダメージ +（印が付いた敵）",
+   "verified": "確認済み"
   },
   "Surge: Infinite": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -232,11 +229,11 @@ window.SPEC_USER = {
      "cond": "mainSame"
     }
    ],
-   "txt": "魔盾の間、水属性の主力の攻撃力 +21.9%"
+   "txt": "魔盾の間、水属性の主力の攻撃力 +21.9%",
+   "verified": "確認済み"
   },
   "Surge: Ripple": {
    "done": true,
-   "draft": false,
    "e": [
     {
      "k": "extra",
@@ -245,15 +242,14 @@ window.SPEC_USER = {
      "t": "skill",
      "c": 10,
      "edit": true,
-     "m": 77
+     "m": 60
     }
    ],
-   "txt": "魔盾の間、主力がダメージを与えると波 77%（スキル・0.5秒に1回）。回数は仮に10回",
-   "verified": "日本語Wiki（ゲーム内の文章）"
+   "note": "60%",
+   "txt": "魔盾の間、主力がダメージを与えると波 77%（スキル・0.5秒に1回）。回数は仮に10回"
   },
   "Isn't It Awesome!": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -262,11 +258,11 @@ window.SPEC_USER = {
      "cond": "mainSame"
     }
    ],
-   "txt": "魔盾の間、水属性の主力の攻撃力 +"
+   "txt": "魔盾の間、水属性の主力の攻撃力 +",
+   "verified": "確認済み"
   },
   "Hold On!": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -274,31 +270,31 @@ window.SPEC_USER = {
      "to": "main"
     }
    ],
-   "txt": "魔盾の間、主力の攻撃力 +"
+   "txt": "魔盾の間、主力の攻撃力 +",
+   "verified": "確認済み"
   },
   "I'll Protect You!": {
    "done": true,
-   "draft": true,
    "e": [],
-   "txt": "吸収量（火力に影響なし）"
+   "txt": "吸収量（火力に影響なし）",
+   "verified": "確認済み"
   },
   "Surge: Immortality": {
    "done": true,
-   "draft": true,
    "e": [],
    "txt": "水の領域の継続時間 +67%（ヒット回数の増加は、技の構造の登録後に反映）",
+   "verified": "確認済み",
    "note": "領域のヒット回数が増える効果。技の構造の登録後に入力"
   },
   "Surge: Thunderbolt": {
    "done": true,
-   "draft": true,
    "e": [],
    "txt": "水の領域の倍率 +44%（技の構造の登録後に反映）",
+   "verified": "確認済み",
    "note": "領域のヒットの倍率が増える効果。技の構造の登録後に入力"
   },
   "Let Me Help!": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "Bb",
@@ -307,11 +303,11 @@ window.SPEC_USER = {
      "stk": 5
     }
    ],
-   "txt": "領域内の水属性の通常攻撃ダメージ +（毎秒・最大5重）"
+   "txt": "領域内の水属性の通常攻撃ダメージ +（毎秒・最大5重）",
+   "verified": "確認済み"
   },
   "Stay Away!": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -321,11 +317,11 @@ window.SPEC_USER = {
     }
    ],
    "txt": "領域がダメージを与えると、主力の攻撃力 +（6秒・最大10重）／領域の間隔 −50%",
+   "verified": "確認済み",
    "note": "領域の間隔の短縮（ヒット回数の増加）は、技の構造の登録後に入力"
   },
   "How About This!": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "extra",
@@ -337,11 +333,12 @@ window.SPEC_USER = {
      "n": 0
     }
    ],
+   "off": true,
+   "note": "確率発動かつ主力の行動による",
    "txt": "領域内の水属性の主力がダメージを与えると、50%で間欠泉（スキル）。回数は仮に5回"
   },
   "Shortcut Seeker": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -349,11 +346,11 @@ window.SPEC_USER = {
      "to": "lux"
     }
    ],
-   "txt": "水属性の巡遊者の攻撃力 +"
+   "txt": "水属性の巡遊者の攻撃力 +",
+   "verified": "確認済み"
   },
   "Band-aid Collector": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
@@ -361,18 +358,594 @@ window.SPEC_USER = {
      "to": "all"
     }
    ],
-   "txt": "テレサが場にいるとき、全員の攻撃力 +"
+   "txt": "テレサが場にいるとき、全員の攻撃力 +",
+   "verified": "確認済み"
   },
   "Magic Sword Wielder": {
    "done": true,
-   "draft": true,
    "e": [
     {
      "k": "atkPct",
      "n": 0
     }
    ],
-   "txt": "テレサの攻撃力 +"
+   "txt": "テレサの攻撃力 +",
+   "verified": "確認済み"
+  }
+ },
+ "Suntide Willow": {
+  "Bubble Flurry": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "raw": 0.05
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Rippling Radiance": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "main",
+     "name": "Rippling Radiance",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 146
+    },
+    {
+     "k": "taken",
+     "raw": 0.04,
+     "to": "enemy",
+     "stk": 4
+    }
+   ],
+   "txt": ""
+  },
+  "Rhythmic Bubbles": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "raw": 0.5
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Rainbow Rebound": {
+   "done": true,
+   "e": [
+    {
+     "k": "taken",
+     "raw": 0.018000000000000002,
+     "to": "enemy",
+     "stk": 8
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Clustered Foam": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 1,
+     "to": "all"
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Enduring Bubble": {
+   "done": true,
+   "e": [
+    {
+     "k": "taken",
+     "n": 0,
+     "to": "enemy",
+     "stk": 5
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Dreamlike Illusion": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "to": "lux",
+     "stk": 6
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Wavering Glow": {
+   "done": true,
+   "e": [
+    {
+     "k": "taken",
+     "n": 1,
+     "to": "enemy",
+     "stk": 4
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Foam Echo": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 8
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Touch 'n' Bounce": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "stk": 8
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Cumulus Drift": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Singing Shores": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Ocean Wanderer": {
+   "done": true,
+   "e": [],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Tidal Warning": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bu",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Shore Regulation": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "to": "all"
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Marine Justice": {
+   "done": true,
+   "e": [
+    {
+     "k": "taken",
+     "n": 0,
+     "to": "enemy",
+     "stk": 5
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  }
+ },
+ "Shia": {
+  "Kindred Bound": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "Kindred Bound",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 6.4
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Twin Moons": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "Twin Moons",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 10
+    }
+   ],
+   "txt": ""
+  },
+  "Bunny Torrent": {
+   "done": true,
+   "e": [],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Rabbit Flip": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "Rabbit Flip",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 4.1
+    }
+   ],
+   "txt": ""
+  },
+  "Dance of the Riptide": {
+   "done": true,
+   "e": [],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Snowfall's Heartbeat": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "stk": 24
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Eclipse Blast": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Flow Reversal": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Kick the Wave": {
+   "done": true,
+   "e": [],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Catch the Wave": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 12
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Moonfall": {
+   "done": true,
+   "e": [
+    {
+     "k": "critDmg",
+     "n": 0,
+     "to": "lux"
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Tidal Charge": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 6
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Counter Current": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 6
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Howl to the Moon": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 20
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み",
+   "note": "中間のLvは直線補間（未確認）"
+  },
+  "Silent Tide": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bu",
+     "n": 0
+    }
+   ],
+   "note": "中間のLvは直線補間（未確認）",
+   "txt": "中間のLvは直線補間（未確認）"
+  },
+  "Wave to Oblivion": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bu",
+     "n": 0
+    }
+   ],
+   "note": "中間のLvは直線補間（未確認）",
+   "txt": "中間のLvは直線補間（未確認）"
+  },
+  "Phantom Step Radiance": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "main",
+     "name": "Phantom Step Radiance",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 396
+    }
+   ],
+   "txt": ""
+  },
+  "Rimecrystal Edge": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "main",
+     "name": "Rimecrystal Edge",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 635
+    },
+    {
+     "k": "extra",
+     "group": "main",
+     "name": "Rimecrystal Edge",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 396
+    }
+   ],
+   "txt": ""
+  },
+  "Moonlight Overflow": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "main",
+     "name": "Moonlight Overflow",
+     "t": "basic",
+     "c": 1,
+     "edit": true,
+     "m": 127
+    },
+    {
+     "k": "W",
+     "raw": 0.05,
+     "stk": 10
+    }
+   ],
+   "txt": ""
+  },
+  "Astral Pirouette": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "main",
+     "name": "Astral Pirouette",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 129
+    },
+    {
+     "k": "W",
+     "raw": 0.05,
+     "stk": 10
+    }
+   ],
+   "txt": ""
+  },
+  "Subzero Dominion": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 0,
+     "to": "main"
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み",
+   "note": "中間のLvは直線補間（未確認）"
+  },
+  "Glacial Dash": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bb",
+     "n": 0
+    }
+   ],
+   "note": "中間のLvは直線補間（未確認）",
+   "txt": "中間のLvは直線補間（未確認）"
+  },
+  "Rimeheart Pulse": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 6
+    }
+   ],
+   "note": "中間のLvは直線補間（未確認）",
+   "txt": "中間のLvは直線補間（未確認）"
+  },
+  "Lunar Detonation": {
+   "done": true,
+   "e": [],
+   "txt": ""
+  },
+  "Final Crescent": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bb",
+     "n": 0,
+     "stk": 5
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み",
+   "note": "中間のLvは直線補間（未確認）"
+  },
+  "Lunar Combo": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "to": "main"
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み",
+   "note": "中間のLvは直線補間（未確認）"
+  },
+  "Leporine Gale": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み",
+   "note": "中間のLvは直線補間（未確認）"
+  },
+  "Rabbit's Beam": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "arr": [
+      5,
+      7.8,
+      10.6,
+      13.4,
+      16.2,
+      19
+     ],
+     "stk": 2
+    }
+   ],
+   "note": "中間のLvは直線補間（未確認）",
+   "txt": "中間のLvは直線補間（未確認）"
+  },
+  "Hare's Pursuit": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "arr": [
+      24,
+      38.4,
+      52.8,
+      67.2,
+      81.6,
+      96
+     ]
+    }
+   ],
+   "note": "中間のLvは直線補間（未確認）",
+   "txt": "中間のLvは直線補間（未確認）"
   }
  }
 };
