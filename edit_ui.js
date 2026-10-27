@@ -171,6 +171,7 @@
       <div class="fld"><label>火力に影響しない</label><div><input type="checkbox" data-f="none"${meta.none ? " checked" : ""}> <span class="muted">（盾・回復・防御・復活など。効果の入力は不要です）</span></div></div>
       <div class="fld"><label>既定で反映しない</label><div><input type="checkbox" data-f="off"${meta.off ? " checked" : ""}> <span class="muted">（条件が重い効果）</span></div></div>
       <div class="fld"><label>Lv7〜9の値</label><div class="muted">既定は、直前の増え方で延長（推定）。説明文で数値に「(Max!)」が付いているものは、効果ごとのチェックで「Lv6から上がらない」にします。確定していません。</div></div>
+      <div class="fld"><label>説明（計算ページ）</label><input type="text" data-f="txt" value="${esc(meta.txt || "")}" placeholder="計算ページの素質カードに出る文。空=メモの内容"></div>
       <div class="fld"><label>メモ</label><input type="text" data-f="note" value="${esc(meta.note)}" placeholder="確認した内容・未確認の点"></div>
       ${meta.none ? "" : rows.map(row).join("")}
       <div style="display:flex;gap:6px;margin-top:6px">${meta.none ? "" : '<button class="btn-add" data-act="addrow">効果を追加</button>'}<button class="btn-add" data-act="save" style="background:var(--indigo);color:#fff">この素質を保存</button><button class="btn-add" data-act="drop">入力を消す</button></div>
@@ -191,6 +192,7 @@
       else r[f] = v;
     } else if (f === "none" || f === "off") { meta[f] = v; if (f === "none" && v) rows = []; }
     else if (f === "note") meta.note = v;
+    else if (f === "txt") meta.txt = v;
     else if (f === "ext") meta.ext = v;
     renderEditor();
   });
