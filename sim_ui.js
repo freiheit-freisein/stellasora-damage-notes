@@ -30,27 +30,10 @@
     return G;
   }
 
-  // ---- プリセット ----
-  // テスト3（光チーム・徽章なし・記録Lv4）。ストンプクラブの通常1撃目 77,631、防衛戦の初段 323,158 と一致を確認した構成
-  function presetTest3() {
-    const g = defState();
-    g.team = { main: "noya", s1: "firefly", s2: "tilia" };
-    g.recordLv = 4; g.enemy = "stomp"; g.glimmer = false;
-    g.notes = { "強撃の音符": 3, "幸運の音符": 15, "爆発の音符": 0, "体力の音符": 11, "集中の音符": 7, "器用の音符": 0, "必殺の音符": 7, "水の音符": 0, "風の音符": 0, "光の音符": 11 };
-    g.lrMain = ["mirai", "negai", "yuuzu"]; g.lrSub = [];
-    g.lrManual = { baseAtk: 4518, baseHp: 0, elem: 0.39, elemEl: "光", basicDmg: 0, skillDmg: 0, atkPct: 0 };   // サブの3枚の合計（内訳は未確認。全体の 66% から メイン3枚の分を引いた値）
-    ["noya", "firefly", "tilia"].forEach(id => { g.chars[id].embOn = [0, 0, 0]; });
-    g.chars.noya.trustLv = 20; g.chars.noya.skillLv = { basic: 9, main: 10, support: 10, ult: 10 };
-    g.chars.firefly.skillLv = { basic: 1, main: 1, support: 8, ult: 9 };
-    g.chars.firefly.pon = { heart1: false };
-    g.chars.tilia.pots2[S.potKey("Renewed Spectrum")] = 1;
-    return g;
-  }
-  // セイナHC（記録Lv34）。共有コードから取り出した入力（初期値との差分）を、初期の入力に重ねる。徽章・ロスレコ・音符・素質を含む
-  const HC_PATCH = {"team":{"main":"noya","s1":"tilia","s2":"firefly"},"recordLv":34,"notes":{"強撃の音符":0,"幸運の音符":51,"爆発の音符":15,"体力の音符":35,"集中の音符":15,"器用の音符":30,"必殺の音符":15,"水の音符":0,"風の音符":0,"光の音符":38},"lrMain":{"0":"mirai","1":"negai","2":"yuuzu"},"lrSub":{"0":"anaaki","1":"kakegae","2":"nitamono"},"lrOn":{"mirai:c:taken":false},"lrManual":{"baseAtk":null,"baseHp":null,"elem":null,"elemEl":"光"},"chars":{"noya":{"skillLv":{"basic":9},"trustLv":20,"emb":{"0":{"slots":{"0":{"k":"elemDmg","cat":"ダメージ・貫通"},"1":{"k":"derivedCritRate","q":"gold","cat":"従者・派生"},"2":{"k":"critRate","q":"rainbow","cat":"会心"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"hpPct","cat":"ステータス"},"1":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"2":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"spMain","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Argent Mirage: Legion's End"},"1":{"k":"baseAtk","cat":"ステータス"},"2":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"hpPct","q":"rainbow","cat":"ステータス"}}}},"add":{"basic":0.12,"skill":0.12,"hpPct":0.15},"pots2":{"Lucent_Blitz":1,"Dawnflare":1,"Prism_Warp":6,"Resolve__Blitz":6,"Astral_Brilliance":6,"Argent_Mirage__Legion_s_End":9,"Veteran_s_Grit":6,"Lucent_Tide":6,"Guiding_Star":6,"Empyrean_Starfall__Devil_s_End":0}},"firefly":{"skillLv":{"basic":1,"main":3,"support":8,"ult":9},"trustLv":10,"emb":{"0":{"slots":{"0":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"1":{"k":"spSupport","cat":"その他"},"2":{"k":"atkPct","cat":"ステータス"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"1":{"k":"hpPct","q":"rainbow","cat":"ステータス"},"2":{"k":"spSupport","cat":"その他"},"3":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"}}},"2":{"slots":{"0":{"k":"potSupport","q":"rainbow2","cat":"スキル・素質","t":"Stellar Crash"},"1":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Persistent Warmth"},"2":{"k":"servantDmg","q":"rainbow","cat":"従者・派生"},"3":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"}}}},"pots2":{"Domain_of_Purity":6,"Stellar_Crash":6,"Radiance_Blade__Twin_Shadow":1,"Radiance_Blade__Firefly":1,"Lightforged_Blade":2,"Persistent_Warmth":4,"Sanctuary_of_Light":1},"pstk":{"Stellar_Crash":0}},"tilia":{"skillLv":{"basic":2,"main":4,"support":9,"ult":3},"emb":{"0":{"slots":{"0":{"k":"spSupport","q":"gold","cat":"その他"}}},"1":{"slots":{"0":{"k":"spSupport","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potSupport","q":"gold","cat":"スキル・素質","t":"Blinding Beam"}}}},"pots2":{"Holy_Inscription":1,"Renewed_Spectrum":1,"Enemy_Counter":6,"Blinding_Beam":7,"Revealed_Flaw":6,"Knight_s_Seal":1,"Banner_of_Glory":2,"Trick_Boost":0},"pon":{"Revealed_Flaw":false,"Holy_Inscription":false}}},"skOn":{"noya:ult":true}};
-  function presetHC() {
-    return S.applyDiff(defState(), clone(HC_PATCH));
-  }
+  // テスト3・セイナHCの構成は、画面のボタンをなくし、共有コードで読み込む。
+  // セイナHC（記録Lv34）の入力（初期値との差分）。検証用に残す
+  const HC_PATCH ={"team":{"main":"noya","s1":"tilia","s2":"firefly"},"recordLv":34,"notes":{"強撃の音符":0,"幸運の音符":51,"爆発の音符":15,"体力の音符":35,"集中の音符":15,"器用の音符":30,"必殺の音符":15,"水の音符":0,"風の音符":0,"光の音符":38},"lrMain":{"0":"mirai","1":"negai","2":"yuuzu"},"lrSub":{"0":"anaaki","1":"kakegae","2":"nitamono"},"lrOn":{"mirai:c:taken":false},"lrManual":{"baseAtk":null,"baseHp":null,"elem":null,"elemEl":"光"},"chars":{"noya":{"skillLv":{"basic":9},"trustLv":20,"emb":{"0":{"slots":{"0":{"k":"elemDmg","cat":"ダメージ・貫通"},"1":{"k":"derivedCritRate","q":"gold","cat":"従者・派生"},"2":{"k":"critRate","q":"rainbow","cat":"会心"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"hpPct","cat":"ステータス"},"1":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"2":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"spMain","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Argent Mirage: Legion's End"},"1":{"k":"baseAtk","cat":"ステータス"},"2":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"hpPct","q":"rainbow","cat":"ステータス"}}}},"add":{"basic":0.12,"skill":0.12,"hpPct":0.15},"pots2":{"Lucent_Blitz":1,"Dawnflare":1,"Prism_Warp":6,"Resolve__Blitz":6,"Astral_Brilliance":6,"Argent_Mirage__Legion_s_End":9,"Veteran_s_Grit":6,"Lucent_Tide":6,"Guiding_Star":6,"Empyrean_Starfall__Devil_s_End":0}},"firefly":{"skillLv":{"basic":1,"main":3,"support":8,"ult":9},"trustLv":10,"emb":{"0":{"slots":{"0":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"1":{"k":"spSupport","cat":"その他"},"2":{"k":"atkPct","cat":"ステータス"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"1":{"k":"hpPct","q":"rainbow","cat":"ステータス"},"2":{"k":"spSupport","cat":"その他"},"3":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"}}},"2":{"slots":{"0":{"k":"potSupport","q":"rainbow2","cat":"スキル・素質","t":"Stellar Crash"},"1":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Persistent Warmth"},"2":{"k":"servantDmg","q":"rainbow","cat":"従者・派生"},"3":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"}}}},"pots2":{"Domain_of_Purity":6,"Stellar_Crash":6,"Radiance_Blade__Twin_Shadow":1,"Radiance_Blade__Firefly":1,"Lightforged_Blade":2,"Persistent_Warmth":4,"Sanctuary_of_Light":1},"pstk":{"Stellar_Crash":0}},"tilia":{"skillLv":{"basic":2,"main":4,"support":9,"ult":3},"emb":{"0":{"slots":{"0":{"k":"spSupport","q":"gold","cat":"その他"}}},"1":{"slots":{"0":{"k":"spSupport","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potSupport","q":"gold","cat":"スキル・素質","t":"Blinding Beam"}}}},"pots2":{"Holy_Inscription":1,"Renewed_Spectrum":1,"Enemy_Counter":6,"Blinding_Beam":7,"Revealed_Flaw":6,"Knight_s_Seal":1,"Banner_of_Glory":2,"Trick_Boost":0},"pon":{"Revealed_Flaw":false,"Holy_Inscription":false}}},"skOn":{"noya:ult":true}};
+  S.presetHC = () => S.applyDiff(defState(), clone(HC_PATCH));
   let G = defState();
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team) G = merge(defState(), s); } catch (e) { /* 保存なしでも動く */ }
   function merge(a, b) {
@@ -58,7 +41,7 @@
     return a;
   }
   let shareCode = "", shareMsg = "";
-  const V = { panel: "overview", tilesFor: "main", drill: null, pick: null, lrPick: null };
+  const V = { panel: "overview", tilesFor: "main", drill: null, pick: null, lrPick: null, lrEl: {} };
   let memo = null;
   try { memo = JSON.parse(localStorage.getItem(KEY_M)); } catch (e) { memo = null; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(G)); } catch (e) { /* 無視 */ } };
@@ -96,17 +79,16 @@
     let builds = {};
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
-    $("topbar").innerHTML = `<b>ビルド:</b>
-      <input type="text" id="bname" placeholder="名前" style="min-height:34px;border:2px solid var(--border);border-radius:10px;padding:0 10px;width:140px">
+    $("topbar").innerHTML = `<b>ビルド</b>
+      <input type="text" id="bname" placeholder="名前" style="width:120px">
       <button class="btn-add" data-act="bsave">保存</button>
-      <select id="bsel" style="width:200px;min-height:34px;padding:0 8px"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
+      <select id="bsel" style="width:170px"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
       <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button>
-      <span style="width:14px"></span><b>共有コード:</b>
-      <input type="text" id="scode" value="${esc(shareCode)}" placeholder="ここに貼り付け" style="min-height:34px;border:2px solid var(--border);border-radius:10px;padding:0 10px;width:260px">
-      <button class="btn-add" data-act="share-out">コードを作る</button><button class="btn-add" data-act="share-in">コードを読み込む</button>
+      <span class="sep"></span><b>共有コード</b>
+      <input type="text" id="scode" value="${esc(shareCode)}" placeholder="ここに貼り付け" style="width:220px">
+      <button class="btn-add" data-act="share-out">コードを作る</button><button class="btn-add" data-act="share-in">読み込む</button>
       <span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <span style="width:14px"></span>
-      <button class="btn-add" data-act="preset-t3">テスト3（徽章なし）を読み込む</button><button class="btn-add" data-act="preset-hc">セイナHC(Lv34)を読み込む</button><button class="btn-add" data-act="reset">全部を初期値に戻す</button>
+      <span class="sep"></span><button class="btn-add" data-act="reset">全部を初期値に戻す</button>
 `;
     $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
   }
@@ -132,26 +114,29 @@
 
   // ---- 選択ボタン ----
   function renderSelectors() {
-    const b = (key, label) => `<button class="sbtn${V.panel === key ? " on" : ""}" data-act="panel:${key}">${label}</button>`;
-    $("selectors").innerHTML =
-      `<div class="sel-row">${b("overview", "巡遊者")}${b("direct", "巡遊者（直接入力）")}${b("record", "記録レベル")}${b("lr", "ロスレコ・音符")}${b("gimmick", "ギミック(敵)")}${b("adjust", "補正")}</div>`;
+    // 徽章・素質などの巡遊者ごとの画面は「巡遊者」のタブの中
+    const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
+    const b = (key, label) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}">${label}</button>`;
+    $("selectors").innerHTML = b("overview", "巡遊者") + b("direct", "巡遊者（直接入力）") + b("record", "記録レベル") + b("lr", "ロスレコ・音符") + b("gimmick", "ギミック(敵)") + b("adjust", "補正");
   }
 
-  // ---- キャラカード（ステータス画面用 / 防衛戦突入後用）----
+  // ---- ステータスの表（ステータス画面／戦闘中／防衛戦に入った直後）----
+  // 戦闘中 = 今の敵で、素質・スキル・ロスレコなどの効果（重複数は入力の値）をすべて足した値
   function cardsHtml(id) {
     const c = chOf(id), cs = G.chars[id];
-    const row = (k, v, sub) => `<tr><td>${k}</td><td style="text-align:right"><b>${v}</b></td><td class="muted">${sub || ""}</td></tr>`;
     const o = E.outsideStats(c, cs);
     const d = RD.team[id].st;
-    const screen = `<table class="card-t"><tr><th colspan="3">ステータス画面</th></tr>
-      ${row("最大HP", fmt(o.hp))}${row("攻撃力", fmt(o.atk))}${row("会心率", pct(o.critRate))}${row("会心ダメージ", pct(o.critDmg))}
-      ${row(c.el + "属性ダメージ", pct(1 + o.elemAdd))}${row("属性耐性貫通", fmt(o.pen))}</table>`;
-    const def = `<table class="card-t"><tr><th colspan="3">防衛戦に入った直後</th></tr>
-      ${row("最大HP", fmt(d.hp), `+${pct(d.hpPct)}`)}${row("攻撃力", fmt(d.atk), `+${pct(d.atkPct)}`)}
-      ${row("会心率", pct(d.critRate))}${row("会心ダメージ", pct(d.critDmg))}${row(c.el + "属性ダメージ", pct(1 + d.elemAdd))}
-      ${row("通常攻撃ダメージ", pct(d.basicAdd))}${row("スキルダメージ", pct(d.skillAdd))}${row("必殺技ダメージ", pct(d.ultAdd))}${row("印ダメージ", pct(d.markAdd))}
-      ${row("属性耐性貫通", fmt(d.pen))}</table>`;
-    return `<div class="box">${screen}</div><div class="box">${def}</div>`;
+    const b = R.team[id], st = b.st, ef = b.ef, ag = ef.ag || {};
+    const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
+    const row = (k, a, m, z) => `<tr><td>${k}</td><td style="text-align:right">${a}</td><td class="bt" style="text-align:right">${m}</td><td style="text-align:right">${z}</td></tr>`;
+    return `<div class="box"><table class="stt"><tr><th></th><th title="ステータス画面の値">画面</th><th class="bt" title="今の敵で、効果をすべて足した値">戦闘中</th><th title="防衛戦に入った直後の値">防衛戦直後</th></tr>
+      ${row("最大HP", fmt(o.hp), fmt(st.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(batk), fmt(d.atk))}
+      ${row("会心率", pct(o.critRate), pct(st.critRate), pct(d.critRate))}${row("会心ダメージ", pct(o.critDmg), pct(st.critDmg), pct(d.critDmg))}
+      ${row(c.el + "属性ダメージ", pct(1 + o.elemAdd), pct(1 + st.elemAdd + ef.W), pct(1 + d.elemAdd))}
+      ${row("通常攻撃ダメージ", "—", pct(st.basicAdd + ef.Bb), pct(d.basicAdd))}${row("スキルダメージ", "—", pct(st.skillAdd + ef.Bs), pct(d.skillAdd))}
+      ${row("必殺技ダメージ", "—", pct(st.ultAdd + ef.Bu), pct(d.ultAdd))}${row("印ダメージ", "—", pct(st.markAdd + (ag.markAdd || 0)), pct(d.markAdd))}
+      ${row("属性耐性貫通", fmt(o.pen), fmt(st.pen), fmt(d.pen))}${row("敵の被ダメージ", "—", "×" + f3(ef.taken), "—")}</table>
+      <div class="muted" style="font-size:11px;line-height:1.4;margin-top:4px">画面＝ステータス画面／戦闘中＝今の敵（ギミック）で、素質・スキル・ロスレコの効果を足した値／防衛戦直後＝防衛戦に入った直後</div></div>`;
   }
 
   // ---- 表示エリア: 巡遊者 ----
@@ -172,7 +157,7 @@
       </div>`;
     };
     return `<div class="cols3">${SLOTS.map(col).join("")}</div>
-      <p class="muted">上のボタン（徽章・素質・ロスレコ・記録レベル…）を押すと、この領域が切り替わります。ステータスが画面と合わないときは、「巡遊者（直接入力）」に画面の値を入れてください（入力した欄だけ上書きして計算します）。</p>`;
+      <p class="muted">各巡遊者の「心相・徽章・素質・その他」で、この中が切り替わります。ステータスが画面と合わないときは、「巡遊者（直接入力）」のタブに画面の値を入れてください（入力した欄だけ上書きして計算します）。</p>`;
   }
   // ---- 巡遊者（直接入力）----
   function renderDirect() {
@@ -328,13 +313,13 @@
     const tagBonus = en => ex.pot[en] ? `<span class="tag-ok">徽章 +${ex.pot[en]}</span>` : "";
     let body = "", note = "";
     if (id === "willow") {
-      body = POTENTIALS.map(x => `<div class="pot${x.core ? " core" : ""}"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ok">反映</span>
-        <div class="muted">${esc(x.text)}</div><div class="lv">${x.core ? "取得(1=あり)" : "Lv"} ${inp(`${p}.pots.${x.id}`, { min: 0, max: 9, step: 1 })}</div></div>`).join("");
-      note = "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計で、重複数数の指定は旧ページ（ウィロー側）にあります。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。";
+      body = POTENTIALS.map(x => `<div class="pot${x.core ? " core" : ""}"><div class="ph"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}</div>
+        <div class="pd" title="${esc(x.text)}">${esc(x.text)}</div><div class="pc"><div class="lv">${x.core ? "取得(1=あり)" : "Lv"} ${inp(`${p}.pots.${x.id}`, { min: 0, max: 9, step: 1, w: 56 })}</div></div></div>`).join("");
+      note = "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。";
     } else if (id === "nazuka" || id === "eleanor") {
-      body = SUP_POTS[id].map(x => `<div class="pot${x.core ? " core" : ""}"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}${x.verified ? '<span class="tag-ok">実測一致</span>' : '<span class="tag-ng">未検証</span>'}
-        <div class="muted">${esc(x.note || x.verified || "")}</div>
-        <div class="lv">Lv ${inp(`${p}.sup.${x.id}.lv`, { min: 0, max: 9, step: 1 })}${x.on === false ? ` 条件を満たす ${inp(`${p}.sup.${x.id}.on`, { chk: 1 })}` : ""}</div></div>`).join("");
+      body = SUP_POTS[id].map(x => `<div class="pot${x.core ? " core" : ""}"><div class="ph"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}${x.verified ? '<span class="tag-ok">実測一致</span>' : '<span class="tag-ng">未検証</span>'}</div>
+        <div class="pd">${esc(x.note || x.verified || "")}</div>
+        <div class="pc"><div class="lv">Lv ${inp(`${p}.sup.${x.id}.lv`, { min: 0, max: 9, step: 1, w: 56 })}${x.on === false ? ` 条件を満たす ${inp(`${p}.sup.${x.id}.on`, { chk: 1 })}` : ""}</div></div></div>`).join("");
       note = "支援として出場したときの素質（検証済みの分だけ効果を反映）。";
     } else if (S.POT_SPEC[id]) {
       const t = TK(c.en);
@@ -348,32 +333,35 @@
       const card = x => {
         const sp = spec[x.name], key = S.potKey(x.name), core = x.type === 1;
         const nm = esc(JA(x.name, id));
-        if (!sp) return `<div class="pot" title="${esc(x.name)}"><b>${nm}</b><span class="tag-ng">計算に未反映</span></div>`;
+        const lvIn = `<div class="lv">${core ? "取得" : "Lv"} ${inp(`${p}.pots2.${key}`, { min: 0, max: core ? 1 : 9, step: 1, w: 56 })}`;
+        if (!sp) return `<div class="pot" title="${esc(x.name)}"><div class="ph"><b>${nm}</b><span class="tag-ng">未反映</span></div><div class="pd">効果がまだ入っていません</div><div class="pc">${lvIn}</div></div></div>`;
         const eff = sp.e.length > 0;
         const onv = (cs.pon || {})[key];
         const on = onv == null ? !sp.off : onv;
         const ctl = [];
         const base = (cs.pots2 || {})[key] || 0;
-        ctl.push(`<div class="lv">${core ? "取得" : "Lv"} ${inp(`${p}.pots2.${key}`, { min: 0, max: core ? 1 : 9, step: 1 })}${base > 0 && ex.pot[x.name] ? ` → Lv${base + ex.pot[x.name]}` : ""}${eff ? ` 反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}>` : ""}</div>`);
+        ctl.push(`${lvIn}${base > 0 && ex.pot[x.name] ? ` → Lv${base + ex.pot[x.name]}` : ""}</div>`);
+        if (eff) ctl.push(`<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>`);
         const seen = {};
         sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; ctl.push(`<div class="lv">${stkIn(key, e)}</div>`); } });
-        sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<div class="lv"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 70 })}<span class="muted">既定 ${e.c}</span></div>`); });
-        return `<div class="pot${core ? " core" : ""}" title="${esc(x.name)}"><b>${nm}</b>${core ? '<span class="tag-ok">コア</span>' : ""}${tagBonus(x.name)}${eff ? '<span class="tag-ok">反映</span>' : '<span class="tag-ng">火力に影響なし/未反映</span>'}${sp.st === "auto" || sp.st === "draft" ? '<span class="tag-ng">下書き</span>' : ""}${sp.off ? '<span class="tag-ng">既定は反映しない</span>' : ""}
-          <div class="muted">${esc(sp.txt)}</div>${ctl.join("")}</div>`;
+        sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<div class="lv"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 56, ph: e.c })}</div>`); });
+        const tags = (core ? '<span class="tag-ok">コア</span>' : "") + tagBonus(x.name) + (eff ? "" : '<span class="tag-ng">火力に影響なし</span>') + (sp.st === "auto" || sp.st === "draft" ? '<span class="tag-ng">下書き</span>' : "") + (sp.off ? '<span class="tag-ng">既定は反映しない</span>' : "");
+        return `<div class="pot${core ? " core" : ""}" title="${esc(x.name)}"><div class="ph"><b>${nm}</b>${tags}</div>
+          <div class="pd" title="${esc(sp.txt)}">${esc(sp.txt)}</div><div class="pc">${ctl.join("")}</div></div>`;
       };
       const groups = t.potentials[role] || [];
       const builds = groups.filter(g => !/Generic/i.test(g.title)), generic = groups.find(g => /Generic/i.test(g.title));
       const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
-      const grid = (arr, cols) => `<div class="pgrid" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${arr.map(card).join("")}</div>`;
-      const coreRow = `<div class="pgrid" style="grid-template-columns:repeat(${Math.max(1, builds.length)},minmax(0,1fr));gap:14px">${builds.map(g => `<div><div class="phead">コア：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1), 2)}</div>`).join("")}</div>`;
-      const subRows = builds.map(g => `<div class="phead">${roleJa}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("");
-      const genRow = generic ? `<div class="phead">汎用</div>${grid(generic.potentials, 3)}` : "";
-      body = `<div style="grid-column:1/-1">${coreRow}${subRows}${genRow}</div>`;
+      // 特化構築ごとに1行（コア2つ＋サブ3つ）、汎用はその下。どの行も同じ5列で、カードの幅と高さをそろえる
+      const grid = arr => `<div class="pgrid">${arr.map(card).join("")}</div>`;
+      const buildRows = builds.map(g => `<div class="phead">${roleJa}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1).concat(g.potentials.filter(x => x.type !== 1)))}`).join("");
+      const genRow = generic ? `<div class="phead">汎用</div>${grid(generic.potentials)}` : "";
+      body = `<div style="grid-column:1/-1">${buildRows}${genRow}</div>`;
       note = "名前は日本語（マウスを重ねると英語名）。効果は原文を読んで分類した内容を表の下に書いています。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。";
     } else {
       const t = TK(c.en), groups = (t.potentials[k === "main" ? "main" : "support"] || []);
-      body = groups.map(g => g.potentials.map(x => `<div class="pot${x.type === 1 ? " core" : ""}" title="${esc(x.name)}"><b>${esc(JA(x.name, id))}</b>${x.type === 1 ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ng">計算に未反映</span>
-        <div class="lv">Lv ${inp(`${p}.pots2.${x.name.replace(/[^A-Za-z0-9]/g, "_")}`, { min: 0, max: 9, step: 1 })}</div></div>`).join("")).join("");
+      body = groups.map(g => g.potentials.map(x => `<div class="pot${x.type === 1 ? " core" : ""}" title="${esc(x.name)}"><div class="ph"><b>${esc(JA(x.name, id))}</b>${x.type === 1 ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ng">未反映</span></div>
+        <div class="pc"><div class="lv">Lv ${inp(`${p}.pots2.${x.name.replace(/[^A-Za-z0-9]/g, "_")}`, { min: 0, max: 9, step: 1, w: 56 })}</div></div></div>`).join("")).join("");
       note = "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「その他」に手で入れられます。";
     }
     return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3><p class="muted">ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。</p><div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
@@ -391,14 +379,28 @@
   // ---- ロスレコ・音符 ----
   function renderLr() {
     const L = LOSTRECORDS;
-    const nm = id => { const r = L.find(x => x.id === id); return r ? r.name + "（" + r.element + "）" : "（なし）"; };
+    // 枠: クリア → 属性 → 名前（徽章と同じ形）。属性だけ選んだ状態は画面の中だけで持つ
+    const ELS = ["水", "火", "風", "地", "光", "闇"].filter(e => L.some(x => x.element === e)).concat([...new Set(L.map(x => x.element))].filter(e => ["水", "火", "風", "地", "光", "闇"].indexOf(e) < 0));
     const slot = (arr, i, lab) => {
-      const path = `${arr}.${i}`, open = V.lrPick === path, cur = (G[arr] || [])[i] || "";
-      const list = `<div class="picker"><div class="sel-row"><button class="sbtn${cur === "" ? " on" : ""}" data-act="lrset:${path}:">（なし）</button>${L.map(x => `<button class="sbtn${cur === x.id ? " on" : ""}" data-act="lrset:${path}:${x.id}">${esc(x.name)}<small>（${x.element}）</small></button>`).join("")}</div></div>`;
-      return `<div class="emb-slot"><span class="muted">${lab}</span> <button class="slotbtn${open ? " on" : ""}" data-act="lrpick:${path}">${esc(nm(cur))}</button>${open ? list : ""}</div>`;
+      const path = `${arr}.${i}`, cur = (G[arr] || [])[i] || "", r = L.find(x => x.id === cur);
+      const el = V.lrEl[path] != null ? V.lrEl[path] : (r ? r.element : "");
+      const names = L.filter(x => !el || x.element === el);
+      return `<div class="lr-line"><span class="lab">${lab}</span><button class="obtn" data-act="lrclear:${path}" style="min-height:30px">クリア</button>
+        <select data-lrel="${path}"><option value="">（属性）</option>${ELS.map(e => `<option${e === el ? " selected" : ""}>${e}</option>`).join("")}</select>
+        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(x.name)}</option>`).join("")}</select></div>`;
     };
     const m = "lrManual";
-    const noteIn = S.NOTE_KEYS.map(n => fld(n, inp(`notes.${esc(n)}`, { min: 0, max: 99, step: 1, w: 80 }), NOTES[n] ? "1Lvあたり " + pct(NOTES[n].perLv) : "")).join("");
+    // 音符: ゲームと同じく、色と名前 → 数 → 効果 を縦に並べ、1行にする
+    const NC = { 強撃: "#E5533D", 幸運: "#F08A24", 爆発: "#8B5CF6", 体力: "#3FB65F", 集中: "#1FB5A8", 器用: "#3B6FE0", 必殺: "#E84D8A", 水: "#2BA6DE", 風: "#55C27A", 光: "#E8B10F", 火: "#E5533D", 地: "#A0703C", 闇: "#6B4FA0" };
+    const STN = { atkPct: "攻撃力", critRate: "会心率", critDmg: "会心ダメージ", hpPct: "最大HP", basicDmg: "通常攻撃ダメージ", skillDmg: "スキルダメージ", ultDmg: "必殺技ダメージ" };
+    const tot = S.notesTotal(G);
+    const r1 = x => (Math.round(x * 1000) / 10).toFixed(1);
+    const noteIn = S.NOTE_KEYS.map(n => {
+      const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, own = (G.notes || {})[n] || 0;
+      const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメージ") : "";
+      return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>${inp(`notes.${esc(n)}`, { min: 0, max: 99, step: 1 })}
+        <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div><div class="note-per">1Lvで +${d ? Math.round(d.perLv * 10000) / 100 : 0}%${t !== own ? `<br>サブの初期 +${t - own}` : ""}</div></div>`;
+    }).join("");
     const counts = S.LR_COUNTS.map(c => fld(c.label, inp(`lrN.${c.key}`, { min: 0, max: c.max, step: 1, w: 70 }), `最大 ${c.max}`)).join("");
     // メインのロスレコの効果
     const fxHtml = (G.lrMain || []).filter(Boolean).map(id => {
@@ -420,10 +422,10 @@
       return `<div class="pot core" style="grid-column:1/-1"><b>${esc(r.name)}</b> <span class="muted">コア効果</span>${core}${as ? `<div class="muted" style="margin-top:6px">アシスト効果（音符のレベルで自動で解放）</div>${as}` : ""}</div>`;
     }).join("");
     return `<div class="wide"><h3>ロスレコ・音符</h3>
-      <div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div>
+      <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div>${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
       <p class="muted">ロスレコの基礎攻撃力・基礎HP・属性ダメージ%は、全員に入ります（属性が違うロスレコの属性ダメージは、その属性の巡遊者だけ）。コア効果・アシスト効果は、メインのものだけです。</p>
-      <h3 style="margin-top:12px;font-size:14px">音符（探索で獲得した分を入力。サブのロスレコの初期音符は自動で足します）</h3>
-      <div class="grid-in">${noteIn}</div><p class="note">合計: ${S.NOTE_KEYS.map(n => { const t = (S.notesTotal(G)[n] || 0); return t ? n.replace("の音符", "") + " " + t : ""; }).filter(Boolean).join(" ／ ") || "なし"}</p>
+      <h3 style="margin-top:12px;font-size:14px">音符効果（探索で獲得した数を入力。サブのロスレコの初期音符は自動で足します）</h3>
+      <div class="notes-row">${noteIn}</div>
       <h3 style="margin-top:12px;font-size:14px">効果の数（暁光・星願など。戦闘中のある時点を想定して入力）</h3>
       <div class="grid-in">${counts}</div>
       <h3 style="margin-top:12px;font-size:14px">メインのロスレコの効果</h3>
@@ -477,7 +479,13 @@
     else if (V.panel === "gimmick") h = renderGimmick();
     else if (V.panel === "adjust") h = renderAdjust();
     else h = renderOverview();
-    $("display").innerHTML = (V.panel === "overview" ? "" : `<div style="margin-bottom:8px"><button class="btn-add" data-act="panel:overview">← 巡遊者に戻る</button></div>`) + h;
+    // 巡遊者ごとの画面（心相・徽章・素質・その他）では、戻るボタンと、同じ巡遊者のほかの画面へのボタンを出す
+    let nav = "";
+    if (/^(emb|heart|pot|add)$/.test(a)) {
+      const nb = (p, l) => `<button class="tab" aria-selected="${a === p}" data-act="panel:${p}:${b}">${l}</button>`;
+      nav = `<div class="subnav"><button class="btn-add" data-act="panel:overview">← 巡遊者に戻る</button><div class="tabs" style="margin:0">${nb("heart", "心相")}${nb("emb", "徽章")}${nb("pot", "素質")}${nb("add", "その他")}</div></div>`;
+    }
+    $("display").innerHTML = nav + h;
   }
 
   // ---- 結果 ----
@@ -528,10 +536,13 @@
     panel.style.display = "";
     const sm = it[2];
     $("drillTitle").textContent = `${it[1]}の内訳（${chOf(it[3]).jp}）`;
-    $("drill").innerHTML = `<div class="tbl-wrap"><table><tr><th>ヒット</th><th>種別</th><th>倍率%</th><th>回数</th><th>非会心</th><th>会心</th><th>期待値</th><th>小計</th></tr>
-      ${sm.rows.map(r => `<tr><td>${esc(r.name)}</td><td>${E.TYPE_NAME[r.type]}</td><td>${f3(r.mult)}</td><td>${r.count}</td><td>${fmt(r.normal)}</td><td>${fmt(r.crit)}</td><td>${fmt(r.avg)}</td><td>${fmt(r.total)}</td></tr>
-      <tr><td colspan="8" class="muted" style="text-align:left">属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}／会心率 ${pct(r.rate)}</td></tr>`).join("")}
-      <tr class="sum"><td>合計</td><td></td><td>${f3(sm.mult)}</td><td></td><td>${fmt(sm.non)}</td><td>${fmt(sm.crit)}</td><td></td><td>${fmt(sm.exp)}</td></tr></table></div>`;
+    // 列は5つに絞り、非会心・会心と倍率の内訳は2行目に折り返して出す（結果の列の幅に収める）
+    $("drill").innerHTML = `<table><colgroup><col style="width:36%"><col style="width:15%"><col style="width:9%"><col style="width:18%"><col style="width:22%"></colgroup>
+      <tr><th>ヒット</th><th>倍率%</th><th>回数</th><th>期待値</th><th>小計</th></tr>
+      ${sm.rows.map(r => `<tr><td class="dn">${esc(r.name)}<small>${E.TYPE_NAME[r.type]}</small></td><td>${f3(r.mult)}</td><td>${r.count}</td><td>${fmt(r.avg)}</td><td><b>${fmt(r.total)}</b></td></tr>
+      <tr><td colspan="5" class="muted" style="text-align:left;font-size:11px">非会心 ${fmt(r.normal)}／会心 ${fmt(r.crit)}（会心率 ${pct(r.rate)}）／属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}</td></tr>`).join("")}
+      <tr class="sum"><td>合計</td><td>${f3(sm.mult)}</td><td></td><td></td><td>${fmt(sm.exp)}</td></tr>
+      <tr><td colspan="5" class="muted" style="text-align:left;font-size:11px">非会心 ${fmt(sm.non)}／会心 ${fmt(sm.crit)}</td></tr></table>`;
   }
 
   function renderAll() {
@@ -545,6 +556,18 @@
   document.addEventListener("change", ev => {
     const t = ev.target;
     if (t.id === "bsel" || t.id === "bname") return;
+    // ロスレコの枠: 属性を変えたら、違う属性のロスレコは外す
+    const lrel = t.getAttribute && t.getAttribute("data-lrel"), lrid = t.getAttribute && t.getAttribute("data-lrid");
+    if (lrel || lrid) {
+      const path = lrel || lrid, [arr, i] = path.split(".");
+      G[arr] = G[arr] || [];
+      if (lrel) {
+        V.lrEl[path] = t.value;
+        const r = LOSTRECORDS.find(x => x.id === G[arr][+i]);
+        if (r && t.value && r.element !== t.value) G[arr][+i] = "";
+      } else { G[arr][+i] = t.value; delete V.lrEl[path]; }
+      renderAll(); return;
+    }
     const p = t.getAttribute && t.getAttribute("data-p");
     if (!p) return;
     const ty = t.getAttribute("data-t");
@@ -581,8 +604,7 @@
     if (a.indexOf("tf:") === 0) { V.tilesFor = a.slice(3); renderAll(); return; }
     if (a.indexOf("drill:") === 0) { const k = a.slice(6); V.drill = V.drill === k ? null : k; renderAll(); return; }
     if (a.indexOf("embclear:") === 0) { embClear(a); renderAll(); return; }
-    if (a.indexOf("lrpick:") === 0) { const p = a.slice(7); V.lrPick = V.lrPick === p ? null : p; renderAll(); return; }
-    if (a.indexOf("lrset:") === 0) { const [, p, id] = a.split(":"); const [arr, i] = p.split("."); G[arr] = G[arr] || []; G[arr][+i] = id; V.lrPick = null; renderAll(); return; }
+    if (a.indexOf("lrclear:") === 0) { const p = a.slice(8), [arr, i] = p.split("."); G[arr] = G[arr] || []; G[arr][+i] = ""; delete V.lrEl[p]; renderAll(); return; }
     let builds = {};
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     if (a === "bsave") { const n = $("bname").value.trim(); if (!n) return; builds[n] = clone(G); try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } renderTop(); }
@@ -601,8 +623,6 @@
       const code = $("scode").value; shareCode = code;
       S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "コードを読み込みました"; renderAll(); }).catch(e => { shareMsg = e.message || "読み込めませんでした"; renderTop(); });
     }
-    else if (a === "preset-t3") { G = presetTest3(); renderAll(); }
-    else if (a === "preset-hc") { G = presetHC(); renderAll(); }
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
   });
   renderAll();

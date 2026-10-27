@@ -82,21 +82,80 @@
   .pcat-h { font-size: 12px; font-weight: 900; color: var(--indigo); margin: 4px 0 2px; }
   .sbtn small { font-weight: 400; margin-left: 2px; }
   @media (max-width: 1500px) { .app { grid-template-columns: minmax(0, 1fr) 480px; } .tiles { grid-template-columns: repeat(3, 1fr); } }
+
+  /* ---- リキッドグラス風（半透明の面＋背景のぼかし） ---- */
+  :root { --glass: rgba(255,255,255,.58); --glass-2: rgba(255,255,255,.42); --glass-line: rgba(255,255,255,.85); --glass-shadow: 0 10px 34px rgba(60,66,130,.13); }
+  body { background: #EEF0FA; background-image: none; }
+  body::before { content: ""; position: fixed; inset: -10%; z-index: -1; pointer-events: none;
+    background: radial-gradient(40% 45% at 12% 18%, #c9d2ff 0, transparent 70%), radial-gradient(38% 40% at 88% 12%, #ffd6e2 0, transparent 70%),
+      radial-gradient(45% 50% at 70% 85%, #c8f1f2 0, transparent 70%), radial-gradient(35% 40% at 20% 90%, #f3e3ff 0, transparent 70%), #EEF0FA; filter: blur(10px); }
+  .site-header { background: var(--glass); backdrop-filter: blur(20px) saturate(170%); -webkit-backdrop-filter: blur(20px) saturate(170%); border-bottom: 1px solid var(--glass-line); position: sticky; top: 0; z-index: 30; }
+  .site-header .wrap { padding-top: 8px; padding-bottom: 8px; }
+  .topbar { display: flex; gap: 6px; align-items: center; padding: 0; flex-wrap: nowrap; font-size: 13px; }
+  .topbar input[type=text], .topbar select { min-height: 34px; border: 1px solid var(--glass-line); background: var(--glass-2); border-radius: 10px; padding: 0 10px; }
+  .topbar .btn-add { min-height: 34px; padding: 0 12px; font-size: 13px; }
+  .topbar .sep { width: 1px; height: 22px; background: var(--border-strong); margin: 0 6px; }
+  .panel { background: var(--glass); backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%); border: 1px solid var(--glass-line); box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.9); border-radius: 22px; }
+  .tile, .chcol, .wide, .box, .pot, .emb-card { background: var(--glass-2); border: 1px solid var(--glass-line); box-shadow: 0 2px 10px rgba(60,66,130,.06), inset 0 1px 0 rgba(255,255,255,.8); }
+  .wide { border-radius: 16px; }
+  .tile.pink { background: rgba(251,228,233,.7); border-color: rgba(201,99,122,.35); }
+  .btn-add { background: var(--glass); border: 1px solid var(--glass-line); box-shadow: 0 2px 8px rgba(60,66,130,.08); }
+  .btn-add:hover { border-color: var(--indigo); }
+  .obtn { background: rgba(253,235,211,.75); border: 1px solid #E3B27A; }
+  select, input[type=number] { background: rgba(255,255,255,.7); border: 1px solid var(--border); }
+  /* タブ（選択と表示を1つに） */
+  .tabs { display: flex; gap: 4px; padding: 5px; margin: 0 0 12px; background: var(--glass-2); border: 1px solid var(--glass-line); border-radius: 999px; position: static; overflow-x: auto; }
+  .tab { flex: none; min-height: 38px; padding: 0 18px; border-radius: 999px; border: 0; background: transparent; color: var(--indigo); font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .tab:hover { background: rgba(255,255,255,.7); }
+  .tab[aria-selected="true"] { background: linear-gradient(180deg, #5b61a0, #444a7c); color: #fff; box-shadow: 0 4px 12px rgba(68,74,124,.3); }
+  .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .subnav .btn-add { min-height: 34px; }
+  /* ステータスの表（画面・戦闘中・防衛戦直後） */
+  .stt { width: 100%; font-size: 12px; table-layout: fixed; margin: 0; }
+  .stt th, .stt td { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stt th { font-size: 11px; text-align: right; }
+  .stt th:first-child, .stt td:first-child { text-align: left; width: 34%; color: var(--muted); font-weight: 700; }
+  .stt td.bt { background: rgba(10,190,197,.08); font-weight: 700; color: var(--indigo); }
+  .stt th.bt { color: var(--link); }
+  /* 素質カード: 見出し・説明・操作を上下にそろえる */
+  .pot { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .pot .ph { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .pot .ph b { margin-right: 2px; }
+  .pot .pd { color: var(--muted); font-size: 12px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .pot .pc { margin-top: auto; padding-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+  .pot .pc .lv { margin: 0; }
+  .pot .tag-ok, .pot .tag-ng { margin-left: 0; }
+  .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  /* ロスレコの枠（徽章と同じ形） */
+  .lr-line { display: grid; grid-template-columns: 64px 80px 130px 260px; gap: 6px; align-items: center; margin: 5px 0; }
+  .lr-line select { width: 100%; min-height: 34px; padding: 0 8px; border-radius: 8px; font-size: 13px; }
+  .lr-line .lab { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .lr-cols { display: grid; grid-template-columns: repeat(2, max-content); gap: 0 32px; }
+  /* 音符（ゲームと同じく、色と名前の下に数、その下に効果） */
+  .notes-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; }
+  .note-cell { text-align: center; padding: 8px 4px; border-radius: 14px; background: var(--glass-2); border: 1px solid var(--glass-line); border-top: 4px solid var(--nc); }
+  .note-ic { width: 30px; height: 30px; margin: 0 auto 2px; border-radius: 50%; background: var(--nc); color: #fff; font-weight: 900; line-height: 30px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.15); }
+  .note-nm { font-size: 12px; font-weight: 900; color: var(--indigo); }
+  .note-cell input[type=number] { width: 100%; text-align: center; min-height: 34px; font-weight: 900; font-size: 16px; padding: 0 4px; margin: 2px 0; }
+  .note-fx { font-size: 11px; color: var(--muted); line-height: 1.35; min-height: 30px; }
+  .note-fx b { font-size: 13px; color: var(--indigo); }
+  .note-per { font-size: 10px; color: var(--muted); }
+  /* 内訳の表（横にはみ出さない） */
+  #drill table { table-layout: fixed; width: 100%; }
+  #drill th, #drill td { white-space: normal; word-break: break-all; }
+  #drill .dn small { display: block; color: var(--muted); font-size: 11px; }
 </style>
 </head>
 <body>
 <header class="site-header"><div class="wrap">
   <span class="logo-ja">巡遊者ダメージ計算</span><span class="logo-en">DAMAGE SIM</span>
   <span style="flex:1"></span>
-  <a class="btn-add" href="index.html" style="display:inline-flex;align-items:center;text-decoration:none">ウィロー側の検証ページ</a>
-  <a class="btn-add" href="lux.html" style="display:inline-flex;align-items:center;text-decoration:none">光チームの検証ページ</a>
+  <div class="topbar" id="topbar"></div>
 </div></header>
-<div class="topbar" id="topbar"></div>
 <div class="app">
   <div id="left">
-    <div class="panel"><h2><span class="en">MULTIPLIERS</span>倍率表示エリア（種類を問わない共通の倍率）<span class="muted" id="tilesFor"></span></h2><div class="tiles" id="tiles"></div></div>
-    <div class="panel"><h2><span class="en">SELECT</span>選ぶと下のエリアが変わります</h2><div id="selectors"></div></div>
-    <div class="panel"><h2><span class="en">DISPLAY</span>表示エリア</h2><div id="display"></div></div>
+    <div class="panel"><h2><span class="en">MULTIPLIERS</span>共通の倍率<span class="muted" id="tilesFor"></span></h2><div class="tiles" id="tiles"></div></div>
+    <div class="panel"><div class="tabs" id="selectors" role="tablist"></div><div id="display"></div></div>
   </div>
   <div id="right">
     <div class="panel"><h2><span class="en">RESULT</span>結果表示エリア<span class="muted">（ピンクをクリックで内訳）</span><span style="flex:1"></span><span id="cmpbar" style="display:inline-flex;gap:6px;align-items:center"></span></h2><div id="result"></div></div>
