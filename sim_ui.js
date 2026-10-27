@@ -81,7 +81,7 @@
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
     $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <button class="btn-add pri" data-act="dlg-open">共有・読み込み</button><button class="btn-add" data-act="reset">全初期化</button>`;
+      <button class="btn-add pri" data-act="dlg-open">共有・読み込み</button><button class="btn-add" data-act="rp-open">誤りの報告</button><button class="btn-add" data-act="reset">全初期化</button>`;
     // 共有・読み込みのポップアップ（プリセットコード・共有コード・共有URL それぞれ 読込・作成・コピー、ブラウザへの保存）
     const row = (key, label, note, ph) => `<div class="row"><label for="dv-${key}">${label} <span class="muted" style="font-weight:400">${note}</span></label>
       <div class="line"><input type="text" id="dv-${key}" value="${esc(DV[key])}" placeholder="${ph}" spellcheck="false">
@@ -660,6 +660,10 @@
     else if (a === "dlg-open") { DM.preset = DM.code = DM.url = null; renderTop(); $("shareDlg").showModal(); }
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
+    else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
+    else if (a === "rp-close") $("reportDlg").close();
+    else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta-closed", "1"); } catch (e) { /* 無視 */ } }
+    else if (a === "rp-send") sendReport();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
   });
@@ -724,7 +728,39 @@
     }).catch(e => { if (w) w.close(); say("url", e.message, true); });
   }
 
+  // ---- 誤りの報告（β版の間）。送った内容はサーバーのデータベースに入り、あとで確認する。今の入力（共有コード）を添えると同じ状態を再現できる ----
+  const RP = { kind: "", body: "", contact: "", attach: true, msg: null, done: false, busy: false };
+  const RP_KINDS = ["計算式・数値", "素質の効果", "ロスレコ・音符", "徽章・ステータス", "表示・使い方", "その他"];
+  function renderReport() {
+    const team = [G.team.main, G.team.s1, G.team.s2].map(id => chOf(id).jp).join("・");
+    $("reportBody").innerHTML = `<h2 id="reportDlgT"><span class="en">REPORT</span>誤りの報告</h2>
+      <p class="muted" style="margin:0">β版なので、まちがっている所がまだあると思います。計算の数値がゲームと合わない、素質やロスレコの効果がちがう、ここが使いにくい…など、なんでも気軽に教えてください！（返信はできないこともあります）</p>
+      ${RP.done ? `<p class="msg ok" style="font-size:14px;margin-top:14px">送りました。教えてくれてありがとうございます！</p><div class="foot"><button class="btn-add" data-act="rp-close">閉じる</button></div>` : `
+      <div class="row"><label for="rp-kind">種類</label><select id="rp-kind"><option value="">（選んでください）</option>${RP_KINDS.map(k => `<option${RP.kind === k ? " selected" : ""}>${k}</option>`).join("")}</select></div>
+      <div class="row"><label for="rp-body">内容 <span class="muted" style="font-weight:400">（どこが・どう違うか。ゲーム内の値が分かれば、その値も）</span></label>
+        <textarea id="rp-body" maxlength="2000" placeholder="例：セイナ(原点)の主力スキルの長剣のダメージが、ゲーム内では 123,456 だった（計算では 120,000）">${esc(RP.body)}</textarea></div>
+      <div class="row"><label for="rp-contact">連絡先 <span class="muted" style="font-weight:400">（任意。XのIDなど。詳しく聞きたいときに使います）</span></label><input type="text" class="wide" id="rp-contact" maxlength="100" value="${esc(RP.contact)}"></div>
+      <div class="row"><label class="check" style="font-weight:400;margin:0"><input type="checkbox" id="rp-attach"${RP.attach ? " checked" : ""}>今の入力を添付する（編成：${esc(team)}。同じ状態を再現して確かめるのに使います）</label></div>
+      <div class="msg${RP.msg && RP.msg.ng ? " ng" : ""}">${esc((RP.msg || {}).t || "")}</div>
+      <div class="foot"><button class="btn-add" data-act="rp-close">閉じる</button><button class="btn-add pri" data-act="rp-send"${RP.busy ? " disabled" : ""} style="background:var(--accent);border-color:var(--accent);font-weight:900">送る</button></div>`}`;
+  }
+  function sendReport() {
+    RP.kind = $("rp-kind").value; RP.body = $("rp-body").value.trim(); RP.contact = $("rp-contact").value.trim(); RP.attach = $("rp-attach").checked;
+    if (!RP.kind) { RP.msg = { t: "種類を選んでください", ng: true }; return renderReport(); }
+    if (RP.body.length < 5) { RP.msg = { t: "内容を5文字以上で書いてください", ng: true }; return renderReport(); }
+    RP.busy = true; RP.msg = { t: "送っています…" }; renderReport();
+    const ver = ((document.querySelector('script[src*="sim_ui.js"]') || {}).src || "").split("v=")[1] || "";
+    const team = [G.team.main, G.team.s1, G.team.s2].map(id => chOf(id).jp).join("・");
+    (RP.attach ? S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2]) : Promise.resolve(null))
+      .then(code => fetch("/api/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: RP.kind, body: RP.body, contact: RP.contact, code, team, ver }) }))
+      .then(r => r.json().catch(() => ({ error: "この環境では送れません（公開しているページで使えます）" })))
+      .then(j => { RP.busy = false; if (j.ok) { RP.done = true; RP.body = ""; RP.msg = null; } else RP.msg = { t: j.error || "送れませんでした", ng: true }; renderReport(); })
+      .catch(() => { RP.busy = false; RP.msg = { t: "送れませんでした（通信の失敗）", ng: true }; renderReport(); });
+  }
+
   renderAll();
+  // β版のお知らせ（閉じたら、このブラウザでは次から出さない）
+  try { if (!localStorage.getItem("stellasora-sim-beta-closed")) $("betabar").hidden = false; } catch (e) { $("betabar").hidden = false; }
   // URLから読み込む（読み込んだらURLからは消す）: #c=共有コード（短縮URLから移動してきたとき）、#p=プリセットコード（プリセット共有サイトなどから）
   const hc = location.hash;
   if (hc.indexOf("#c=") === 0 || hc.indexOf("#p=") === 0) {

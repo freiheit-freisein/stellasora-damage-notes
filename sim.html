@@ -122,6 +122,14 @@
   .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .subnav .tabs { border: 0; padding: 0; }
   .subnav .tab { min-height: 36px; }
+  .betabar { margin: 10px 12px 0; padding: 8px 44px 8px 14px; border-radius: 14px; background: #FFF6DA; border: 2px solid var(--yellow); font-size: 13px; color: var(--text); position: relative; line-height: 1.6; }
+  .betabar b { color: var(--indigo); margin-right: 4px; }
+  .betabar .linkbtn { border: 0; background: none; padding: 0 2px; color: var(--link); font-weight: 900; text-decoration: underline; cursor: pointer; font-size: 13px; }
+  .betabar .closebtn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; }
+  .betabar .closebtn:hover { background: rgba(0,0,0,.06); }
+  .beta { display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: var(--pink-soft); border: 2px solid var(--pink-line); color: var(--text); font-size: 12px; font-weight: 900; cursor: help; }
+  .dlg textarea { width: 100%; min-height: 140px; border: 2px solid var(--border); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; resize: vertical; }
+  .dlg .row select, .dlg .row input[type=text].wide { width: 100%; min-height: 40px; border: 2px solid var(--border); border-radius: 10px; padding: 0 10px; }
   .xbtn { background: #1E2250 !important; color: #fff !important; border-color: #1E2250 !important; font-weight: 900; }
   /* 共有・読み込みのポップアップ */
   .dlg { width: min(760px, calc(100vw - 24px)); border: 2px solid var(--border); border-radius: 18px; padding: 18px; color: var(--text); box-shadow: 0 16px 48px rgba(30,34,80,.25); }
@@ -230,13 +238,15 @@
 <body class="m-in">
 <header class="site-header"><div class="wrap">
   <svg class="logo-star" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>
-  <span class="logo-ja">巡遊者の計算ノート</span><span class="logo-en">FOR STELLA SORA</span>
+  <span class="logo-ja">巡遊者の計算ノート</span><span class="logo-en">FOR STELLA SORA</span><span class="beta" title="β版：検証中です。計算の誤りなどは「誤りの報告」から教えてください">β版</span>
   <span style="flex:1"></span>
   <div class="topbar" id="topbar"></div>
 </div></header>
 <div class="mstrip" id="mstrip"></div>
+<div class="betabar" id="betabar" hidden><b>β版です。</b>計算がまちがっていることもあるので、ゆるしてね。気づいたことがあったら<button type="button" class="linkbtn" data-act="rp-open">誤りの報告</button>から教えてもらえると、とてもうれしいです！<button type="button" class="closebtn" data-act="beta-close" aria-label="お知らせを閉じる">×</button></div>
 <nav class="mbar" id="mbar" aria-label="表示の切り替え"></nav>
 <dialog id="shareDlg" class="dlg" aria-labelledby="shareDlgT"><div id="shareBody"></div></dialog>
+<dialog id="reportDlg" class="dlg" aria-labelledby="reportDlgT"><div id="reportBody"></div></dialog>
 <div class="app">
   <div id="left">
     <div class="panel"><h2><span class="en">MULTIPLIERS</span>共通の倍率<span class="muted" id="tilesFor"></span></h2><div class="tiles" id="tiles"></div></div>
