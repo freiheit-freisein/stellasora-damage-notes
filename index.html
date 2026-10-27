@@ -182,13 +182,13 @@
       <div class="card">
         <h2><span class="en">SUPPORT POTENTIALS</span>支援の素質（ナツカ・エレノア）</h2>
         <hr class="dotted-rule">
-        <label>ウィローのチーム効果の重なり率（%）<input type="number" id="willowStk" min="0" max="100" step="5" value="0"></label>
+        <label>ウィローのチーム効果の重複数率（%）<input type="number" id="willowStk" min="0" max="100" step="5" value="0"></label>
         <div class="note">ウィローの素質（七彩・浮光・砕沫の余韻・着地からの跳躍・風に乗る泡雲・ビーチ管制）が、風属性の支援に乗る割合。0=何も発動していない／100=最大スタック。</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">
-          <label>フロッグのATK効果の重なり（0〜5）<input type="number" id="willowFrog" min="0" max="5" step="1" value="0"></label>
-          <label>必殺技のATK効果の重なり（0〜5）<input type="number" id="willowUlt" min="0" max="5" step="1" value="0"></label>
+          <label>フロッグのATK効果の重複数（0〜5）<input type="number" id="willowFrog" min="0" max="5" step="1" value="0"></label>
+          <label>必殺技のATK効果の重複数（0〜5）<input type="number" id="willowUlt" min="0" max="5" step="1" value="0"></label>
         </div>
-        <div class="note" style="margin-top:6px">ウィローのチーム効果を重なり数で個別に指定（空欄=上の重なり率）。泡雲・ビーチ管制は 0/1。</div>
+        <div class="note" style="margin-top:6px">ウィローのチーム効果を重複数数で個別に指定（空欄=上の重複数率）。泡雲・ビーチ管制は 0/1。</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <label>泡雲<input type="number" id="wn_cumulus" min="0" max="1" style="width:60px"></label>
           <label>砕沫の余韻<input type="number" id="wn_saibotsu" min="0" max="8" style="width:60px"></label>
@@ -199,7 +199,7 @@
           <label>ボスのレベル<input type="number" id="bossLv" min="1" max="30" value="1" style="width:60px"></label>
         </div>
         <div id="supPots"></div>
-        <div class="note">「反映」を外すと効果を入れません。「重なり」は重なる回数（空欄=最大）。Lvは徽章込みの実効レベル。</div>
+        <div class="note">「反映」を外すと効果を入れません。「重複数」は重なる回数（空欄=最大）。Lvは徽章込みの実効レベル。</div>
       </div>
 
       <div class="card">

@@ -815,7 +815,7 @@ window.TEST_CTX = Object.assign({}, TEST2_CTX, {
 // 「テスト用」のエレノア（支援スキルの終盤＝お嬢様の本気3重・リーダーの片鱗10重・爆発9重のとき）
 window.TEST_PLATEAU_CTX = JSON.parse(JSON.stringify(TEST_CTX));
 Object.assign(window.TEST_PLATEAU_CTX.sup.eleanor, { echo: { lv: 6, on: true }, ampl: { lv: 7, on: true } });
-// ウィローのチーム効果（メガホン中・ナツカの支援スキル）の当てはめ。重なり数は実測の倍率からの推定（砕沫の余韻と七彩は同じエコーウェーブ起点なので同数程度）
+// ウィローのチーム効果（メガホン中・ナツカの支援スキル）の当てはめ。重複数数は実測の倍率からの推定（砕沫の余韻と七彩は同じエコーウェーブ起点なので同数程度）
 window.TEST_W1_CTX = Object.assign(JSON.parse(JSON.stringify(TEST_CTX)), { willowN: { cumulus: 1, saibotsu: 0, nanairo: 4, chakuchi: 1 }, bossLv: 1 });
 window.TEST_W2_CTX = Object.assign(JSON.parse(JSON.stringify(TEST_CTX)), { willowN: { cumulus: 1, saibotsu: 8, nanairo: 1, chakuchi: 1 }, bossLv: 4 });
 window.TEST_W3_CTX = Object.assign(JSON.parse(JSON.stringify(TEST_CTX)), { willowN: { cumulus: 1, saibotsu: 3, nanairo: 4, yurameku: 1, chakuchi: 1 }, bossLv: 7 });

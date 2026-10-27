@@ -1,7 +1,7 @@
 // 支援キャラ（ナツカ・エレノア）の素質の効果。数値は data/trekkers.js（Wiki）の nums から取る（Lv7〜9は直線外挿）。
 // effects[].k: atkPct=自分の攻撃力% / W=自分の風属性ダメージ加算 / Bs・Bb=スキル・通常攻撃ダメージ加算 / mult=ヒットの倍率を (1+x) 倍 /
 //   taken=敵の風属性被ダメージ（別枠の乗算）/ critRate・critDmg / atkPctHit=そのヒットだけの攻撃力% / count=ヒット数の倍率
-// num: wiki nums の何番目の配列か。stk: 最大重なり（値に掛ける）。hit: 効く対象（省略=全ヒット）。team: 風属性のアタッカー・バランサーの味方全員に効く。
+// num: wiki nums の何番目の配列か。stk: 最大重複数（値に掛ける）。hit: 効く対象（省略=全ヒット）。team: 風属性のアタッカー・バランサーの味方全員に効く。
 // over: レベルごとの実測値（Wikiの丸め誤差を避ける。例 花嵐の加護 Lv8=125%）。
 // on: 初期の「反映」（false=条件が重い・未検証のもの）。verified: 実測で確認した効果。
 window.SUP_HITS = {
@@ -42,7 +42,7 @@ window.SUP_POTS = {
     { id: "resonance", en: "Wind Resonance", jp: "(未確認)", effects: [{ k: "atkPct", num: 0 }], on: false, note: "風の印が発動した時から3秒" },
     { id: "ampl", en: "Power Amp", jp: "リーダーの片鱗", effects: [{ k: "W", num: 0, stk: 10, team: true, over: { 7: 0.0575 } }], on: false, verified: "Lv7=5.75%/重（最大スタックの実測から逆算・仮置き）", note: "エレノアがダメージを与えるたびに風属性の味方全員の風ダメージ（5秒・10重）。エレノアが戦闘に出ているときだけ" },
     { id: "reinforce", en: "Reinforcement Command", jp: "(未確認)", effects: [{ k: "W", num: 0 }], on: false, note: "必殺技を使った後25秒" },
-    { id: "purge", en: "Purge Command", jp: "(未確認)", effects: [{ k: "W", num: 0 }], note: "風ダメージ上昇（常時）。必殺技の重なりは未反映" },
-    { id: "focus", en: "Focus Command", jp: "(未確認)", effects: [{ k: "atkPct", num: 0 }], note: "攻撃力上昇（常時）。必殺技の重なりは未反映" },
+    { id: "purge", en: "Purge Command", jp: "(未確認)", effects: [{ k: "W", num: 0 }], note: "風ダメージ上昇（常時）。必殺技の重複数は未反映" },
+    { id: "focus", en: "Focus Command", jp: "(未確認)", effects: [{ k: "atkPct", num: 0 }], note: "攻撃力上昇（常時）。必殺技の重複数は未反映" },
   ],
 };

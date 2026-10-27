@@ -314,7 +314,7 @@ function willowTeam(ctx) {
   const f = Math.min(Math.max(ctx.willowStk || 0, 0), 1);
   const N = ctx.willowN || {};
   const MAXS = { cumulus: 1, beach: 1, saibotsu: 8, nanairo: 8, yurameku: 4, chakuchi: 8 };
-  // 重なり数: 個別指定があればそれ、なければ 最大×重なり率
+  // 重複数数: 個別指定があればそれ、なければ 最大×重複数率
   const cnt = id => (N[id] != null && N[id] !== "" ? Math.min(Math.max(+N[id], 0), MAXS[id]) : f * MAXS[id]);
   const pots = ctx.willowPots || {};
   const wt = TREKKERS.find(x => x.en === "Suntide Willow");

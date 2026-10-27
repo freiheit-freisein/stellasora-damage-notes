@@ -24,12 +24,12 @@
   addRec({ id: "hakubo", name: "薄暮", rarity: 3, element: "なし", level: 1, levelMax: 10, stats: { baseHp: 50, baseAtk: 233 }, core: { name: "薄暮", rank: "VI" }, sub: { startNotes: [] } });
   addRec({ id: "nodoka", name: "長閑", rarity: 3, element: "なし", level: 1, levelMax: 10, stats: { baseHp: 50, baseAtk: 233 }, core: { name: "長閑", rank: "VI" }, sub: { startNotes: [] } });
 
-  // 数を入力するもの（効果の回数・重なり）
+  // 数を入力するもの（効果の回数・重複数）
   S.LR_COUNTS = [
     { key: "akatsuki", label: "暁光の数（主力）", max: 99 },
     { key: "seigan", label: "星願の数（主力）", max: 20 },
-    { key: "yuuzu", label: "夕涼みの光属性ダメージの重なり（印の発動回数）", max: 5 },
-    { key: "merchen", label: "メルヘンなサンセット：追加の重なり", max: 3 },
+    { key: "yuuzu", label: "夕涼みの光属性ダメージの重複数（印の発動回数）", max: 5 },
+    { key: "merchen", label: "メルヘンなサンセット：追加の重複数", max: 3 },
     { key: "kaisetsu", label: "回折の数", max: 6 },
   ];
 

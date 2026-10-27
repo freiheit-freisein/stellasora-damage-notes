@@ -6,8 +6,8 @@
 //   mult = ヒットの倍率を (1+x) 倍(tags=対象)   taken = 敵の光属性被ダメージ(別枠の乗算)   takenMark/takenSkill = 敵の印/スキル被ダメージ
 //   extra = 追加ヒット(group=技グループ、'*'は全て、m=倍率%、c=回数)   count = ヒット回数の加算(hit)   drop = ヒットの置き換え(hit)
 //   n = nums の番号 / raw = 割合の固定値 / m(extra) = 倍率% / arr = 文章にだけある Lv別の値(%)  flat = 割合ではなく実数
-//   stk = 最大の重なり   perLux = 光属性の人数を掛ける   to = 効く相手(self 既定 / lux 光の全員 / all 全員 / main 主力 / luxVers 光のバランサー)
-//   cond = 条件(glimmer 敵に残光 / allLux 全員が光)   sk = 重なりの入力名   perGlow / perTag = 回数を グロウ・タグの数に合わせる
+//   stk = 最大の重複数   perLux = 光属性の人数を掛ける   to = 効く相手(self 既定 / lux 光の全員 / all 全員 / main 主力 / luxVers 光のバランサー)
+//   cond = 条件(glimmer 敵に残光 / allLux 全員が光)   sk = 重複数の入力名   perGlow / perTag = 回数を グロウ・タグの数に合わせる
 // off:true = 条件が重いので既定で反映しない。txt = 反映した内容（画面に表示）。
 window.SIM = window.SIM || {};
 (function (S) {
@@ -16,9 +16,9 @@ window.SIM = window.SIM || {};
     noya: {
       "Lucent Blitz": { txt: "主力スキル：長剣 +4回、光刃9発（各21%・スキル）", e: [{ k: "count", hit: "mLong", add: 4 }, X("main", "光刃（Lucent Blitz）", { m: 21, c: 9, tags: ["glow", "long"] })] },
       "Dawnflare": { txt: "主力スキル：ブレードライト 134%×6（スキル）／通常攻撃の突進：光刃3発（各21%）", e: [X("main", "ブレードライト（Dawnflare）", { m: 134, c: 6, tags: ["long"] }), X("basic", "突進の光刃（Dawnflare）", { m: 21, c: 3, tags: ["glow", "long"] })] },
-      "Prism Warp": { txt: "光刃が戻って追加ダメージ（スキル）＋長剣・光刃のスキル会心率", e: [X("*", "光刃の戻り（Prism Warp）", { n: 0, perGlow: true, tags: [] }), { k: "critRate", n: 1, tags: ["long", "glow"], ht: "skill" }] },
+      "Prism Warp": { txt: "光刃が戻って追加ダメージ（スキル）＋長剣・光刃のスキル会心率（会心率は(Max!)でLv6から上がらない）", e: [X("*", "光刃の戻り（Prism Warp）", { n: 0, perGlow: true, tags: [] }), { k: "critRate", n: 1, tags: ["long", "glow"], ht: "skill", ext: "cap" }] },
       "Resolve: Blitz": { txt: "残光の敵に、長剣・光刃の倍率 ×(1+x)", e: [{ k: "mult", n: 0, tags: ["long", "glow"], cond: "glimmer" }] },
-      "Lucent Tide": { txt: "（逆転の光明）光刃が印を発動できる（未反映）／主力スキル後12秒：セイナのスキル会心率＋、光のバランサーのスキル会心ダメ＋（2重）", e: [{ k: "critRate", n: 0, ht: "skill", stk: 2 }, { k: "critDmg", n: 1, ht: "skill", stk: 2, to: "luxVers" }] },
+      "Lucent Tide": { txt: "（逆転の光明）光刃が印を発動できる（未反映）／主力スキル後12秒：セイナのスキル会心率＋（(Max!)でLv6から上がらない）、光のバランサーのスキル会心ダメ＋（2重）", e: [{ k: "critRate", n: 0, ht: "skill", stk: 2, ext: "cap" }, { k: "critDmg", n: 1, ht: "skill", stk: 2, to: "luxVers" }] },
       "Stardust Descent": { txt: "主力スキル：スターフォール2個（各23%・通常）／突進が大剣89%＋スターフォールに置き換わる", e: [X("main", "スターフォール（Stardust Descent）", { m: 23, c: 2, t: "basic", tags: ["starfall"] }), { k: "drop", hit: "sprint" }, X("basic", "突進の大剣（Stardust Descent）", { m: 89, t: "basic", tags: ["great"] }), X("basic", "突進のスターフォール", { m: 23, t: "basic", tags: ["starfall"] })] },
       "Sinbreaker": { txt: "ジャッジメントスターフォール 222%×2（通常）／通常攻撃ダメージ +20%", e: [X("basic", "ジャッジメントスターフォール", { m: 222, c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20 }] },
       "Eclipse Phantom": { txt: "ジャッジメント後のフィールド 41〜165%×6（通常）＋大剣・スターフォールの通常会心率", e: [X("basic", "フィールド（Eclipse Phantom）", { n: 0, c: 6, t: "basic", tags: ["great"] }), { k: "critRate", n: 1, tags: ["great", "starfall"], ht: "basic" }] },
@@ -64,7 +64,7 @@ window.SIM = window.SIM || {};
       "Radiance Blade: Twin Shadow": { txt: "全員が光のとき、飛ぶ刃のスキル会心率＋0.3%・スキルダメ＋3%（各20重）", e: [{ k: "critRate", raw: 0.003, stk: 20, tags: ["blade"], ht: "skill", cond: "allLux" }, { k: "Bs", raw: 0.03, stk: 20, tags: ["blade"], cond: "allLux" }] },
       "Radiance Blade: Firefly": { txt: "飛ぶ刃のスキル会心率 +15%／飛ぶ刃が当たるたび 41%（スキル）", e: [{ k: "critRate", raw: 0.15, tags: ["blade"], ht: "skill" }, X("support", "追撃（Radiance Blade: Firefly）", { m: 41, perTag: "blade", tags: ["blade"] })] },
       "Lightforged Blade": { txt: "飛ぶ刃：グロウ1つごとに会心率＋、ハロー1つごとにスキルダメ＋（各最大20）", e: [{ k: "critRate", n: 0, stk: 20, sk: "glow", tags: ["blade"], ht: "skill" }, { k: "Bs", n: 1, stk: 20, sk: "halo", tags: ["blade"] }] },
-      "Stellar Crash": { txt: "飛ぶ刃 19.8〜79.1%（スキル）＋敵の光被ダメージ＋（残光の重なり×、最大20）。刃の回数は仮に3回", e: [X("support", "飛ぶ刃（Stellar Crash）", { n: 0, c: 3, tags: ["blade"], edit: true }), { k: "taken", n: 1, stk: 20, to: "enemy" }] },
+      "Stellar Crash": { txt: "飛ぶ刃 19.8〜79.1%（スキル）＋敵の光被ダメージ＋（残光の重複数×、最大20）。刃の回数は仮に3回", e: [X("support", "飛ぶ刃（Stellar Crash）", { n: 0, c: 3, tags: ["blade"], edit: true }), { k: "taken", n: 1, stk: 20, to: "enemy" }] },
       "Blade of Falling Petals": { txt: "ソードフォーム終了時 34〜138%×2×4本（スキル）＋スキル会心ダメ＋（最大12重）", e: [X("support", "花びらの斬撃（Falling Petals）", { n: 0, c: 8, tags: ["blade"] }), { k: "critDmg", n: 1, ht: "skill", stk: 12 }] },
       "Radiance Blade: Blazing Edge": { txt: "全員が光のとき、大剣の通常攻撃ダメージ +31%／大剣が当たるたび追撃 163%（通常）", e: [{ k: "Bb", raw: 0.31, tags: ["giant"], cond: "allLux" }, X("support", "追撃（Blazing Edge）", { m: 163, t: "basic", perTag: "giant", tags: ["giant"] })] },
       "Radiance Blade: Pursuing Slash": { txt: "大剣8回ごとのドミネイティングスラッシュ 195＋220×2＋171×3（通常）", e: [X("support", "斬撃1", { m: 195, t: "basic" }), X("support", "斬撃2", { m: 220, c: 2, t: "basic" }), X("support", "斬撃3", { m: 171, c: 3, t: "basic" })] },
@@ -115,7 +115,7 @@ window.SIM = window.SIM || {};
     const u = US[c.en];
     if (!u) return;
     SPEC[c.id] = SPEC[c.id] || {};
-    Object.keys(u).forEach(name => { SPEC[c.id][name] = { txt: u[name].txt || "", off: !!u[name].off, e: u[name].e || [] }; });
+    Object.keys(u).forEach(name => { SPEC[c.id][name] = { txt: u[name].txt || "", off: !!u[name].off, ext: u[name].ext, e: u[name].e || [] }; });
   });
   S.POT_SPEC = SPEC;
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
@@ -128,10 +128,12 @@ window.SIM = window.SIM || {};
   };
   // Lv7以降は、既定では直前の差のまま延長（眩い正義 Lv7=+345% と一致）。値が分かっているものは over で上書きする。
   // 閃光の奥義 Lv9 は、直前の差で延長した値（光刃174%・スキルダメ+87%）より低い実値（150%・+75%(Max表示)）なので over に入れてある。
-  const lvVal = (arr, lv, over) => {
+  // Lv7以降: ext="cap" ならLv6のまま（上がらない・未確定）、既定は直前の増え方で延長（推定）。over で、Lvごとの値を直接指定
+  const lvVal = (arr, lv, over, ext) => {
     lv = Math.max(lv, 1);
     if (over && over[lv] != null) return over[lv];
     if (arr.length < 2 || lv <= arr.length) return arr[Math.min(lv, arr.length) - 1];
+    if (ext === "cap") return arr[arr.length - 1];
     return arr[arr.length - 1] + (arr[arr.length - 1] - arr[arr.length - 2]) * (lv - arr.length);
   };
 
@@ -165,31 +167,33 @@ window.SIM = window.SIM || {};
   // 敵の光被ダメージ(taken)は、足し算の1つの束にする（実測: ホタル心相1 +14% を含む束に ナイトパンチ +57% を足すと、印の増幅 ×6.67 と一致）。
   function collect(G, team) {
     const chs = team.map(id => S.CH.find(c => c.id === id));
-    const luxN = chs.filter(c => c.el === "光").length;
-    const allLux = luxN === chs.length;
+    // 「光属性の全員」などは、効果を持つ巡遊者と同じ属性の全員として扱う（光チーム以外にも使えるようにした）
+    const elOf = oid => chs[team.indexOf(oid)].el;
+    const sameN = oid => chs.filter(c => c.el === elOf(oid)).length;
     const out = {};
     team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
-    const cond = k => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? allLux : true);
+    const cond = (k, oid) => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? sameN(oid) === chs.length : k === "mainSame" ? chs[0].el === elOf(oid) : true);
     const recvOf = (to, oid) => {
-      if (to === "lux") return team.filter((id, i) => chs[i].el === "光");
+      const el = elOf(oid);
+      if (to === "lux") return team.filter((id, i) => chs[i].el === el);
       if (to === "all") return team.slice();
       if (to === "main") return [team[0]];
-      if (to === "luxVers") return team.filter((id, i) => chs[i].el === "光" && chs[i].role === "バランサー");
-      if (to === "enemy") return team.filter((id, i) => chs[i].el === "光");
+      if (to === "luxVers") return team.filter((id, i) => chs[i].el === el && chs[i].role === "バランサー");
+      if (to === "enemy") return team.filter((id, i) => chs[i].el === el);
       return [oid];
     };
     // 1件の効果の適用。key=状態のキー、ei=効果の番号、info=Wikiの数値
     const apply = (e, ei, key, oid, cs, lv, info) => {
-      if (!cond(e.cond)) return;
+      if (!cond(e.cond, oid)) return;
       let v = 0;
       if (e.raw != null) v = e.raw;
-      else if (e.arr) v = (e.over && e.over[lv] != null ? e.over[lv] : lvVal(e.arr, lv)) / (e.k === "extra" ? 1 : 100);
-      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over) / (e.flat || e.k === "extra" ? 1 : 100);
+      else if (e.arr) v = lvVal(e.arr, lv, e.over, e.ext || info.ext) / (e.k === "extra" ? 1 : 100);
+      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || info.ext) / (e.flat || e.k === "extra" ? 1 : 100);
       const skey = key + (e.sk ? ":" + e.sk : "");
       let stk = (cs.pstk || {})[skey];
       if (stk == null || stk === "") stk = e.stk || 1;
       v *= stk;
-      if (e.perLux) v *= luxN;
+      if (e.perLux) v *= sameN(oid);
       recvOf(e.to, oid).forEach(rid => {
         const a = out[rid];
         if (e.k === "count") { a.count[e.hit] = (a.count[e.hit] || 0) + e.add; return; }
@@ -224,7 +228,7 @@ window.SIM = window.SIM || {};
         const sp = spec[name];
         const onSet = (cs.pon || {})[key];
         if (onSet == null ? sp.off : !onSet) return;
-        const info = numsOf(c, name);
+        const info = Object.assign({}, numsOf(c, name), { ext: sp.ext });
         sp.e.forEach((e, ei) => apply(e, ei, key, oid, cs, lv, info));
         out[oid].applied.push(name);
       });

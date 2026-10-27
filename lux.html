@@ -32,7 +32,7 @@
 <div class="wrap"><p class="lead">主力 セイナ(原点)・支援 ティリア／ホタル（保存ビルド「セイナHC」・ストンプクラブ）。式は 最大HP × 倍率 × 光属性ダメージ × 種別ダメージ × 被ダメージ(別枠の乗算) × 敵側補正D。印ダメージ(ルーセント)は最大HPの70%・会心なし。「実測に合わせた値」は原因が分かっていない補正です。</p></div>
 <div class="two">
   <div class="col">
-    <div class="card"><h2><span class="en">STACKS</span>戦闘中の重なり</h2><hr class="dotted-rule">
+    <div class="card"><h2><span class="en">STACKS</span>戦闘中の重複数</h2><hr class="dotted-rule">
       <div class="row" id="stacks"></div>
       <div class="inline" id="toggles"></div>
     </div>
@@ -51,10 +51,10 @@
       <div id="dmg"></div></div>
     <div class="card"><h2><span class="en">MARK</span>印ダメージ（ティリアの増幅）</h2><hr class="dotted-rule"><div id="mark"></div></div>
     <div class="card"><h2><span class="en">VERIFICATION</span>実測との比較</h2><hr class="dotted-rule"><div class="tbl-wrap" id="ver"></div></div>
-    <div class="card"><h2><span class="en">SEARCH</span>重なりの当てはめ探索</h2><hr class="dotted-rule">
+    <div class="card"><h2><span class="en">SEARCH</span>重複数の当てはめ探索</h2><hr class="dotted-rule">
       <div class="inline"><label>実測の数字（主力スキル長剣・非会心）<input type="number" id="target" value="1268743" style="width:180px"></label>
       <button type="button" class="btn-add" id="search">探索</button></div>
-      <div class="note">暁光・星願・回折・ホタル追撃の重なり、メルヘン、暁光の被ダメを動かして、近い数字になる組み合わせを上位から表示します（候補は複数ありえます）。</div>
+      <div class="note">暁光・星願・回折・ホタル追撃の重複数、メルヘン、暁光の被ダメを動かして、近い数字になる組み合わせを上位から表示します（候補は複数ありえます）。</div>
       <div id="found"></div></div>
   </div>
 </div>
@@ -136,7 +136,7 @@
       ["スキルの会心÷非会心（2,167,436 ÷ 1,268,743）", st.critDmg, LUX.MEAS.skillCrit / LUX.MEAS.skillNon, "実測値を入力"],
       ["ティリアの盾の1発目（貫通0・スタックなし）", LUX.tiliaShield(base), LUX.MEAS.tiliaShield1, "検証（敵の耐性250の式）"],
       ["ホタルのソードフォーム 1撃目（219%・貫通75）", LUX.fireflySword1(base), LUX.MEAS.fireflySword1, "検証（耐性250−貫通75）"],
-      ["ホタルのウィング 79.1%（非会心・重なり0）", LUX.fireflyBlade(base), LUX.MEAS.fireflyBlade, "検証（実測は重なり少し込み）"],
+      ["ホタルのウィング 79.1%（非会心・重複数0）", LUX.fireflyBlade(base), LUX.MEAS.fireflyBlade, "検証（実測は重複数少し込み）"],
     ];
     if (st.preset === "t3") {
       rows.length = 0;                                     // 前のビルド(セイナHC)の実測行は、このビルドには当てはまらない

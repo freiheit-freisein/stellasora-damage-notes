@@ -496,7 +496,7 @@
         const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = cur.on == null ? p.on !== false : !!cur.on;
         cb.addEventListener("change", () => { cur.on = cb.checked; update(); });
         on.append(cb, "反映");
-        const stk = document.createElement("input"); stk.type = "number"; stk.min = 0; stk.step = 1; stk.placeholder = maxStk > 1 ? "重なり/" + maxStk : "";
+        const stk = document.createElement("input"); stk.type = "number"; stk.min = 0; stk.step = 1; stk.placeholder = maxStk > 1 ? "重複数/" + maxStk : "";
         stk.disabled = maxStk <= 1; stk.value = cur.stk == null ? "" : cur.stk;
         stk.addEventListener("input", () => { if (stk.value === "") delete cur.stk; else cur.stk = Math.max(parseInt(stk.value, 10) || 0, 0); update(); });
         row.append(info, sel, on, stk);

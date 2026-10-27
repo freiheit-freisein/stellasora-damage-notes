@@ -223,8 +223,8 @@
     }).join("");
     if (id === "willow") {
       const fv = Math.round(E.skillVal(c, 1, 1, (cs.skillLv.main || 10) + (lvB.main || 0)) * 10) / 10, uv = Math.round(E.skillVal(c, 3, 2, (cs.skillLv.ult || 10) + (lvB.ult || 0)) * 10) / 10;
-      body += `<div class="pot core"><b>主力スキル</b><div>バブルフロッグがダメージを与えると、チームの攻撃力 +${fv}%（6秒・最大5重）</div><div class="lv">重なり ${inp("willowFrog", { min: 0, max: 5, step: 1, w: 60 })}<span class="muted">/5（ウィロー以外の味方に反映）</span></div></div>
-        <div class="pot core"><b>必殺技</b><div>チームの攻撃力 +${uv}%（20秒・最大5重）</div><div class="lv">重なり ${inp("willowUlt", { min: 0, max: 5, step: 1, w: 60 })}<span class="muted">/5（ウィロー以外の味方に反映）</span></div></div>`;
+      body += `<div class="pot core"><b>主力スキル</b><div>バブルフロッグがダメージを与えると、チームの攻撃力 +${fv}%（6秒・最大5重）</div><div class="lv">重複数 ${inp("willowFrog", { min: 0, max: 5, step: 1, w: 60 })}<span class="muted">/5（ウィロー以外の味方に反映）</span></div></div>
+        <div class="pot core"><b>必殺技</b><div>チームの攻撃力 +${uv}%（20秒・最大5重）</div><div class="lv">重複数 ${inp("willowUlt", { min: 0, max: 5, step: 1, w: 60 })}<span class="muted">/5（ウィロー以外の味方に反映）</span></div></div>`;
     }
     if (!body) body = '<span class="muted">このキャラの、火力に関わるスキルのバフ効果は、ありません（または未登録です）。</span>';
     return `<h3 style="margin:0 0 6px;font-size:14px">スキルのバフ効果</h3><p class="muted">スキルLv: ${lvs}（スキルLvは「巡遊者」の欄で変えます）</p>
@@ -329,7 +329,7 @@
     if (id === "willow") {
       body = POTENTIALS.map(x => `<div class="pot${x.core ? " core" : ""}"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ok">反映</span>
         <div class="muted">${esc(x.text)}</div><div class="lv">${x.core ? "取得(1=あり)" : "Lv"} ${inp(`${p}.pots.${x.id}`, { min: 0, max: 9, step: 1 })}</div></div>`).join("");
-      note = "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計で、重なり数の指定は旧ページ（ウィロー側）にあります。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。";
+      note = "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計で、重複数数の指定は旧ページ（ウィロー側）にあります。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。";
     } else if (id === "nazuka" || id === "eleanor") {
       body = SUP_POTS[id].map(x => `<div class="pot${x.core ? " core" : ""}"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}${x.verified ? '<span class="tag-ok">実測一致</span>' : '<span class="tag-ng">未検証</span>'}
         <div class="muted">${esc(x.note || x.verified || "")}</div>
@@ -340,7 +340,7 @@
       const spec = S.POT_SPEC[id];
       const stkIn = (key, e) => {
         const sk = key + (e.sk ? ":" + e.sk : "");
-        return `<span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重なり"}</span> ${inp(`${p}.pstk.${sk}`, { min: 0, max: e.stk, step: 1, w: 60 })}<span class="muted">/${e.stk}</span> `;
+        return `<span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${inp(`${p}.pstk.${sk}`, { min: 0, max: e.stk, step: 1, w: 60 })}<span class="muted">/${e.stk}</span> `;
       };
       // 今の枠（主力 or 支援）の素質だけを出す。上にコア4つ、そのあと 特化構築1・2のサブ素質、汎用
       const role = k === "main" ? "main" : "support", roleJa = k === "main" ? "主力" : "支援";
@@ -368,14 +368,14 @@
       const subRows = builds.map(g => `<div class="phead">${roleJa}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("");
       const genRow = generic ? `<div class="phead">汎用</div>${grid(generic.potentials, 3)}` : "";
       body = `<div style="grid-column:1/-1">${coreRow}${subRows}${genRow}</div>`;
-      note = "名前は日本語（マウスを重ねると英語名）。効果は原文を読んで分類した内容を表の下に書いています。回数や重なりが原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。";
+      note = "名前は日本語（マウスを重ねると英語名）。効果は原文を読んで分類した内容を表の下に書いています。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。";
     } else {
       const t = TK(c.en), groups = (t.potentials[k === "main" ? "main" : "support"] || []);
       body = groups.map(g => g.potentials.map(x => `<div class="pot${x.type === 1 ? " core" : ""}" title="${esc(x.name)}"><b>${esc(JA(x.name, id))}</b>${x.type === 1 ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ng">計算に未反映</span>
         <div class="lv">Lv ${inp(`${p}.pots2.${x.name.replace(/[^A-Za-z0-9]/g, "_")}`, { min: 0, max: 9, step: 1 })}</div></div>`).join("")).join("");
       note = "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「その他」に手で入れられます。";
     }
-    return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3><div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
+    return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3><p class="muted">ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。</p><div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
   }
 
   // ---- 記録レベル ----
