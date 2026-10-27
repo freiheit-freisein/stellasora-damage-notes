@@ -115,6 +115,21 @@
   .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .subnav .tabs { border: 0; padding: 0; }
   .subnav .tab { min-height: 36px; }
+  /* 共有・読み込みのポップアップ */
+  .dlg { width: min(760px, calc(100vw - 24px)); border: 2px solid var(--border); border-radius: 18px; padding: 18px; color: var(--text); box-shadow: 0 16px 48px rgba(30,34,80,.25); }
+  .dlg::backdrop { background: rgba(30,34,80,.35); }
+  .dlg h2 { margin: 0 0 4px; font-size: 18px; color: var(--indigo); display: flex; align-items: center; gap: 8px; }
+  .dlg h2 .en { font-family: var(--font-en); font-weight: 400; font-size: 15px; letter-spacing: .14em; color: var(--link); }
+  .dlg .row { margin: 12px 0 0; }
+  .dlg .row > label { margin: 0 0 4px; font-size: 14px; }
+  .dlg .line { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 6px; align-items: center; }
+  .dlg .line input { min-height: 40px; border: 2px solid var(--border); border-radius: 10px; padding: 0 10px; font-family: monospace; font-size: 13px; width: 100%; }
+  .dlg .line .btn-add { min-height: 40px; padding: 0 14px; }
+  .dlg .msg { font-size: 12px; color: var(--muted); min-height: 18px; margin-top: 2px; }
+  .dlg .msg.ng { color: var(--danger); } .dlg .msg.ok { color: var(--ok); }
+  .dlg .foot { display: flex; justify-content: flex-end; margin-top: 14px; gap: 8px; flex-wrap: wrap; }
+  .dlg .sub { border-top: 2px dotted var(--accent); margin-top: 14px; padding-top: 6px; }
+  @media (max-width: 560px) { .dlg .line { grid-template-columns: repeat(3, minmax(0, 1fr)); } .dlg .line input { grid-column: 1 / -1; } }
   /* スクロールは画面全体で1本（結果の列だけのスクロールはしない） */
   #right { position: static; max-height: none; overflow: visible; }
   /* スマホ用の部品（PCでは出さない） */
@@ -172,7 +187,6 @@
     .logo-ja { font-size: 17px; } .logo-en { display: none; }
     .topbar { flex-wrap: wrap; width: 100%; }
     .tb-b, .topbar .sep, .topbar #smsg:empty { display: none; }
-    .topbar #scode { flex: 1; width: auto !important; min-width: 0; }
     .app { grid-template-columns: minmax(0, 1fr); padding: 8px; gap: 8px; }
     .panel { padding: 10px; border-radius: 14px; margin-bottom: 8px; }
     .panel > h2 { flex-wrap: wrap; }
@@ -214,6 +228,7 @@
 </div></header>
 <div class="mstrip" id="mstrip"></div>
 <nav class="mbar" id="mbar" aria-label="表示の切り替え"></nav>
+<dialog id="shareDlg" class="dlg" aria-labelledby="shareDlgT"><div id="shareBody"></div></dialog>
 <div class="app">
   <div id="left">
     <div class="panel"><h2><span class="en">MULTIPLIERS</span>共通の倍率<span class="muted" id="tilesFor"></span></h2><div class="tiles" id="tiles"></div></div>
@@ -239,6 +254,8 @@
 <script src="sim_engine.js"></script>
 <script src="data/potential_ja.js"></script>
 <script src="sim_share.js"></script>
+<script src="data/preset_map.js"></script>
+<script src="sim_preset.js"></script>
 <script src="sim_ui.js"></script>
 </body>
 </html>

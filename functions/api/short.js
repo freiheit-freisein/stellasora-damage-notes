@@ -21,6 +21,13 @@ function newId() {
   return [...r].map(b => ALPHA[b % ALPHA.length]).join("");
 }
 
+// 短縮URLの中身（共有コード）を返す: GET /api/short?id=k7Qx2mA → {"code": "…"}（ページを移動せずに読み込むため）
+export async function onRequestGet({ request, env }) {
+  const id = new URL(request.url).searchParams.get("id") || "";
+  const row = /^[A-Za-z0-9]{4,16}$/.test(id) ? await env.DB.prepare("SELECT code FROM short WHERE id = ?").bind(id).first() : null;
+  return row ? json({ code: row.code }) : json({ error: "この短縮URLは見つかりませんでした" }, 404);
+}
+
 export async function onRequestPost({ request, env }) {
   let body;
   try { body = await request.json(); } catch (e) { return json({ error: "送信の形式が正しくありません" }, 400); }

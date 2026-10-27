@@ -40,7 +40,8 @@
     Object.keys(b).forEach(k => { if (b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) && a[k] && typeof a[k] === "object" && !Array.isArray(a[k])) merge(a[k], b[k]); else a[k] = b[k]; });
     return a;
   }
-  let shareCode = "", shareMsg = "";
+  let shareMsg = "";
+  const DV = { preset: "", code: "", url: "" }, DM = {};   // ポップアップの各欄の値とメッセージ（{t, ng}）
   const V = { panel: "overview", tilesFor: "main", drill: null, pick: null, lrPick: null, lrEl: {}, mChar: "main", m: "in" };
   let memo = null;
   try { memo = JSON.parse(localStorage.getItem(KEY_M)); } catch (e) { memo = null; }
@@ -79,17 +80,23 @@
     let builds = {};
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
-    $("topbar").innerHTML = `<span class="tb-b"><b>ビルド</b>
-      <input type="text" id="bname" placeholder="名前" style="width:120px">
-      <button class="btn-add" data-act="bsave">保存</button>
-      <select id="bsel" style="width:170px"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
-      <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></span>
-      <span class="sep"></span><b>共有コード</b>
-      <input type="text" id="scode" value="${esc(shareCode)}" placeholder="ここに貼り付け" style="width:220px">
-      <button class="btn-add pri" data-act="short">短縮URLを作る</button><button class="btn-add" data-act="share-out">コードを作る</button><button class="btn-add" data-act="share-in">読み込む</button>
-      <span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <span class="sep"></span><button class="btn-add" data-act="reset">全部を初期値に戻す</button>
-`;
+    $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
+      <button class="btn-add pri" data-act="dlg-open">共有・読み込み</button><button class="btn-add" data-act="reset">全初期化</button>`;
+    // 共有・読み込みのポップアップ（プリセットコード・共有コード・共有URL それぞれ 読込・作成・コピー、ブラウザへの保存）
+    const row = (key, label, note, ph) => `<div class="row"><label for="dv-${key}">${label} <span class="muted" style="font-weight:400">${note}</span></label>
+      <div class="line"><input type="text" id="dv-${key}" value="${esc(DV[key])}" placeholder="${ph}" spellcheck="false">
+      <button class="btn-add" data-act="dv:${key}:in">読込</button><button class="btn-add" data-act="dv:${key}:out">作成</button><button class="btn-add" data-act="dv:${key}:copy">コピー</button></div>
+      <div class="msg${DM[key] && DM[key].ng ? " ng" : DM[key] ? " ok" : ""}">${esc((DM[key] || {}).t || "")}</div></div>`;
+    $("shareBody").innerHTML = `<h2 id="shareDlgT"><span class="en">SHARE</span>共有・読み込み</h2>
+      ${row("preset", "プリセットコード", "（ゲーム・プリセット共有サイトと同じ。編成と素質Lvだけ）", "ゲームの素質プリセットのコード")}
+      ${row("code", "共有コード", "（この計算ページの入力すべて）", "共有コードを貼り付け")}
+      ${row("url", "共有URL", "（共有コードの短縮URL。開くだけで読み込まれます）", "https://sim.stella-tool.com/s/…")}
+      <div class="row sub"><label for="bname">このブラウザに保存 <span class="muted" style="font-weight:400">（名前を付けて保存・読み込み）</span></label>
+      <div class="line" style="grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto auto">
+        <input type="text" id="bname" placeholder="名前"><button class="btn-add" data-act="bsave">保存</button>
+        <select id="bsel"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
+        <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></div></div>
+      <div class="foot"><button class="btn-add" data-act="dlg-close">閉じる</button></div>`;
     $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
   }
 
@@ -649,40 +656,65 @@
     else if (a === "bdel") { const n = $("bsel").value; if (n && builds[n]) { delete builds[n]; try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } renderTop(); } }
     else if (a === "memo") { memo = { v: clone(window.__cur || {}) }; try { localStorage.setItem(KEY_M, JSON.stringify(memo)); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "memodel") { memo = null; try { localStorage.removeItem(KEY_M); } catch (e) { /* 無視 */ } renderAll(); }
-    else if (a === "share-out") {
-      S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2]).then(code => {
-        shareCode = code; shareMsg = `コードを作りました（${code.length}文字）`;
-        try { navigator.clipboard.writeText(code).then(() => { shareMsg += "。コピーしました"; renderTop(); }, () => { /* コピーできない環境では、枠から選んでコピー */ }); } catch (e) { /* 無視 */ }
-        renderTop();
-      });
-    }
-    else if (a === "short") {
-      // 共有コードをサーバーに預けて、短いURL（/s/ID）をもらう。公開版（Cloudflare）だけで動く
-      shareMsg = "短縮URLを作っています…"; renderTop();
-      S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2])
-        .then(code => fetch("/api/short", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) }))
-        .then(r => r.json().catch(() => ({ error: "この環境では短縮URLを作れません（公開しているページで使えます）" })))
-        .then(j => {
-          if (!j.url) { shareMsg = j.error || "短縮URLを作れませんでした"; renderTop(); return; }
-          shareCode = j.url; shareMsg = "短縮URLを作りました";
-          try { navigator.clipboard.writeText(j.url).then(() => { shareMsg += "。コピーしました"; renderTop(); }, () => { /* コピーできない環境では、枠から選んでコピー */ }); } catch (e) { /* 無視 */ }
-          renderTop();
-        })
-        .catch(() => { shareMsg = "短縮URLを作れませんでした（通信の失敗）"; renderTop(); });
-    }
-    else if (a === "share-in") {
-      let code = $("scode").value.trim(); shareCode = code;
-      if (/\/s\/[A-Za-z0-9]+/.test(code)) { location.href = code; return; }   // 短縮URLを貼ったときは、そのURLを開く
-      if (code.indexOf("#c=") >= 0) code = decodeURIComponent(code.slice(code.indexOf("#c=") + 3));   // 長いURLを貼ったとき
-      S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "コードを読み込みました"; renderAll(); }).catch(e => { shareMsg = e.message || "読み込めませんでした"; renderTop(); });
-    }
+    else if (a === "dlg-open") { DM.preset = DM.code = DM.url = null; renderTop(); $("shareDlg").showModal(); }
+    else if (a === "dlg-close") $("shareDlg").close();
+    else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
   });
+  // ---- 共有・読み込み（ポップアップの各欄）: key = preset / code / url、op = in（読込）/ out（作成）/ copy ----
+  const say = (key, t, ng) => { DM[key] = { t, ng: !!ng }; renderTop(); };
+  const loadCode = (code, key, what) => S.shareDecode(code, defState()).then(g => { G = g; DM[key] = { t: what + "を読み込みました" }; renderAll(); }).catch(e => say(key, e.message || "読み込めませんでした", true));
+  const loadPreset = (code, key) => {
+    try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); DM[key] = { t: "読み込みました（" + names.join("・") + "）。編成と素質Lvだけが変わります" }; renderAll(); }
+    catch (e) { say(key, e.message || "読み込めませんでした", true); }
+  };
+  function shareAct(key, op) {
+    ["preset", "code", "url"].forEach(k => { const el = $("dv-" + k); if (el) DV[k] = el.value.trim(); if (k !== key) DM[k] = null; });   // ほかの欄のメッセージは消す
+    const v = DV[key];
+    if (op === "copy") {
+      if (!v) return say(key, "コピーするものがありません（先に「作成」を押してください）", true);
+      try { navigator.clipboard.writeText(v).then(() => say(key, "コピーしました"), () => say(key, "コピーできませんでした。枠の中を選んでコピーしてください", true)); } catch (e) { say(key, "コピーできませんでした。枠の中を選んでコピーしてください", true); }
+      return;
+    }
+    if (key === "preset") {
+      if (op === "in") return loadPreset(v, key);
+      try { DV.preset = S.presetMake(G); say(key, "作りました。ゲームやプリセット共有サイトで読み込めます（編成と素質Lvだけ）"); } catch (e) { say(key, e.message, true); }
+      return;
+    }
+    if (key === "code") {
+      if (op === "in") return v ? loadCode(v, key, "共有コード") : say(key, "共有コードを貼り付けてください", true);
+      S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2]).then(c => { DV.code = c; say(key, `作りました（${c.length}文字）`); });
+      return;
+    }
+    // 共有URL: 読込は、短縮URL（/s/ID）・長いURL（#c= / #p=）のどれでもよい。作成は、短縮URL（公開しているページだけ）
+    if (op === "in") {
+      const m = /\/s\/([A-Za-z0-9]{4,16})/.exec(v);
+      if (m) {
+        say(key, "読み込んでいます…");
+        return fetch("/api/short?id=" + m[1]).then(r => r.json()).then(j => j.code ? loadCode(j.code, key, "共有URLのビルド") : say(key, j.error || "見つかりませんでした", true))
+          .catch(() => say(key, "読み込めませんでした（公開しているページで使えます）", true));
+      }
+      if (v.indexOf("#c=") >= 0) return loadCode(decodeURIComponent(v.slice(v.indexOf("#c=") + 3)), key, "共有URLのビルド");
+      if (v.indexOf("#p=") >= 0) return loadPreset(decodeURIComponent(v.slice(v.indexOf("#p=") + 3)), key);
+      return say(key, "共有URLを貼り付けてください", true);
+    }
+    say(key, "短縮URLを作っています…");
+    S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2])
+      .then(code => fetch("/api/short", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) }))
+      .then(r => r.json().catch(() => ({ error: "この環境では短縮URLを作れません（公開しているページで使えます）" })))
+      .then(j => { if (!j.url) return say(key, j.error || "短縮URLを作れませんでした", true); DV.url = j.url; say(key, "作りました"); })
+      .catch(() => say(key, "短縮URLを作れませんでした（通信の失敗）", true));
+  }
+
   renderAll();
-  // URLの #c=共有コード（短縮URLから移動してきたとき）を読み込み、URLからは消す
-  if (location.hash.indexOf("#c=") === 0) {
-    const code = decodeURIComponent(location.hash.slice(3));
+  // URLから読み込む（読み込んだらURLからは消す）: #c=共有コード（短縮URLから移動してきたとき）、#p=プリセットコード（プリセット共有サイトなどから）
+  const hc = location.hash;
+  if (hc.indexOf("#c=") === 0 || hc.indexOf("#p=") === 0) {
+    const code = decodeURIComponent(hc.slice(3));
     try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* 無視 */ }
-    S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "URLのビルドを読み込みました"; renderAll(); }).catch(e => { shareMsg = e.message || "URLのビルドを読み込めませんでした"; renderAll(); });
+    if (hc[1] === "p") {
+      try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); shareMsg = "URLのプリセット（" + names.join("・") + "）を読み込みました"; } catch (e) { shareMsg = e.message; }
+      renderAll();
+    } else S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "URLのビルドを読み込みました"; renderAll(); }).catch(e => { shareMsg = e.message || "URLのビルドを読み込めませんでした"; renderAll(); });
   }
 })();
