@@ -86,7 +86,7 @@
       <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></span>
       <span class="sep"></span><b>共有コード</b>
       <input type="text" id="scode" value="${esc(shareCode)}" placeholder="ここに貼り付け" style="width:220px">
-      <button class="btn-add" data-act="share-out">コードを作る</button><button class="btn-add" data-act="share-in">読み込む</button>
+      <button class="btn-add pri" data-act="short">短縮URLを作る</button><button class="btn-add" data-act="share-out">コードを作る</button><button class="btn-add" data-act="share-in">読み込む</button>
       <span class="muted" id="smsg">${esc(shareMsg)}</span>
       <span class="sep"></span><button class="btn-add" data-act="reset">全部を初期値に戻す</button>
 `;
@@ -656,11 +656,33 @@
         renderTop();
       });
     }
+    else if (a === "short") {
+      // 共有コードをサーバーに預けて、短いURL（/s/ID）をもらう。公開版（Cloudflare）だけで動く
+      shareMsg = "短縮URLを作っています…"; renderTop();
+      S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2])
+        .then(code => fetch("/api/short", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) }))
+        .then(r => r.json().catch(() => ({ error: "この環境では短縮URLを作れません（公開しているページで使えます）" })))
+        .then(j => {
+          if (!j.url) { shareMsg = j.error || "短縮URLを作れませんでした"; renderTop(); return; }
+          shareCode = j.url; shareMsg = "短縮URLを作りました";
+          try { navigator.clipboard.writeText(j.url).then(() => { shareMsg += "。コピーしました"; renderTop(); }, () => { /* コピーできない環境では、枠から選んでコピー */ }); } catch (e) { /* 無視 */ }
+          renderTop();
+        })
+        .catch(() => { shareMsg = "短縮URLを作れませんでした（通信の失敗）"; renderTop(); });
+    }
     else if (a === "share-in") {
-      const code = $("scode").value; shareCode = code;
+      let code = $("scode").value.trim(); shareCode = code;
+      if (/\/s\/[A-Za-z0-9]+/.test(code)) { location.href = code; return; }   // 短縮URLを貼ったときは、そのURLを開く
+      if (code.indexOf("#c=") >= 0) code = decodeURIComponent(code.slice(code.indexOf("#c=") + 3));   // 長いURLを貼ったとき
       S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "コードを読み込みました"; renderAll(); }).catch(e => { shareMsg = e.message || "読み込めませんでした"; renderTop(); });
     }
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
   });
   renderAll();
+  // URLの #c=共有コード（短縮URLから移動してきたとき）を読み込み、URLからは消す
+  if (location.hash.indexOf("#c=") === 0) {
+    const code = decodeURIComponent(location.hash.slice(3));
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* 無視 */ }
+    S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "URLのビルドを読み込みました"; renderAll(); }).catch(e => { shareMsg = e.message || "URLのビルドを読み込めませんでした"; renderAll(); });
+  }
 })();

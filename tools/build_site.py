@@ -9,7 +9,7 @@ import os, re, shutil, subprocess
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'dist')
-SKIP_DIRS = ('tools/', 'docs/', '.claude/')
+SKIP_DIRS = ('tools/', 'docs/', '.claude/', 'functions/', 'migrations/')   # functions/ は wrangler がこのフォルダから直接読む
 SKIP_EXT = ('.md', '.py')
 
 files = subprocess.run(['git', 'ls-files'], cwd=ROOT, capture_output=True, text=True, encoding='utf-8').stdout.split('\n')
@@ -20,7 +20,7 @@ if dirty:
 shutil.rmtree(OUT, ignore_errors=True)
 n = 0
 for f in files:
-    if not f or f.startswith(SKIP_DIRS) or f.endswith(SKIP_EXT) or f == '.gitignore':
+    if not f or f.startswith(SKIP_DIRS) or f.endswith(SKIP_EXT) or f in ('.gitignore', 'wrangler.toml'):
         continue
     dst = os.path.join(OUT, f)
     os.makedirs(os.path.dirname(dst), exist_ok=True)

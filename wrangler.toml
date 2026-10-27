@@ -1,0 +1,13 @@
+# 公開用（Cloudflare Pages: sim.stella-tool.com）。ファイルは tools/build_site.py で dist/ にまとめる。
+#   python tools/build_site.py
+#   npx wrangler pages deploy dist --project-name stellasora-damage-sim --branch main
+# 短縮URL（functions/）は D1 の short テーブルを使う。テーブルの作成: npx wrangler d1 migrations apply stellasora-sim-short --remote
+name = "stellasora-damage-sim"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "stellasora-sim-short"
+database_id = "ec38ac41-543a-41b8-b2af-af4e4d6a728e"
+migrations_dir = "migrations"
