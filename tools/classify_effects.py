@@ -59,13 +59,19 @@ def classify(en_name, jt, en_nums, el_ja, role):
             continue
         got = []
         head = s.split('が')[0] if 'が' in s else s[:12]
+        # 効果の文（「〜ダメージが」「攻撃力が」など）の直前の読点より後を、主語として先に見る（「…時、6秒間、チーム内の水属性巡遊者はスキルダメージが」）
+        em = re.search(r'(ダメージ|会心率|会心ダメージ|攻撃力|最大HP)が', s)
+        seg = re.split(r'[、，,]', s[:em.start()])[-1] if em else ''
         to = None
-        if re.search(r'チーム(全体|内の全員)|全員', head):
-            to = 'all'
-        elif re.search(r'^主力(巡遊者)?', head):
-            to = 'main'
-        elif re.search(el_ja + r'属性(の)?巡遊者', head):
-            to = 'lux'
+        for h in ([seg] if seg else []) + [head]:
+            if re.search(r'チーム(全体|内の全員)|全員', h):
+                to = 'all'
+            elif re.search(r'^主力(巡遊者)?', h):
+                to = 'main'
+            elif re.search(el_ja + r'属性(の)?巡遊者', h) or (re.search(r'その巡遊者', h) and re.search(el_ja + r'属性の印', s)):
+                to = 'lux'   # 「その巡遊者」＝その属性の印を発動した味方
+            if to:
+                break
 
         def add(k, txt, flat=False, extra=None, enemy=False):
             v, nt = value(txt, en_nums, flat, s)
@@ -135,6 +141,8 @@ for t in tk:
             p = enmap.get((role, pn))
             en_nums = [a for a in (p['nums'] if p else []) if a]
             eff, notes, unk = classify(pn, j['text'], en_nums, el, role)
+            # 用語の説明（メロウ状態など）に数値があれば、効果の中身なので「要確認」の文として残す（自動では効果にしない）
+            unk += ['用語「' + x['term'] + '」：' + x['text'] for x in j.get('terms', []) if re.search(r'(ダメージ|攻撃力|会心)[^。]*?\d+(?:\.\d+)?\s*[%％]', x['text'])]
             d = {'draft': True, 'auto': True, 'e': eff, 'txt': ''}
             if notes:
                 d['note'] = '／'.join(notes)

@@ -161,6 +161,7 @@
     };
     $("editor").innerHTML = `<h2>${esc(PJ(S.t, p.name))} <span class="muted">${esc(p.name)}</span></h2>
       <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>
+      ${((jpOf(S.t, S.role, p.name) || {}).terms || []).map(x => `<div class="muted" style="margin:2px 0">用語「${esc(x.term)}」：${esc(x.text)}</div>`).join("")}
       ${(jpOf(S.t, S.role, p.name) || {}).text ? '<div class="muted">↑ 日本語Wiki（ゲーム内の文章）。' + (meta.fromDraft ? "下の効果は、この文章から自動で作った下書きです。" : "") + '</div>' : ""}
       ${meta.fromDraft ? `<div class="eff" style="border-color:#E3B27A"><b>下書きの内容</b><br>${rows.length ? rows.map(r => "・" + esc(describe(toEngine(r), p))).join("<br>") : "（効果なし／火力に影響しない、と判断）"}${meta.unk ? `<br><span style="color:var(--danger)">自動で分類できなかった文：</span>${meta.unk.map(esc).join(" ／ ")}` : ""}<div style="margin-top:6px"><button class="btn-add" data-act="ok" style="background:var(--indigo);color:#fff">この内容でOK（確認済みにする）</button></div></div>` : ""}
       <div class="muted">Lvごとの数値（文章の中の数値を、左から順に拾ったもの）。ゲーム内の画面で確認できるのは Lv1 と Lv6 だけで、Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、実際にビルドを組まないと分かりません。</div>${numsTable(p)}

@@ -72,6 +72,7 @@ for r in rows:
         'name_en': r['name_en'], 'name_ja': r['name_ja'],
         'type': (wp or {}).get('type'),
         'text_ja': (j or {}).get('text'),
+        'terms_ja': (j or {}).get('terms'),
         'text_en': (wp or {}).get('text'),
         'nums_en': (wp or {}).get('nums'),
         'effects': eff,

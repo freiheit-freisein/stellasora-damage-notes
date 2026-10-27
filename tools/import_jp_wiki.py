@@ -21,6 +21,51 @@ def clean(s):
     s = re.sub(r'<[^>]+>', '', s)
     return H.unescape(s).strip()
 
+# 用語の説明（ページでマウスを重ねると出る補足）は、本文に「document.addEventListener(... tippy(..., { content: '説明' }) ...)」の形で混ざる。
+# 本文からは外し、terms = [{term: 用語, text: 説明}] に分ける。用語は、直前の区切り（、。：かっこ・改行など）からの文字。
+TIP = re.compile(r"\s*document\.addEventListener\('DOMContentLoaded', \(\) => \{ tippy\('\.tooltip-[0-9a-f]+', \{ content: '(.*?)', \}\); \}\);\s*", re.S)
+
+
+TERM = re.compile(r'(.属性の印|[^をがのでにはとかも、。：:\n（(）)「」・，,\s]+)$')   # 直前の助詞・区切りより後（「水属性の印」は、ひとまとまり）
+
+
+def split_terms(text):
+    terms, out, pos = [], '', 0
+    for m in TIP.finditer(text):
+        out += text[pos:m.start()]
+        pos = m.end()
+        t = TERM.search(out)
+        term = t.group(1) if t else ''
+        if len(term) == 1:   # 「花の海」のように、1文字だけになるときは「〜の」を含める
+            t = re.search(r'([^をがでにはとかも、。：:\n（(）)「」・，,\s]+の.)$', out)
+            term = t.group(1) if t else term
+        if term and not any(x['term'] == term for x in terms):
+            terms.append({'term': term, 'text': m.group(1).strip()})
+    return out + text[pos:], terms
+
+
+def write_all(data):
+    """data/potentials_jp.json と、画面用の data/potentials_jp.js（window.POT_JP）を書く"""
+    json.dump(data, open('data/potentials_jp.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+    open('data/potentials_jp.js', 'w', encoding='utf-8').write('// 日本語Wikiの素質の説明文（ゲーム内の日本語の文章と数値に近い）。tools/import_jp_wiki.py で作成。terms = 用語の説明\nwindow.POT_JP = '
+                                                               + json.dumps(data, ensure_ascii=False) + ';\n')
+
+
+if '--clean-only' in sys.argv:   # 取り込み済みの data/potentials_jp.json から、用語の説明だけを分ける（Wikiに取りに行かない）
+    data = json.load(open('data/potentials_jp.json', encoding='utf-8'))
+    n = 0
+    for t in data.values():
+        for role in t.values():
+            for p in role.values():
+                txt, terms = split_terms(p['text'])
+                if terms:
+                    p['text'] = txt
+                    p['terms'] = terms
+                    n += 1
+    write_all(data)
+    print('用語を分けた素質', n)
+    sys.exit()
+
 def parse(page):
     rows = []
     for tr in re.findall(r'<tr>(.*?)</tr>', page, flags=re.S):
@@ -28,7 +73,11 @@ def parse(page):
         if len(ths) != 3: continue
         label, name, desc = clean(ths[0]), clean(ths[1]), ths[2]
         nums = [clean(x) for x in re.findall(r'<span style="color:#[0-9a-fA-F]{6}">(.*?)</span>', desc, flags=re.S)]
-        rows.append({'label': label, 'ja': name, 'text': clean(desc), 'nums': nums})
+        text, terms = split_terms(clean(desc))
+        row = {'label': label, 'ja': name, 'text': text, 'nums': nums}
+        if terms:
+            row['terms'] = terms
+        rows.append(row)
     return rows
 
 out = {}; report = []
@@ -50,7 +99,7 @@ for t in tk:
         cands = [c for c in cands if (c[0], c[1]) not in used]
         if not cands: continue
         role, en = cands[0]; used[(role, en)] = 1
-        res.setdefault(role, {})[en] = {'ja': r['ja'], 'label': r['label'], 'text': r['text'], 'nums': r['nums']}
+        res.setdefault(role, {})[en] = {k: r[k] for k in ('ja', 'label', 'text', 'nums', 'terms') if k in r}
     # 日本語名の対応が入れ替わっている素質を、数値の一致で直す（英語Wikiの数値の端が、別の行の数値と一致するもの）
     def numsof(strs):
         return [float(m) for x in strs for m in re.findall(r'\d+(?:\.\d+)?', x)]
@@ -75,5 +124,5 @@ for t in tk:
     report.append((t['en'], ja, f'{n_got}/{n_en} 入れ替え修正 {fixed}'))
     out[t['en']] = res
     time.sleep(0.6)
-json.dump(out, open('data/potentials_jp.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+write_all(out)
 for r in report: print(*r)

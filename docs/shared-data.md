@@ -36,6 +36,7 @@
 | `trekker_id` `role` `kind` `grp` `ui_order` `slot` `name_en` `name_ja` | サイトの `potentials` と同じ |
 | `type` | 英語Wikiの種類（1=コア、2=サブ、3=汎用）。サイトの `kind` と別に持つ |
 | `text_ja` | 日本語Wikiの説明文。数値は `16~63%` のような範囲（Lv1〜Lv6）。`(Max!)` が付いた数値は、Lv6から上がらない |
+| `terms_ja` | 説明文に出てくる用語の説明（Wikiでマウスを重ねると出る補足）。`[{term, text}]`。無いときは null |
 | `text_en` `nums_en` | 英語Wikiの説明文と、Lvごとの数値（古い値が多いので、参考） |
 | `effects` | 計算ツールの効果の分類（下記） |
 

@@ -1,4 +1,4 @@
-// 素質の日本語名（プリセット共有サイトの名前データより。入れ替わっていた35組は、日本語Wikiの名前で直した: tools/fix_potential_ja.py）。キー=巡遊者の英語名 → 素質の英語名。
+// 素質の日本語名（プリセット共有サイトの名前データより。日本語Wikiの名前とそろえてある: tools/fix_potential_ja.py）。キー=巡遊者の英語名 → 素質の英語名。
 window.POTENTIAL_JA = {
 "Amber": {
 "Dominant Firepower": "超火力",
