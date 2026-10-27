@@ -534,27 +534,27 @@
     const main = G.team.main, s1 = G.team.s1, s2 = G.team.s2;
     // 順番: 通常、主力、必殺、印、支援1、支援2
     const items = [
-      ["basic", "通常攻撃（1ローテ）", groupSummary(main, "basic"), main],
+      ["basic", "通常1ローテ", groupSummary(main, "basic"), main],
       ["main", "主力スキル", groupSummary(main, "main"), main],
       ["ult", "必殺技", groupSummary(main, "ult"), main],
       ["mark", "印", groupSummary(main, "main", true) || groupSummary(main, "ult", true), main],
-      ["sup1", "支援スキル（支援1）", groupSummary(s1, "support"), s1],
-      ["sup2", "支援スキル（支援2）", groupSummary(s2, "support"), s2],
+      ["sup1", chOf(s1).jp + " 支援スキル", groupSummary(s1, "support"), s1],
+      ["sup2", chOf(s2).jp + " 支援スキル", groupSummary(s2, "support"), s2],
     ];
     window.__items = items;
     const curVals = {};
     $("result").innerHTML = items.map(([key, label, sm, id]) => {
       const nm = esc(chOf(id).jp);
-      if (!sm) return `<div class="res-row"><div class="tile"><span>${label}倍率</span><b>—</b><small>${nm}にはこの項目がありません</small></div><div class="tile"><span>${label}ダメージ</span><b>—</b></div></div>`;
+      if (!sm) return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>—</b><small>${nm}にはこの項目がありません</small></div><div class="tile"><span>${esc(label)} Dmg</span><b>—</b></div></div>`;
       curVals[key] = sm.exp;
       let cmp = "";
       if (memo && memo.v && memo.v[key] != null) {
         const d = sm.exp / memo.v[key] - 1;
         cmp = `<div class="cmp ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${(Math.round(d * 1000) / 10)}%</div>`;
       }
-      return `<div class="res-row"><div class="tile"><span>${label}倍率（${nm}）</span><b>${fmt(sm.mult)}%</b>
+      return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>${fmt(sm.mult)}%</b>
         <small>種別ダメージ ×${f3(sm.B)}</small><small>会心率 ${pct(sm.rate)} ／ 会心ダメージ ${pct(sm.critDmg)}</small><small>会心期待値倍率 ×${f3(sm.expMult)}</small></div>
-        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${label}ダメージ</span><b>${fmt(sm.exp)}</b><small>非会心 ${fmt(sm.non)} ／ 会心 ${fmt(sm.crit)}</small>${cmp}</div></div>`;
+        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} Dmg</span><b>${fmt(sm.exp)}</b><small>非会心 ${fmt(sm.non)} ／ 会心 ${fmt(sm.crit)}</small>${cmp}</div></div>`;
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
@@ -566,7 +566,7 @@
     if (!it || !it[2]) { panel.style.display = "none"; return; }
     panel.style.display = "";
     const sm = it[2];
-    $("drillTitle").textContent = `${it[1]}の内訳（${chOf(it[3]).jp}）`;
+    $("drillTitle").textContent = `${it[1]}の内訳` + (/^sup/.test(it[0]) ? "" : `（${chOf(it[3]).jp}）`);
     // 1ヒットを2段で: 種別／名前・倍率／回数・非会心／会心・期待値（1ヒット）／会心率と会心ダメージ。倍率の内訳と小計は、行にマウスを重ねると出る
     const r1 = n => (Math.round(n * 10) / 10).toFixed(1);
     $("drill").innerHTML = `<table><colgroup><col style="width:34%"><col style="width:18%"><col style="width:22%"><col style="width:26%"></colgroup>
