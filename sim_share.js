@@ -23,12 +23,13 @@
     CH.forEach(c => { set.add(c.id); const t = TREKKERS.find(x => x.en === c.en); if (t && t.potentials) ["main", "support"].forEach(r => (t.potentials[r] || []).forEach(g => g.potentials.forEach(x => { set.add(x.name); set.add(S.potKey(x.name)); }))); });
     (S.ENEMIES || []).forEach(e => set.add(e.id));
     Object.keys(S.DEFAULT_ENEMY_TRAITS || {}).forEach(k => S.DEFAULT_ENEMY_TRAITS[k].forEach(t => set.add(t.id)));
-    (window.LOSTRECORDS || []).forEach(r => set.add(r.id));
+    // Wikiから自動で足したロスレコ（auto）は辞書に入れない（文字のまま書き出す）。辞書が変わると、それまでの共有コードが読めなくなるため
+    (window.LOSTRECORDS || []).filter(r => !r.auto).forEach(r => set.add(r.id));
     (window.EMBLEM_OPTIONS || []).forEach(o => set.add(o.key));
     (window.EMBLEM_QUALITY || []).forEach(q => set.add(q[0]));
     ["rainbow2", "rainbow3", "triangle", "circle", "star", "heart1", "heart2", "heart3", "heart4", "heart5"].forEach(x => set.add(x));
     (S.NOTE_KEYS || []).forEach(n => set.add(n));
-    Object.keys(S.LR_FX || {}).forEach(id => { const fx = S.LR_FX[id]; fx.core.forEach(it => set.add(id + ":c:" + it.id)); fx.assists.forEach(a => a.items.forEach(it => set.add(id + ":" + a.id + ":" + it.id))); });
+    Object.keys(S.LR_FX || {}).filter(id => !S.LR_FX[id].auto).forEach(id => { const fx = S.LR_FX[id]; fx.core.forEach(it => set.add(id + ":c:" + it.id)); fx.assists.forEach(a => a.items.forEach(it => set.add(id + ":" + a.id + ":" + it.id))); });
     (S.LR_COUNTS || []).forEach(c => set.add(c.key));
     Object.keys(S.SKILL_FX || {}).forEach(id => S.SKILL_FX[id].forEach(fx => set.add(id + ":" + fx.id)));
     ["光", "水", "風", "火", "地", "闇"].forEach(x => set.add(x));

@@ -71,14 +71,14 @@
     return t;
   }
   function lrSum(G, el) {
-    const t = { baseAtk: 0, baseHp: 0, elem: 0, basicDmg: 0, skillDmg: 0, atkPct: 0 };
+    const t = { baseAtk: 0, baseHp: 0, elem: 0, basicDmg: 0, skillDmg: 0, ultDmg: 0, atkPct: 0 };
     const add = (id, isMain) => {
       const r = (window.LOSTRECORDS || []).find(x => x.id === id);
       if (!r) return;
       const s = r.stats || {}, m = !r.element || r.element === el;
       t.baseAtk += s.baseAtk || 0; t.baseHp += s.baseHp || 0;
       if (m) t.elem += s.elemDmg || 0;
-      t.basicDmg += s.basicDmg || 0;
+      t.basicDmg += s.basicDmg || 0; t.skillDmg += s.skillDmg || 0; t.ultDmg += s.ultDmg || 0;
       const a = isMain && r.core && r.core.always;
       if (a) { if (m) t.elem += a.elemDmg || 0; t.atkPct += a.atkPct || 0; }
     };
@@ -126,7 +126,7 @@
       elemAdd: lr.elem + nt.elem + (em.elemDmg || 0) + (o.elem || 0) + tu * (tb.elem || 0),
       basicAdd: (em.basicDmg || 0) + lr.basicDmg + nt.basicDmg + (o.basic || 0) + tu * (tb.basic || 0),
       skillAdd: (em.skillDmg || 0) + lr.skillDmg + nt.skillDmg + (o.skill || 0) + tu * (tb.skill || 0),
-      ultAdd: (em.ultDmg || 0) + nt.ultDmg + (o.ult || 0) + tu * (tb.ult || 0),
+      ultAdd: (em.ultDmg || 0) + lr.ultDmg + nt.ultDmg + (o.ult || 0) + tu * (tb.ult || 0),
       markAdd: (em.markDmg || 0) + (o.mark || 0),
       critRate: 0.05 + nt.critRate + (em.critRate || 0) + (o.critRate || 0) + (eo.teamCrit || 0),
       critDmg: 1.5 + nt.critDmg + (em.critDmg || 0) + (o.critDmg || 0) + tu * (tb.crit || 0),

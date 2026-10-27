@@ -163,7 +163,7 @@
     const col = ([k, l]) => {
       const id = G.team[k], c = chOf(id), p = `chars.${id}`;
       return `<div class="chcol${mHide(k)}"><h3>${l}</h3>
-        ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp + (x.auto ? "（未検証）" : "")]), str: true }))}
+        ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp + (x.auto ? "*" : "")]), str: true }))}
         ${fld("キャラレベル", `<span class="muted">90（固定）</span>`)}
         ${lvFld(id, "basic", "通常攻撃Lv")}${lvFld(id, "main", "主力スキルLv")}${lvFld(id, "support", "支援スキルLv")}${lvFld(id, "ult", "必殺技Lv", "11〜は推定")}
         ${fld("信頼ボーナスLv", inp(`${p}.trustLv`, { min: 0, max: 99, step: 1, w: 70 }))}
@@ -172,7 +172,7 @@
       </div>`;
     };
     return `${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div>
-      <p class="muted">各巡遊者の「心相・徽章・素質・その他」で、この中が切り替わります。ステータスが画面と合わないときは、「巡遊者（直接入力）」のタブに画面の値を入れてください（入力した欄だけ上書きして計算します）。</p>`;
+      <p class="muted">名前の後ろの「*」は未確認（技のヒットや素質を、Wikiの説明文から自動で作ったもの）です。各巡遊者の「心相・徽章・素質・その他」で、この中が切り替わります。ステータスが画面と合わないときは、「巡遊者（直接入力）」のタブに画面の値を入れてください（入力した欄だけ上書きして計算します）。</p>`;
   }
   // ---- 巡遊者（直接入力）----
   function renderDirect() {
@@ -347,7 +347,7 @@
       const role = k === "main" ? "main" : "support", roleJa = k === "main" ? "主力" : "支援";
       const card = x => {
         const sp = spec[x.name], key = S.potKey(x.name), core = x.type === 1;
-        const nm = esc(JA(x.name, id));
+        const nm = esc(JA(x.name, id)) + (spec[x.name] && (spec[x.name].st === "auto" || spec[x.name].st === "draft") ? "*" : "");   // *＝未確認（説明文から自動で作った下書き）
         const lvIn = `<div class="lv">${core ? "取得" : "Lv"} ${inp(`${p}.pots2.${key}`, { min: 0, max: core ? 1 : 9, step: 1, w: 56 })}`;
         if (!sp) return `<div class="pot" title="${esc(x.name)}"><div class="ph"><b>${nm}</b><span class="tag-ng">未反映</span></div><div class="pd">効果がまだ入っていません</div><div class="pc">${lvIn}</div></div></div>`;
         const eff = sp.e.length > 0;
@@ -360,7 +360,7 @@
         const seen = {};
         sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; ctl.push(`<div class="lv">${stkIn(key, e)}</div>`); } });
         sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<div class="lv"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 56, ph: e.c })}</div>`); });
-        const tags = (core ? '<span class="tag-ok">コア</span>' : "") + tagBonus(x.name) + (eff ? "" : '<span class="tag-ng">火力に影響なし</span>') + (sp.st === "auto" || sp.st === "draft" ? '<span class="tag-ng">下書き</span>' : "") + (sp.off ? '<span class="tag-ng">既定は反映しない</span>' : "");
+        const tags = (core ? '<span class="tag-ok">コア</span>' : "") + tagBonus(x.name) + (eff ? "" : '<span class="tag-ng">火力に影響なし</span>') +(sp.off ? '<span class="tag-ng">既定は反映しない</span>' : "");
         return `<div class="pot${core ? " core" : ""}" title="${esc(x.name)}"><div class="ph"><b>${nm}</b>${tags}</div>
           <div class="pd" title="${esc(sp.txt)}">${esc(sp.txt)}</div><div class="pc">${ctl.join("")}</div></div>`;
       };
@@ -372,7 +372,7 @@
       const buildRows = builds.map(g => `<div class="phead">${roleJa}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1).concat(g.potentials.filter(x => x.type !== 1)))}`).join("");
       const genRow = generic ? `<div class="phead">汎用</div>${grid(generic.potentials)}` : "";
       body = `<div style="grid-column:1/-1">${buildRows}${genRow}</div>`;
-      note = "名前は日本語（マウスを重ねると英語名）。効果は原文を読んで分類した内容を表の下に書いています。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。";
+      note = "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。効果は原文を読んで分類した内容を表の下に書いています。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。";
     } else {
       const t = TK(c.en), groups = (t.potentials[k === "main" ? "main" : "support"] || []);
       body = groups.map(g => g.potentials.map(x => `<div class="pot${x.type === 1 ? " core" : ""}" title="${esc(x.name)}"><div class="ph"><b>${esc(JA(x.name, id))}</b>${x.type === 1 ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ng">未反映</span></div>
@@ -392,6 +392,8 @@
   }
 
   // ---- ロスレコ・音符 ----
+  // ロスレコの名前。Wikiから自動で入れたもの（ゲーム内では未確認）は「*」を付ける。★の数も添える
+  const lrName = r => `${r.name}${r.auto || r.autoFx ? "*" : ""}${r.rarity ? `（★${r.rarity}）` : ""}`;
   function renderLr() {
     const L = LOSTRECORDS;
     // 枠: クリア → 属性 → 名前（徽章と同じ形）。属性だけ選んだ状態は画面の中だけで持つ
@@ -402,7 +404,7 @@
       const names = L.filter(x => !el || x.element === el);
       return `<div class="lr-line"><span class="lab">${lab}</span><button class="obtn" data-act="lrclear:${path}" style="min-height:30px">クリア</button>
         <select data-lrel="${path}"><option value="">（属性）</option>${ELS.map(e => `<option${e === el ? " selected" : ""}>${e}</option>`).join("")}</select>
-        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(x.name)}</option>`).join("")}</select></div>`;
+        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(lrName(x))}</option>`).join("")}</select></div>`;
     };
     const m = "lrManual";
     // 音符: ゲームと同じく、色と名前 → 数 → 効果 を縦に並べ、1行にする
@@ -421,24 +423,30 @@
     const fxHtml = (G.lrMain || []).filter(Boolean).map(id => {
       const fx = S.LR_FX[id], r = L.find(x => x.id === id);
       if (!r) return "";
-      if (!fx) return `<div class="pot"><b>${esc(r.name)}</b><span class="tag-ng">効果は未反映（基礎攻撃・基礎HP・属性ダメージだけ反映）</span></div>`;
+      if (!fx) return `<div class="pot"><b>${esc(lrName(r))}</b><span class="tag-ng">効果は未反映（基礎攻撃・基礎HP・属性ダメージだけ反映）</span></div>`;
       const item = (key, it, lv) => {
         const txt = typeof it.txt === "function" ? it.txt(lv) : it.txt;
-        const tog = it.off ? ` 反映 <input type="checkbox" data-p="lrOn.${key}" data-t="b"${(G.lrOn || {})[key] ? " checked" : ""}>` : (it.need ? ` <span class="muted">条件: ${(S.LR_COUNTS.find(c => c.key === it.need[0]) || {}).label} が ${it.need[1]} 以上</span>` : (it.n ? ` <span class="muted">数: ${(S.LR_COUNTS.find(c => c.key === it.n) || {}).label}</span>` : ` <span class="tag-ok">常時</span>`));
-        return `<div style="margin:3px 0">${esc(txt)}${tog}</div>`;
+        if (it.skip) return `<div style="margin:3px 0;color:var(--muted)">${esc(txt)} <span class="tag-ng">計算に未反映</span></div>`;
+        const stk = (it.e || []).find(e => e.stk > 1);
+        const isOn = (G.lrOn || {})[key] == null ? !it.off : (G.lrOn || {})[key];
+        const tog = it.off ? ` 反映 <input type="checkbox" data-p="lrOn.${key}" data-t="b"${isOn ? " checked" : ""}>` : (it.need ? ` <span class="muted">条件: ${(S.LR_COUNTS.find(c => c.key === it.need[0]) || {}).label} が ${it.need[1]} 以上</span>` : (it.n ? ` <span class="muted">数: ${(S.LR_COUNTS.find(c => c.key === it.n) || {}).label}</span>` : ` <span class="tag-ok">常時</span>`));
+        return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}</div>`;
       };
-      const core = fx.core.map(it => item(id + ":c:" + it.id, it, 1)).join("");
+      const rank = fx.auto ? Math.min(6, Math.max(1, +((G.lrRank || {})[id]) || 1)) : 1;
+      const rankSel = fx.auto ? ` <span class="muted">突破</span> ${inp(`lrRank.${id}`, { sel: [1, 2, 3, 4, 5, 6].map(n => [n, String(n)]) })}` : "";
+      const core = fx.core.map(it => item(id + ":c:" + it.id, it, rank)).join("");
       const as = fx.assists.map(a => {
         const lv = S.lrAssistLv(G.notes, a);
         const need = a.notes.map(n => n.replace("の音符", "")).join("・");
         return `<div style="margin-top:6px"><b>${esc(a.name)}</b> ${lv ? `<span class="tag-ok">Lv${lv} 発動</span>` : '<span class="tag-ng">未発動</span>'}<span class="muted"> 解放: ${need} ${a.base}以上（Lvごとに+15）</span>
           ${lv ? a.items.map(it => item(id + ":" + a.id + ":" + it.id, it, lv)).join("") : ""}</div>`;
       }).join("");
-      return `<div class="pot core" style="grid-column:1/-1"><b>${esc(r.name)}</b> <span class="muted">コア効果</span>${core}${as ? `<div class="muted" style="margin-top:6px">アシスト効果（音符のレベルで自動で解放）</div>${as}` : ""}</div>`;
+      return `<div class="pot core" style="grid-column:1/-1"><div class="ph"><b>${esc(lrName(r))}</b> <span class="muted">コア効果</span>${rankSel}</div>${core}${as ? `<div class="muted" style="margin-top:6px">アシスト効果（音符のレベルで自動で解放）</div>${as}` : ""}</div>`;
     }).join("");
     return `<div class="wide"><h3>ロスレコ・音符</h3>
       <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div>${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
-      <p class="muted">ロスレコの基礎攻撃力・基礎HP・属性ダメージ%は、全員に入ります（属性が違うロスレコの属性ダメージは、その属性の巡遊者だけ）。コア効果・アシスト効果は、メインのものだけです。</p>
+      <p class="muted">ロスレコの基礎攻撃力・基礎HP・属性ダメージ%は、全員に入ります（属性が違うロスレコの属性ダメージは、その属性の巡遊者だけ）。コア効果・アシスト効果は、メインのものだけです。<br>
+      名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。コア効果は「突破」で値を選べます。条件付きの効果は、既定では反映しません（チェックで反映）。</p>
       <h3 style="margin-top:12px;font-size:14px">音符効果（探索で獲得した数を入力。サブのロスレコの初期音符は自動で足します）</h3>
       <div class="notes-row">${noteIn}</div>
       <h3 style="margin-top:12px;font-size:14px">効果の数（暁光・星願など。戦闘中のある時点を想定して入力）</h3>

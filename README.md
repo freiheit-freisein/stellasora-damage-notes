@@ -47,6 +47,8 @@ PCの横長画面（1920x1080）前提です。スマホ対応は、まだです
 | `calc.js` `data.js` `data_sup.js` | 検証済みの式とデータ（ウィロー・ナツカ・エレノア、ロスレコ・音符など）。計算ページが使う |
 | `sim.html` `sim_ui.js` `sim_engine.js` `sim_data.js` `sim_pots.js` `sim_lr.js` `sim_share.js` | 計算ページ（画面・計算エンジン・キャラと敵のデータ・光チームの素質の効果表）。以前のウィロー側の検証ページとは、全シナリオで一致を確認済み |
 | `index.html` | 計算ページ（sim.html）へ移動するだけ |
+| `data/lostrecords_jp.json` `data/lr_auto.js` `tools/import_lr_wiki.py` `tools/build_lr.py` | 日本語Wikiのロスレコ（★5・★4・★3の全部）と、その効果を決まった言い回しで読んだもの。ゲーム内では未確認なので、計算ページでは名前に「*」を付ける。手で入れたロスレコ（`sim_lr.js`）が優先 |
+| `tools/build_site.py` | 公開用（sim.stella-tool.com）のファイルを `dist/` にまとめる |
 | `sim_share.js` | 共有コード（入力の差分を辞書で番号にして、圧縮・英数字化。初期値と違う所だけを出すので短い） |
 | `record_level.js` | 記録レベルボーナス表（Lv1〜40） |
 | `data/potential_ja.js` | 素質の日本語名（英語名→日本語名）。プリセット共有サイトの名前データより |

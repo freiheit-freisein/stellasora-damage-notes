@@ -85,6 +85,24 @@
     nodoka: { core: [{ id: "atk", txt: "支援の攻撃力 +14%", e: [{ k: "atkPct", v: 0.14, to: "sup" }] }], assists: [] },
   };
 
+  // ---- 日本語Wikiから自動で作ったロスレコ（data/lr_auto.js）。ゲーム内では未確認なので、画面では名前に「*」を付ける ----
+  // 手で入れたロスレコ（上）は、そのまま使う。手で入れたものに効果の表（LR_FX）がなければ、Wikiの効果だけ足す（autoFx）。
+  // コア効果は突破（1〜6、既定1）、アシスト効果は音符で決まるLv（1〜5）の値を使う。重複できるものは最大の重複数。
+  const autoFx = r => ({
+    auto: true,
+    core: r.core.map((it, i) => ({ id: "c" + i, auto: true, skip: it.skip, off: it.off, txt: lv => it.txt[Math.min(lv, it.txt.length) - 1], e: (it.e || []).map(e => Object.assign({}, e, { v: lv => e.v[Math.min(lv, e.v.length) - 1] * (e.stk || 1) })) })),
+    assists: r.assists.map(a => ({ id: a.id, name: a.name, notes: a.notes, base: a.base, items: a.items.map((it, i) => ({ id: "i" + i, auto: true, skip: it.skip, off: it.off, txt: lv => it.txt[Math.min(lv, it.txt.length) - 1], e: (it.e || []).map(e => Object.assign({}, e, { v: lv => e.v[Math.min(lv, e.v.length) - 1] * (e.stk || 1) })) })) })),
+  });
+  (window.LR_AUTO || []).forEach(r => {
+    const had = L.find(x => x.name === r.name);
+    if (had) {
+      if (!S.LR_FX[had.id]) { S.LR_FX[had.id] = autoFx(r); had.autoFx = true; }
+      return;
+    }
+    addRec({ id: r.id, name: r.name, rarity: r.rarity, element: r.element, level: 90, levelMax: 90, stats: r.stats, core: { name: r.coreName, rank: "?" }, sub: { startNotes: r.sub }, auto: true });
+    S.LR_FX[r.id] = autoFx(r);
+  });
+
   // 音符のレベルから、アシストの発動Lv（0=未発動）を決める。Lv n の条件は 全ての音符が base + 15×(n−1) 以上
   S.lrAssistLv = (notes, a) => {
     for (let n = 5; n >= 1; n--) {
@@ -99,7 +117,16 @@
     const mains = (G.lrMain || []).filter(Boolean);
     const on = G.lrOn || {}, N = G.lrN || {};
     const luxIds = team.filter((id, i) => chs[i].el === "光");
-    const recv = to => to === "main" ? [team[0]] : to === "sup" ? team.slice(1) : to === "lux" ? luxIds : team.slice();
+    // 受け取る味方。e.el があれば、その属性の味方だけ（「X属性の主力」は、主力がX属性のときだけ）
+    const recv = e => {
+      const to = e.to, el = e.el, ok = i => !el || chs[i].el === el;
+      if (to === "main") return ok(0) ? [team[0]] : [];
+      if (to === "sup") return team.filter((id, i) => i > 0 && ok(i));
+      if (to === "lux") return luxIds;
+      if (to === "el") return team.filter((id, i) => ok(i));
+      if (to && to.indexOf("role:") === 0) return team.filter((id, i) => chs[i].role === to.slice(5) && ok(i));
+      return team.filter((id, i) => ok(i));
+    };
     const put = (e, v, rid) => {
       const a = out[rid];
       if (!a || !v) return;
@@ -107,9 +134,12 @@
       else if (e.k === "critDmgSkill") a.mods.push({ k: "critDmg", v, tags: null, ht: "skill", cond: null });
       else if (e.k === "takenSkill") a.takenSkill *= 1 + v;
       else if (e.k === "takenBasic") a.takenBasic = (a.takenBasic || 1) * (1 + v);
+      else if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; }
+      else if (e.k === "mark") a.markAdd += v;
       else if (a[e.k] != null) a[e.k] += v;
     };
     const apply = (key, item, lv) => {
+      if (item.skip) return;
       const isOn = on[key] == null ? !item.off : on[key];
       if (!isOn) return;
       if (item.need && (+N[item.need[0]] || 0) < item.need[1]) return;
@@ -118,13 +148,14 @@
         let v = typeof e.v === "function" ? e.v(lv) : e.v;
         const c = e.cap != null ? Math.min(cnt, e.cap) : cnt;
         v *= c;
-        recv(e.to).forEach(rid => put(e, v, rid));
+        recv(e).forEach(rid => put(e, v, rid));
       });
     };
     mains.forEach(rid => {
       const fx = S.LR_FX[rid];
       if (!fx) return;
-      fx.core.forEach(it => apply(rid + ":c:" + it.id, it, 1));
+      const rank = fx.auto ? Math.min(6, Math.max(1, +((G.lrRank || {})[rid]) || 1)) : 1;   // 自動のロスレコは突破（既定1）
+      fx.core.forEach(it => apply(rid + ":c:" + it.id, it, rank));
       fx.assists.forEach(a => {
         const lv = S.lrAssistLv(S.notesTotal(G), a);
         if (!lv) return;

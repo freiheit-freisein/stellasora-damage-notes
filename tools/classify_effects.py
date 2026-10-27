@@ -116,11 +116,24 @@ def classify(en_name, jt, en_nums, el_ja, role):
             if m5:
                 flat = '%' not in m5.group(1) and '％' not in m5.group(1)
                 add('hpFlat' if flat else 'hpPct', m5.group(1), flat=flat)
-            m6 = re.search(r'攻撃力の\s*' + NUM + r'(?:\s*[xX×]\s*(\d+))?\s*[%％]?\s*の[^。]*?(スキル|通常攻撃|必殺技|印)ダメージを与え', s)
+            # 「（巡遊者名の）必殺技のダメージが」「主力スキルのダメージが」○%増加 → その種類のダメージ
+            m7 = re.search(r'(?:^|の)(必殺技|主力スキル)のダメージが\s*(' + VAL + r')\s*増加', s) if not m2 else None
+            if m7:
+                add('Bu' if m7.group(1) == '必殺技' else 'Bs', m7.group(2))
+            # 追加ヒット「攻撃力の N%（または N%～M%）の…ダメージを与え」。範囲は Lv1〜Lv6 の値
+            m6 = re.search(r'攻撃力の\s*(' + RNG + '|' + NUM + r'(?:\s*[xX×]\s*(\d+))?\s*[%％]?)\s*の[^。]*?(スキル|通常攻撃|必殺技|印)ダメージを与え', s)
             if m6:
-                grp = 'ult' if m6.group(3) == '必殺技' else role
-                got.append({'k': 'extra', 'group': grp, 'name': en_name, 't': {'スキル': 'skill', '通常攻撃': 'basic', '必殺技': 'ult', '印': 'mark'}[m6.group(3)],
-                            'c': int(m6.group(2)) if m6.group(2) else 1, 'edit': True, 'm': float(m6.group(1))})
+                grp = 'ult' if m6.group(6) == '必殺技' else role
+                e = {'k': 'extra', 'group': grp, 'name': en_name, 't': {'スキル': 'skill', '通常攻撃': 'basic', '必殺技': 'ult', '印': 'mark'}[m6.group(6)],
+                     'c': int(m6.group(5)) if m6.group(5) else 1, 'edit': True}
+                if m6.group(2):   # 範囲: 英語Wikiの表と一致すれば番号、なければ直線補間
+                    v, nt = value(m6.group(1), en_nums, True)
+                    e.update({'n': v['n']} if 'n' in v else {'arr': v['arr']})
+                    if nt and nt not in notes:
+                        notes.append(nt)
+                else:
+                    e['m'] = float(m6.group(4))
+                got.append(e)
         if got:
             effects += got
             last = got
