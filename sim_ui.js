@@ -97,7 +97,7 @@
         <select id="bsel"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
         <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></div></div>
       <div class="foot"><button class="btn-add" data-act="dlg-close">閉じる</button></div>`;
-    $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
+    $("cmpbar").innerHTML = `<button class="btn-add xbtn" data-act="share-x" style="min-height:30px;padding:0 12px;font-size:12px">Xで共有</button><button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
   }
 
   // ---- 倍率タイル（種類を問わない共通の倍率） ----
@@ -658,6 +658,7 @@
     else if (a === "memodel") { memo = null; try { localStorage.removeItem(KEY_M); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "dlg-open") { DM.preset = DM.code = DM.url = null; renderTop(); $("shareDlg").showModal(); }
     else if (a === "dlg-close") $("shareDlg").close();
+    else if (a === "share-x") shareX();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
   });
@@ -699,11 +700,27 @@
       return say(key, "共有URLを貼り付けてください", true);
     }
     say(key, "短縮URLを作っています…");
-    S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2])
-      .then(code => fetch("/api/short", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) }))
+    makeShort().then(url => { DV.url = url; say(key, "作りました"); }).catch(e => say(key, e.message, true));
+  }
+  // 短縮URLを作る（公開しているページだけ）。カードのタイトルは、編成の3人の名前
+  const teamTitle = () => [G.team.main, G.team.s1, G.team.s2].map(id => chOf(id).jp).join("・") + "のビルド";
+  function makeShort() {
+    return S.shareEncode(G, defState(), [G.team.main, G.team.s1, G.team.s2])
+      .then(code => fetch("/api/short", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code, title: teamTitle() }) }))
+      .catch(() => { throw new Error("短縮URLを作れませんでした（通信の失敗）"); })
       .then(r => r.json().catch(() => ({ error: "この環境では短縮URLを作れません（公開しているページで使えます）" })))
-      .then(j => { if (!j.url) return say(key, j.error || "短縮URLを作れませんでした", true); DV.url = j.url; say(key, "作りました"); })
-      .catch(() => say(key, "短縮URLを作れませんでした（通信の失敗）", true));
+      .then(j => { if (!j.url) throw new Error(j.error || "短縮URLを作れませんでした"); return j.url; });
+  }
+  // Xで共有: 短縮URLを作って、Xの投稿画面を開く。ポップアップを止められないよう、押した時点で窓を開いておき、URLができたら移動する
+  function shareX() {
+    const w = window.open("about:blank", "_blank");
+    shareMsg = "Xで共有する準備をしています…"; renderTop();
+    makeShort().then(url => {
+      const text = `${teamTitle()}を計算しました #巡遊者の計算ノート #ステラソラ`;
+      const intent = "https://x.com/intent/post?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
+      if (w) w.location.href = intent; else location.href = intent;
+      shareMsg = ""; renderTop();
+    }).catch(e => { if (w) w.close(); shareMsg = e.message; renderTop(); });
   }
 
   renderAll();

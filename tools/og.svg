@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- リンクを張ったときのカード（OGP画像）。tools/make_og.mjs で og.png にする。革張りの日記帳はオリジナルの絵 -->
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#E4E7F3" stroke-width="1.5"/>
+    </pattern>
+    <linearGradient id="leather" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8A5636"/>
+      <stop offset="0.55" stop-color="#6E4027"/>
+      <stop offset="1" stop-color="#4E2B19"/>
+    </linearGradient>
+    <linearGradient id="spine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3E2213"/>
+      <stop offset="1" stop-color="#5C341F"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F3D58A"/>
+      <stop offset="0.5" stop-color="#D2A64A"/>
+      <stop offset="1" stop-color="#A97B2C"/>
+    </linearGradient>
+    <linearGradient id="pages" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF5E6"/>
+      <stop offset="1" stop-color="#EADFC2"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="10" dy="16" stdDeviation="14" flood-color="#1E2250" flood-opacity="0.28"/>
+    </filter>
+    <path id="star4" d="M0 -1C0.12 -0.12 0.12 -0.12 1 0 0.12 0.12 0.12 0.12 0 1 -0.12 0.12 -0.12 0.12 -1 0 -0.12 -0.12 -0.12 -0.12 0 -1Z"/>
+  </defs>
+
+  <rect width="1200" height="630" fill="#F3F4FA"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <!-- 背景の円（ゲームのノートの画面のような、薄い輪） -->
+  <g fill="none" stroke="#C9CEEA" stroke-width="1.5">
+    <circle cx="330" cy="330" r="270" stroke-dasharray="2 7"/>
+    <circle cx="330" cy="330" r="215"/>
+  </g>
+  <circle cx="330" cy="330" r="250" fill="url(#glow)"/>
+
+  <!-- 日記帳 -->
+  <g transform="translate(330 330) rotate(-9)" filter="url(#shadow)">
+    <!-- 紙の束（右と下に見える） -->
+    <rect x="-150" y="-206" width="316" height="420" rx="14" fill="url(#pages)" stroke="#D8CBA7" stroke-width="2"/>
+    <g stroke="#DCCDA8" stroke-width="1.5">
+      <path d="M-140 206H150M-140 200H152M-140 194H154"/>
+      <path d="M160 -196V196M156 -198V198"/>
+    </g>
+    <!-- 表紙 -->
+    <rect x="-170" y="-216" width="318" height="420" rx="16" fill="url(#leather)"/>
+    <rect x="-170" y="-216" width="40" height="420" rx="14" fill="url(#spine)"/>
+    <g stroke="#3A1F11" stroke-width="3" opacity="0.6">
+      <path d="M-170 -150H-130M-170 -60H-130M-170 30H-130M-170 120H-130"/>
+    </g>
+    <!-- ステッチ -->
+    <rect x="-118" y="-200" width="252" height="388" rx="10" fill="none" stroke="#E9C98B" stroke-width="3" stroke-dasharray="9 7" opacity="0.85"/>
+    <!-- 角金具 -->
+    <g fill="url(#gold)" stroke="#8C6422" stroke-width="2">
+      <path d="M148 -216H104Q148 -216 148 -172Z"/>
+      <path d="M148 204H104Q148 204 148 160Z"/>
+    </g>
+    <!-- 中央の紋章: 円と羅針の星 -->
+    <g transform="translate(10 -20)">
+      <circle r="78" fill="none" stroke="url(#gold)" stroke-width="5"/>
+      <circle r="64" fill="none" stroke="#E9C98B" stroke-width="1.5" stroke-dasharray="3 5"/>
+      <g fill="url(#gold)" stroke="#8C6422" stroke-width="1.5" stroke-linejoin="round">
+        <path d="M0 -36L6 -6 36 0 6 6 0 36 -6 6 -36 0 -6 -6Z" transform="rotate(45)"/>
+        <path d="M0 -62L9 -9 62 0 9 9 0 62 -9 9 -62 0 -9 -9Z"/>
+      </g>
+      <circle r="9" fill="#4B5082" stroke="#F3D58A" stroke-width="3"/>
+    </g>
+    <!-- 表題の札 -->
+    <rect x="-70" y="96" width="160" height="40" rx="6" fill="#F5EBD3" stroke="url(#gold)" stroke-width="3"/>
+    <path d="M-50 116h120" stroke="#B59B6A" stroke-width="2" stroke-dasharray="6 5"/>
+    <!-- 留め具のベルトとバックル -->
+    <rect x="118" y="-44" width="70" height="38" rx="6" fill="#4A2817"/>
+    <rect x="160" y="-52" width="34" height="54" rx="6" fill="none" stroke="url(#gold)" stroke-width="7"/>
+    <!-- しおり紐 -->
+    <path d="M40 204C42 240 30 262 44 292" fill="none" stroke="#0ABEC5" stroke-width="9" stroke-linecap="round"/>
+    <path d="M62 204C66 236 76 252 70 280" fill="none" stroke="#EDA3B2" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <!-- きらめき -->
+  <g>
+    <use href="#star4" transform="translate(126 120) scale(18)" fill="#0ABEC5"/>
+    <use href="#star4" transform="translate(560 140) scale(14)" fill="#EDA3B2"/>
+    <use href="#star4" transform="translate(150 548) scale(16)" fill="#F4C84A"/>
+    <use href="#star4" transform="translate(548 520) scale(11)" fill="#9AA0C8"/>
+  </g>
+
+  <!-- 文字 -->
+  <g font-family="Noto Sans JP" fill="#4B5082">
+    <text x="640" y="196" font-family="Bahnschrift" font-weight="600" font-size="30" letter-spacing="6" fill="#08808A">FOR STELLA SORA</text>
+    <g transform="translate(640 0) skewX(-10)">
+      <text x="40" y="262" font-weight="700" font-size="44">巡遊者の</text>
+      <text x="40" y="350" font-weight="700" font-size="82">計算ノート</text>
+    </g>
+    <path d="M640 392H1130" stroke="#0ABEC5" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round"/>
+    <text x="640" y="440" font-weight="700" font-size="25" fill="#5F6492">素質・徽章・ロスレコ・音符まで入れて</text>
+    <text x="640" y="478" font-weight="700" font-size="25" fill="#5F6492">ダメージを計算して、ビルドを共有</text>
+    <text x="640" y="556" font-family="Bahnschrift" font-weight="600" font-size="24" letter-spacing="2" fill="#9AA0C8">sim.stella-tool.com</text>
+  </g>
+</svg>

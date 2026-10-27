@@ -33,10 +33,15 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); } catch (e) { return json({ error: "送信の形式が正しくありません" }, 400); }
   const code = body && body.code;
   if (!valid(code)) return json({ error: "共有コードが正しくありません" }, 400);
+  // カードに出すタイトル（編成の3人の名前など）。制御文字を除き、80文字まで。画面に出すときにエスケープする
+  const title = typeof body.title === "string" ? body.title.replace(/[\u0000-\u001f\u007f<>]/g, "").trim().slice(0, 80) || null : null;
   const origin = new URL(request.url).origin;
   const hash = await sha(code);
-  const had = await env.DB.prepare("SELECT id FROM short WHERE hash = ?").bind(hash).first();
-  if (had) return json({ id: had.id, url: origin + "/s/" + had.id });
+  const had = await env.DB.prepare("SELECT id, title FROM short WHERE hash = ?").bind(hash).first();
+  if (had) {
+    if (!had.title && title) await env.DB.prepare("UPDATE short SET title = ? WHERE id = ?").bind(title, had.id).run();
+    return json({ id: had.id, url: origin + "/s/" + had.id });
+  }
 
   const ip = (await sha("sim-short:" + (request.headers.get("CF-Connecting-IP") || ""))).slice(0, 16);
   const now = Date.now();
@@ -46,7 +51,7 @@ export async function onRequestPost({ request, env }) {
   for (let i = 0; i < 5; i++) {
     const id = newId();
     try {
-      await env.DB.prepare("INSERT INTO short (id, code, hash, ip, created) VALUES (?, ?, ?, ?, ?)").bind(id, code, hash, ip, now).run();
+      await env.DB.prepare("INSERT INTO short (id, code, hash, ip, created, title) VALUES (?, ?, ?, ?, ?, ?)").bind(id, code, hash, ip, now, title).run();
       return json({ id, url: origin + "/s/" + id });
     } catch (e) {
       // 同じIDが既にある（まれ）か、同時に同じコードが登録された
