@@ -53,6 +53,9 @@ PCの横長画面（1920x1080）前提の簡易UIです。スマホ対応・見�
 | `data/potential_ja.js` | 素質の日本語名（英語名→日本語名）。プリセット共有サイトの名前データより |
 | `data/trekkers.json` `data/trekkers.js` | キャラのスキル倍率・ステータス・素質（下記の出典から自動生成） |
 | `tools/` | 上記データを作るスクリプト |
+| `edit.html` `edit_ui.js` `data/spec_user.js` `data/spec_draft.js` | 素質の効果の入力ツールと、その内容（確認済み／自動の下書き） |
+| `data/shared/potentials.json` `docs/shared-data.md` | プリセット共有サイトと共有する素質のデータ（キーはサイトと同じ trekker_id＋role＋name_en）。作り方は docs/shared-data.md |
+| `tools/import_jp_wiki.py` `tools/classify_effects.py` `tools/build_shared.py` | 日本語Wikiの取り込み・効果の下書き・共有データの作成 |
 | `SUMMARY.md` | 検証のまとめ（分かっていること・仮説） |
 
 ## 出典とライセンス
