@@ -61,7 +61,7 @@ window.SPEC_USER = {
    ],
    "txt": "主力スキルの2段目：71%×2・119%・79%（スキル）",
    "note": "遅らせて撃つと、敵の水被ダメージ +10%（6秒）の効果は、条件が重いので未反映",
-   "verified": "日本語Wiki（ゲーム内の文章）"
+   "verified": "日本語Wikiの文章（ゲーム内の画面では未確認）"
   },
   "Cordiality": {
    "done": true,
@@ -109,7 +109,7 @@ window.SPEC_USER = {
     }
    ],
    "txt": "魔盾を得たとき、波 112%（スキル）。回数は仮に1回",
-   "verified": "日本語Wiki（ゲーム内の文章）"
+   "verified": "日本語Wikiの文章（ゲーム内の画面では未確認）"
   },
   "Stream: Drip's Overturn": {
    "done": true,
