@@ -41,7 +41,7 @@
     return a;
   }
   let shareCode = "", shareMsg = "";
-  const V = { panel: "overview", tilesFor: "main", drill: null, pick: null, lrPick: null, lrEl: {} };
+  const V = { panel: "overview", tilesFor: "main", drill: null, pick: null, lrPick: null, lrEl: {}, mChar: "main", m: "in" };
   let memo = null;
   try { memo = JSON.parse(localStorage.getItem(KEY_M)); } catch (e) { memo = null; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(G)); } catch (e) { /* 無視 */ } };
@@ -79,11 +79,11 @@
     let builds = {};
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
-    $("topbar").innerHTML = `<b>ビルド</b>
+    $("topbar").innerHTML = `<span class="tb-b"><b>ビルド</b>
       <input type="text" id="bname" placeholder="名前" style="width:120px">
       <button class="btn-add" data-act="bsave">保存</button>
       <select id="bsel" style="width:170px"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
-      <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button>
+      <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></span>
       <span class="sep"></span><b>共有コード</b>
       <input type="text" id="scode" value="${esc(shareCode)}" placeholder="ここに貼り付け" style="width:220px">
       <button class="btn-add" data-act="share-out">コードを作る</button><button class="btn-add" data-act="share-in">読み込む</button>
@@ -116,8 +116,23 @@
   function renderSelectors() {
     // 徽章・素質などの巡遊者ごとの画面は「巡遊者」のタブの中
     const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
-    const b = (key, label) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}">${label}</button>`;
-    $("selectors").innerHTML = b("overview", "巡遊者") + b("direct", "巡遊者（直接入力）") + b("record", "記録レベル") + b("lr", "ロスレコ・音符") + b("gimmick", "ギミック(敵)") + b("adjust", "補正");
+    const b = (key, label, en) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${label}</span></button>`;
+    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS") + b("direct", "直接入力", "DIRECT") + b("record", "記録レベル", "RECORD") + b("lr", "ロスレコ・音符", "LOST RECORDS") + b("gimmick", "ギミック(敵)", "ENEMY") + b("adjust", "補正", "ADJUST");
+  }
+  // スマホ: 巡遊者を1人ずつ出すための切り替え（PCでは出さない）
+  const mChar = () => `<div class="m-only mchar">${SLOTS.map(([k, l]) => `<button class="tab" aria-selected="${V.mChar === k}" data-act="mchar:${k}">${l}</button>`).join("")}</div>`;
+  const mHide = k => V.mChar === k ? "" : " m-hide";
+  // スマホ: 下のタブ（入力・結果・内訳）と、上の結果の帯
+  const big = n => n >= 1e8 ? (Math.round(n / 1e6) / 100) + "億" : n >= 1e4 ? Math.round(n / 1e4).toLocaleString("ja-JP") + "万" : fmt(n);
+  function renderMobile(items) {
+    const mb = (k, l, en) => `<button class="tab" aria-selected="${V.m === k}" data-act="m:${k}"><span class="te">${en}</span><span>${l}</span></button>`;
+    $("mbar").innerHTML = mb("in", "入力", "INPUT") + mb("res", "結果", "RESULT") + mb("drill", "内訳", "DETAIL");
+    $("mstrip").innerHTML = items.filter(x => x[2]).map(([key, label, sm]) => {
+      let d = "";
+      if (memo && memo.v && memo.v[key] != null) { const r = sm.exp / memo.v[key] - 1; d = ` <span class="${r >= 0 ? "up" : "down"}">${r >= 0 ? "+" : ""}${Math.round(r * 1000) / 10}%</span>`; }
+      return `<button class="mchip" data-act="drill:${key}">${esc(label.replace(/（.*/, ""))}<b>${big(sm.exp)}${d}</b></button>`;
+    }).join("");
+    document.body.className = "m-" + V.m;
   }
 
   // ---- ステータスの表（ステータス画面／戦闘中／防衛戦に入った直後）----
@@ -147,7 +162,7 @@
   function renderOverview() {
     const col = ([k, l]) => {
       const id = G.team[k], c = chOf(id), p = `chars.${id}`;
-      return `<div class="chcol"><h3>${l}</h3>
+      return `<div class="chcol${mHide(k)}"><h3>${l}</h3>
         ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp + (x.auto ? "（未検証）" : "")]), str: true }))}
         ${fld("キャラレベル", `<span class="muted">90（固定）</span>`)}
         ${lvFld(id, "basic", "通常攻撃Lv")}${lvFld(id, "main", "主力スキルLv")}${lvFld(id, "support", "支援スキルLv")}${lvFld(id, "ult", "必殺技Lv", "11〜は推定")}
@@ -156,7 +171,7 @@
         ${cardsHtml(id)}
       </div>`;
     };
-    return `<div class="cols3">${SLOTS.map(col).join("")}</div>
+    return `${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div>
       <p class="muted">各巡遊者の「心相・徽章・素質・その他」で、この中が切り替わります。ステータスが画面と合わないときは、「巡遊者（直接入力）」のタブに画面の値を入れてください（入力した欄だけ上書きして計算します）。</p>`;
   }
   // ---- 巡遊者（直接入力）----
@@ -164,7 +179,7 @@
     const col = ([k, l]) => {
       const id = G.team[k], c = chOf(id), p = `chars.${id}.manual`, st = R.team[id].st;
       const f = (label, key, ph) => fld(label, inp(`${p}.${key}`, { w: 110, ph: ph }));
-      return `<div class="chcol"><h3>${l}：${esc(c.jp)}</h3>
+      return `<div class="chcol${mHide(k)}"><h3>${l}：${esc(c.jp)}</h3>
         ${f("最大HP", "hp", fmt(st.hp))}${f("攻撃力", "atk", fmt(st.atk))}
         ${f("会心率(%)", "critRate", Math.round(st.critRate * 1000) / 10)}${f("会心ダメージ(%)", "critDmg", Math.round(st.critDmg * 1000) / 10)}
         ${f(c.el + "属性ダメージ(%)", "elem", Math.round(st.elemAdd * 1000) / 10)}${f("通常攻撃ダメージ(%)", "basic", Math.round(st.basicAdd * 1000) / 10)}
@@ -175,7 +190,7 @@
     };
     return `<div class="wide"><label class="check" style="font-weight:700"><input type="checkbox" data-p="directPriority" data-t="b"${G.directPriority !== false ? " checked" : ""}>入力されている欄は直接入力を優先する</label>
       <p class="muted">空欄は反映せず、計算のままです（薄い数字は今の計算値）。入力がある欄は、その値で上書きして計算します。「属性ダメージ」は 100% を除いた加算分（画面が112%なら12）です。戦闘中だけ付く効果は画面に出ないので、その分は素質・ロスレコ・「その他」で補います。</p>
-      <div class="cols3">${SLOTS.map(col).join("")}</div></div>`;
+      ${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div></div>`;
   }
   function renderAdd(k) {
     const id = G.team[k], c = chOf(id), p = `chars.${id}.add`;
@@ -528,6 +543,7 @@
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
+    renderMobile(items);
   }
   function renderDrill(items) {
     const it = items.find(x => x[0] === V.drill);
@@ -536,13 +552,16 @@
     panel.style.display = "";
     const sm = it[2];
     $("drillTitle").textContent = `${it[1]}の内訳（${chOf(it[3]).jp}）`;
-    // 列は5つに絞り、非会心・会心と倍率の内訳は2行目に折り返して出す（結果の列の幅に収める）
-    $("drill").innerHTML = `<table><colgroup><col style="width:36%"><col style="width:15%"><col style="width:9%"><col style="width:18%"><col style="width:22%"></colgroup>
-      <tr><th>ヒット</th><th>倍率%</th><th>回数</th><th>期待値</th><th>小計</th></tr>
-      ${sm.rows.map(r => `<tr><td class="dn">${esc(r.name)}<small>${E.TYPE_NAME[r.type]}</small></td><td>${f3(r.mult)}</td><td>${r.count}</td><td>${fmt(r.avg)}</td><td><b>${fmt(r.total)}</b></td></tr>
-      <tr><td colspan="5" class="muted" style="text-align:left;font-size:11px">非会心 ${fmt(r.normal)}／会心 ${fmt(r.crit)}（会心率 ${pct(r.rate)}）／属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}</td></tr>`).join("")}
-      <tr class="sum"><td>合計</td><td>${f3(sm.mult)}</td><td></td><td></td><td>${fmt(sm.exp)}</td></tr>
-      <tr><td colspan="5" class="muted" style="text-align:left;font-size:11px">非会心 ${fmt(sm.non)}／会心 ${fmt(sm.crit)}</td></tr></table>`;
+    // 1ヒットを2段で: 種別／名前・倍率／回数・非会心／会心・期待値（1ヒット）／会心率と会心ダメージ。倍率の内訳と小計は、行にマウスを重ねると出る
+    const r1 = n => (Math.round(n * 10) / 10).toFixed(1);
+    $("drill").innerHTML = `<table><colgroup><col style="width:34%"><col style="width:18%"><col style="width:22%"><col style="width:26%"></colgroup>
+      <tr><th>種別<br>ヒット</th><th>倍率<br>回数</th><th>非会心<br>会心</th><th>期待値<br><span class="nb">会心率</span><span class="nb">／会心ダメ</span></th></tr>
+      ${sm.rows.map(r => {
+        const tip = esc(`小計 ${fmt(r.total)}／属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}`);
+        return `<tr class="d1" title="${tip}"><td>${E.TYPE_NAME[r.type]}</td><td>${r1(r.mult)}%</td><td>${fmt(r.normal)}</td><td class="ex">${fmt(r.avg)}</td></tr>
+        <tr class="d2" title="${tip}"><td>${esc(r.name)}</td><td>×${r.count} hit</td><td>${fmt(r.crit)}</td><td><span class="nb">${pct(r.rate)}</span><span class="nb">／${pct(r.critDmg != null ? r.critDmg : r.crit / r.normal)}</span></td></tr>`;
+      }).join("")}
+      <tr class="sum"><td>合計</td><td>${fmt(sm.mult)}%</td><td>${big(sm.non)}<br>${big(sm.crit)}</td><td>${fmt(sm.exp)}</td></tr></table>`;
   }
 
   function renderAll() {
@@ -602,7 +621,17 @@
     const a = t.getAttribute("data-act");
     if (a.indexOf("panel:") === 0) { V.panel = a.slice(6); V.pick = null; V.lrPick = null; renderAll(); return; }
     if (a.indexOf("tf:") === 0) { V.tilesFor = a.slice(3); renderAll(); return; }
-    if (a.indexOf("drill:") === 0) { const k = a.slice(6); V.drill = V.drill === k ? null : k; renderAll(); return; }
+    if (a.indexOf("drill:") === 0) {
+      const k = a.slice(6), phone = window.matchMedia("(max-width: 860px)").matches;
+      if (phone) { V.drill = k; V.m = "drill"; } else V.drill = V.drill === k ? null : k;   // スマホは内訳のタブに切り替える
+      renderAll(); return;
+    }
+    if (a.indexOf("m:") === 0) {
+      V.m = a.slice(2);
+      if (V.m === "drill" && !V.drill) { const f = (window.__items || []).find(x => x[2]); V.drill = f ? f[0] : null; }   // 内訳は、まだ選んでいなければ先頭の項目
+      renderAll(); window.scrollTo(0, 0); return;
+    }
+    if (a.indexOf("mchar:") === 0) { V.mChar = a.slice(6); renderAll(); return; }
     if (a.indexOf("embclear:") === 0) { embClear(a); renderAll(); return; }
     if (a.indexOf("lrclear:") === 0) { const p = a.slice(8), [arr, i] = p.split("."); G[arr] = G[arr] || []; G[arr][+i] = ""; delete V.lrEl[p]; renderAll(); return; }
     let builds = {};

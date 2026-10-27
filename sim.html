@@ -84,33 +84,41 @@
   .sbtn small { font-weight: 400; margin-left: 2px; }
   @media (max-width: 1500px) { .app { grid-template-columns: minmax(0, 1fr) 480px; } .tiles { grid-template-columns: repeat(3, 1fr); } }
 
-  /* ---- リキッドグラス風（半透明の面＋背景のぼかし） ---- */
-  :root { --glass: rgba(255,255,255,.58); --glass-2: rgba(255,255,255,.42); --glass-line: rgba(255,255,255,.85); --glass-shadow: 0 10px 34px rgba(60,66,130,.13); }
-  body { background: #EEF0FA; background-image: none; }
-  body::before { content: ""; position: fixed; inset: -10%; z-index: -1; pointer-events: none;
-    background: radial-gradient(40% 45% at 12% 18%, #c9d2ff 0, transparent 70%), radial-gradient(38% 40% at 88% 12%, #ffd6e2 0, transparent 70%),
-      radial-gradient(45% 50% at 70% 85%, #c8f1f2 0, transparent 70%), radial-gradient(35% 40% at 20% 90%, #f3e3ff 0, transparent 70%), #EEF0FA; filter: blur(10px); }
-  .site-header { background: var(--glass); backdrop-filter: blur(20px) saturate(170%); -webkit-backdrop-filter: blur(20px) saturate(170%); border-bottom: 1px solid var(--glass-line); position: sticky; top: 0; z-index: 30; }
-  .site-header .wrap { padding-top: 8px; padding-bottom: 8px; }
+  /* ---- 見た目は素質ノート（プリセット共有サイト）に合わせる: 方眼の背景・白いカード・2pxの薄い枠。面は少しだけ透かす ---- */
+  .site-header { background: rgba(255,255,255,.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
+  .site-header .wrap { padding-top: 8px; padding-bottom: 8px; flex-wrap: wrap; }
+  .logo-star { width: 26px; height: 26px; fill: var(--accent); flex: none; }
   .topbar { display: flex; gap: 6px; align-items: center; padding: 0; flex-wrap: nowrap; font-size: 13px; }
-  .topbar input[type=text], .topbar select { min-height: 34px; border: 1px solid var(--glass-line); background: var(--glass-2); border-radius: 10px; padding: 0 10px; }
-  .topbar .btn-add { min-height: 34px; padding: 0 12px; font-size: 13px; }
+  .topbar b { color: var(--indigo); }
+  .topbar input[type=text], .topbar select { min-height: 34px; border: 2px solid var(--border); background: #fff; border-radius: 10px; padding: 0 10px; }
+  .topbar .btn-add { min-height: 34px; padding: 0 14px; font-size: 13px; }
+  .topbar .btn-add.pri { background: var(--accent); border-color: var(--accent); color: var(--text); font-weight: 900; }
   .topbar .sep { width: 1px; height: 22px; background: var(--border-strong); margin: 0 6px; }
-  .panel { background: var(--glass); backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%); border: 1px solid var(--glass-line); box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.9); border-radius: 22px; }
-  .tile, .chcol, .wide, .box, .pot, .emb-card { background: var(--glass-2); border: 1px solid var(--glass-line); box-shadow: 0 2px 10px rgba(60,66,130,.06), inset 0 1px 0 rgba(255,255,255,.8); }
-  .wide { border-radius: 16px; }
-  .tile.pink { background: rgba(251,228,233,.7); border-color: rgba(201,99,122,.35); }
-  .btn-add { background: var(--glass); border: 1px solid var(--glass-line); box-shadow: 0 2px 8px rgba(60,66,130,.08); }
+  .tb-b { display: contents; }
+  .panel { background: rgba(255,255,255,.94); border: 2px solid var(--border); border-radius: 18px; box-shadow: 0 4px 16px rgba(75,80,130,.06); }
+  .panel > h2 .en { font-size: 15px; }
+  .tile, .chcol, .box, .pot, .emb-card { background: var(--surface-soft); border: 2px solid var(--border); }
+  .wide { background: transparent; border: 0; padding: 0; }
+  .chcol { background: #fff; }
+  .tile.pink { background: var(--pink-soft); border-color: var(--pink-line); }
+  .pot.core { background: #fff7f9; border-color: var(--pink); }
+  .btn-add { background: #fff; border: 2px solid var(--border); }
   .btn-add:hover { border-color: var(--indigo); }
-  .obtn { background: rgba(253,235,211,.75); border: 1px solid #E3B27A; }
-  select, input[type=number] { background: rgba(255,255,255,.7); border: 1px solid var(--border); }
-  /* タブ（選択と表示を1つに） */
-  .tabs { display: flex; gap: 4px; padding: 5px; margin: 0 0 12px; background: var(--glass-2); border: 1px solid var(--glass-line); border-radius: 999px; position: static; overflow-x: auto; }
-  .tab { flex: none; min-height: 38px; padding: 0 18px; border-radius: 999px; border: 0; background: transparent; color: var(--indigo); font-weight: 700; cursor: pointer; white-space: nowrap; }
-  .tab:hover { background: rgba(255,255,255,.7); }
-  .tab[aria-selected="true"] { background: linear-gradient(180deg, #5b61a0, #444a7c); color: #fff; box-shadow: 0 4px 12px rgba(68,74,124,.3); }
-  .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .subnav .btn-add { min-height: 34px; }
+  select, input[type=number] { background: #fff; border: 2px solid var(--border); }
+  /* タブ: 素質ノートのナビと同じく、英字の小見出し＋日本語 */
+  .tabs { display: flex; gap: 4px; padding: 0 0 10px; margin: 0 0 12px; background: none; border: 0; border-radius: 0; border-bottom: 2px dotted var(--accent); position: static; overflow-x: auto; scrollbar-width: none; }
+  .tab { flex: none; display: flex; flex-direction: column; align-items: center; line-height: 1.2; min-height: 44px; padding: 6px 16px; border-radius: 10px; border: 0; background: transparent; color: var(--indigo); font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; justify-content: center; }
+  .tab .te { font-family: var(--font-en); font-weight: 400; font-size: 13px; letter-spacing: .1em; color: var(--muted); }
+  .tab:hover { background: var(--surface-soft); }
+  .tab[aria-selected="true"] { background: var(--indigo); color: #fff; }
+  .tab[aria-selected="true"] .te { color: var(--border); }
+  .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .subnav .tabs { border: 0; padding: 0; }
+  .subnav .tab { min-height: 36px; }
+  /* スクロールは画面全体で1本（結果の列だけのスクロールはしない） */
+  #right { position: static; max-height: none; overflow: visible; }
+  /* スマホ用の部品（PCでは出さない） */
+  .mbar, .mstrip, .m-only { display: none; }
   /* ステータスの表（画面・戦闘中・防衛戦直後） */
   .stt { width: 100%; font-size: 12px; table-layout: fixed; margin: 0; }
   .stt th, .stt td { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -134,25 +142,77 @@
   .lr-cols { display: grid; grid-template-columns: repeat(2, max-content); gap: 0 32px; }
   /* 音符（ゲームと同じく、色と名前の下に数、その下に効果） */
   .notes-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; }
-  .note-cell { text-align: center; padding: 8px 4px; border-radius: 14px; background: var(--glass-2); border: 1px solid var(--glass-line); border-top: 4px solid var(--nc); }
+  .note-cell { text-align: center; padding: 8px 4px; border-radius: 14px; background: #fff; border: 2px solid var(--border); border-top: 4px solid var(--nc); }
   .note-ic { width: 30px; height: 30px; margin: 0 auto 2px; border-radius: 50%; background: var(--nc); color: #fff; font-weight: 900; line-height: 30px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.15); }
   .note-nm { font-size: 12px; font-weight: 900; color: var(--indigo); }
   .note-cell input[type=number] { width: 100%; text-align: center; min-height: 34px; font-weight: 900; font-size: 16px; padding: 0 4px; margin: 2px 0; }
   .note-fx { font-size: 11px; color: var(--muted); line-height: 1.35; min-height: 30px; }
   .note-fx b { font-size: 13px; color: var(--indigo); }
   .note-per { font-size: 10px; color: var(--muted); }
-  /* 内訳の表（横にはみ出さない） */
-  #drill table { table-layout: fixed; width: 100%; }
-  #drill th, #drill td { white-space: normal; word-break: break-all; }
-  #drill .dn small { display: block; color: var(--muted); font-size: 11px; }
+  /* 内訳の表: 1ヒットを2段で（種別/名前・倍率/回数・非会心/会心・期待値/会心率と会心ダメ） */
+  #drill table { table-layout: fixed; width: 100%; font-size: 12px; }
+  #drill th, #drill td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 2px 6px; border-bottom: 0; }
+  #drill th { font-size: 11px; line-height: 1.3; border-bottom: 1px solid var(--border); }
+  #drill tr.d2 td { border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+  #drill tr.d1 td { padding-top: 5px; }
+  #drill tr.d1 td:first-child { color: var(--muted); font-size: 11px; }
+  #drill tr.d2 td:first-child { font-weight: 700; color: var(--indigo); }
+  #drill td.ex { font-weight: 900; color: var(--indigo); }
+  #drill tr.sum td { border-top: 2px solid var(--border-strong); }
+  #drill .nb { display: inline-block; white-space: nowrap; }
+
+  /* ---- スマホ（幅860px以下）: 下のタブで「入力・結果・内訳」を切り替え、上に結果の帯 ---- */
+  @media (max-width: 860px) {
+    body { padding-bottom: 76px; font-size: 14px; }
+    .site-header { position: static; }
+    .site-header .wrap { padding: 6px 10px; gap: 6px; }
+    .topbar .btn-add { min-height: 32px; padding: 0 10px; font-size: 12px; }
+    .topbar input[type=text] { min-height: 32px; }
+    .logo-ja { font-size: 17px; } .logo-en { display: none; }
+    .topbar { flex-wrap: wrap; width: 100%; }
+    .tb-b, .topbar .sep, .topbar #smsg:empty { display: none; }
+    .topbar #scode { flex: 1; width: auto !important; min-width: 0; }
+    .app { grid-template-columns: minmax(0, 1fr); padding: 8px; gap: 8px; }
+    .panel { padding: 10px; border-radius: 14px; margin-bottom: 8px; }
+    .panel > h2 { flex-wrap: wrap; }
+    body.m-in #right, body.m-res #left, body.m-drill #left, body.m-res #drillPanel, body.m-drill #right > .panel:first-child { display: none !important; }
+    body.m-drill #drillPanel:not([style*="none"]) { display: block; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .tile b { font-size: 17px; }
+    .cols3, .grid-in { grid-template-columns: minmax(0, 1fr) !important; }
+    .cols3 > .m-hide { display: none; }
+    .m-only { display: flex; }
+    .mchar { gap: 6px; margin-bottom: 8px; }
+    .mchar .tab { flex: 1; }
+    .pgrid { grid-template-columns: minmax(0, 1fr) !important; }
+    .pot .pd { -webkit-line-clamp: 2; }
+    .emb-line { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr); }
+    .lr-cols { grid-template-columns: minmax(0, 1fr); }
+    .lr-line { grid-template-columns: 52px 64px 72px minmax(0, 1fr); }
+    .notes-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    .fld { grid-template-columns: 100px minmax(0, 1fr); }
+    .res-row { gap: 6px; margin-bottom: 6px; }
+    .wide > table { display: block; overflow-x: auto; }
+    #drill td, #drill th { white-space: normal; overflow: visible; font-size: 11px; }
+    #drill tr.d2 td:first-child { word-break: break-all; }
+    .mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: #fff; border-top: 2px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 6px; }
+    .mbar .tab { flex: 1; }
+    .mstrip { display: flex; gap: 6px; overflow-x: auto; padding: 6px 10px; background: rgba(255,255,255,.95); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; scrollbar-width: none; }
+    .mchip { flex: none; display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--pink-line); background: var(--pink-soft); font-size: 11px; color: var(--muted); cursor: pointer; }
+    .mchip b { font-size: 14px; color: var(--indigo); }
+    .mchip .up { color: var(--ok); } .mchip .down { color: var(--danger); }
+  }
 </style>
 </head>
-<body>
+<body class="m-in">
 <header class="site-header"><div class="wrap">
+  <svg class="logo-star" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>
   <span class="logo-ja">巡遊者ダメージ計算</span><span class="logo-en">DAMAGE SIM</span>
   <span style="flex:1"></span>
   <div class="topbar" id="topbar"></div>
 </div></header>
+<div class="mstrip" id="mstrip"></div>
+<nav class="mbar" id="mbar" aria-label="表示の切り替え"></nav>
 <div class="app">
   <div id="left">
     <div class="panel"><h2><span class="en">MULTIPLIERS</span>共通の倍率<span class="muted" id="tilesFor"></span></h2><div class="tiles" id="tiles"></div></div>
