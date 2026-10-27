@@ -81,7 +81,7 @@
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
     $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <button class="btn-add pri" data-act="dlg-open">共有・読み込み</button><button class="btn-add" data-act="rp-open">誤りの報告</button><button class="btn-add" data-act="reset">全初期化</button>`;
+      <button class="btn-add pri" data-act="dlg-open">共有・読み込み</button><button class="btn-add" data-act="rp-open">報告</button><button class="btn-add" data-act="reset">全初期化</button>`;
     // 共有・読み込みのポップアップ（プリセットコード・共有コード・共有URL それぞれ 読込・作成・コピー、ブラウザへの保存）
     const row = (key, label, note, ph) => `<div class="row"><label for="dv-${key}">${label} <span class="muted" style="font-weight:400">${note}</span></label>
       <div class="line"><input type="text" id="dv-${key}" value="${esc(DV[key])}" placeholder="${ph}" spellcheck="false">
@@ -728,13 +728,13 @@
     }).catch(e => { if (w) w.close(); say("url", e.message, true); });
   }
 
-  // ---- 誤りの報告（β版の間）。送った内容はサーバーのデータベースに入り、あとで確認する。今の入力（共有コード）を添えると同じ状態を再現できる ----
+  // ---- 報告（α版の間、データや計算の誤りなどを送ってもらう）。送った内容はサーバーのデータベースに入り、あとで確認する。今の入力（共有コード）を添えると同じ状態を再現できる ----
   const RP = { kind: "", body: "", contact: "", attach: true, msg: null, done: false, busy: false };
   const RP_KINDS = ["計算式・数値", "素質の効果", "ロスレコ・音符", "徽章・ステータス", "表示・使い方", "その他"];
   function renderReport() {
     const team = [G.team.main, G.team.s1, G.team.s2].map(id => chOf(id).jp).join("・");
-    $("reportBody").innerHTML = `<h2 id="reportDlgT"><span class="en">REPORT</span>誤りの報告</h2>
-      <p class="muted" style="margin:0">β版なので、まちがっている所がまだあると思います。計算の数値がゲームと合わない、素質やロスレコの効果がちがう、ここが使いにくい…など、なんでも気軽に教えてください！（返信はできないこともあります）</p>
+    $("reportBody").innerHTML = `<h2 id="reportDlgT"><span class="en">REPORT</span>報告</h2>
+      <p class="muted" style="margin:0">α版なので、データや計算が間違っている所がまだあると思います。計算の数値がゲームと合わない、素質やロスレコの効果がちがう、ここが使いにくい…など、なんでも気軽に教えてください！（返信はできないこともあります）</p>
       ${RP.done ? `<p class="msg ok" style="font-size:14px;margin-top:14px">送りました。教えてくれてありがとうございます！</p><div class="foot"><button class="btn-add" data-act="rp-close">閉じる</button></div>` : `
       <div class="row"><label for="rp-kind">種類</label><select id="rp-kind"><option value="">（選んでください）</option>${RP_KINDS.map(k => `<option${RP.kind === k ? " selected" : ""}>${k}</option>`).join("")}</select></div>
       <div class="row"><label for="rp-body">内容 <span class="muted" style="font-weight:400">（どこが・どう違うか。ゲーム内の値が分かれば、その値も）</span></label>
@@ -759,7 +759,7 @@
   }
 
   renderAll();
-  // β版のお知らせ（閉じたら、このブラウザでは次から出さない）
+  // α版のお知らせ（閉じたら、このブラウザでは次から出さない）
   try { if (!localStorage.getItem("stellasora-sim-beta-closed")) $("betabar").hidden = false; } catch (e) { $("betabar").hidden = false; }
   // URLから読み込む（読み込んだらURLからは消す）: #c=共有コード（短縮URLから移動してきたとき）、#p=プリセットコード（プリセット共有サイトなどから）
   const hc = location.hash;
