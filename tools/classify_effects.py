@@ -85,9 +85,15 @@ def classify(en_name, jt, en_nums, el_ja, role):
             if nt and nt not in notes:
                 notes.append(nt)
 
-        mm = re.search(r'(スキル|通常攻撃|印)?被ダメージ(?:を|が)\s*(' + VAL + r')\s*(増加|上昇)', s)
-        if mm and ('敵' in s or '属性被ダメージ' in s):
-            add({'スキル': 'takenSkill', '通常攻撃': 'takenBasic', '印': 'takenMark'}.get(mm.group(1), 'taken'), mm.group(2), enemy=True)
+        # 敵の被ダメージ: 「水属性被ダメージ」= その属性の味方だけ（el）、「スキル/通常攻撃/印被ダメージ」= 全員。
+        # 「グレイからの被ダメージ」「サーフィンの被ダメージ」のような、相手や技を限ったものは分類しない（要確認）
+        mm = re.search(r'(?:([水火光闇風地])属性|(スキル|通常攻撃|印))?被ダメージ(?:を|が)\s*(' + VAL + r')\s*(増加|上昇)', s)
+        if mm and not mm.group(1) and not mm.group(2):
+            unknown.append(s)
+            last = None
+            continue
+        elif mm and ('敵' in s or '属性被ダメージ' in s):
+            add({'スキル': 'takenSkill', '通常攻撃': 'takenBasic', '印': 'takenMark'}.get(mm.group(2), 'taken'), mm.group(3), enemy=True, extra={'el': mm.group(1)} if mm.group(1) else None)
         else:
             m2 = re.search(r'(スキル|通常攻撃|必殺技|印|' + el_ja + r'属性)ダメージが\s*(' + VAL + r')\s*(増加|上昇)', s)
             if m2 and '攻撃力の' not in s[:m2.start()]:

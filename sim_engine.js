@@ -205,7 +205,7 @@
     }
     if (ag) {
       e.atkPct += ag.atkPct; e.W += ag.W; e.Bs += ag.Bs; e.Bb += ag.Bb; e.Bu += ag.Bu; e.taken *= ag.taken; e.ag = ag;
-      if (ag.applied.length) e.applied.push("光チームの素質 " + ag.applied.length + "件");
+      if (ag.applied.length) e.applied.push("素質など " + ag.applied.length + "件");
     }
     return e;
   }

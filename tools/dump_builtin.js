@@ -4,5 +4,5 @@ global.window = global;
 global.localStorage = { getItem() { return null; } };
 for (const f of ['data/trekkers.js', 'data.js', 'data_sup.js', 'record_level.js', 'calc.js', 'sim_data.js', 'sim_pots.js']) vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
 const out = {};
-SIM.CH.forEach(c => { if (SIM.POT_SPEC[c.id]) out[c.en] = SIM.POT_SPEC[c.id]; });
+SIM.CH.forEach(c => { if (SIM.POT_SPEC_BUILTIN[c.id]) out[c.en] = SIM.POT_SPEC_BUILTIN[c.id]; });
 process.stdout.write(JSON.stringify(out));

@@ -52,7 +52,8 @@
 
 - `k`: 効果の種類 — `W`（属性ダメージ）`Bs`（スキル）`Bb`（通常）`Bu`（必殺）`mark`（印）`atkPct` `hpPct` `hpFlat` `atkFlat` `pen` `critRate` `critDmg` `taken`（敵の属性被ダメージ）`takenSkill` `takenBasic` `takenMark` `mult`（ヒット倍率）`count` `extra`（追加ヒット）
 - 値: `n`（`nums_en` の番号）／`arr`（Lvごとの値、%）／`raw`（固定。割合は 0.15 = 15%）／`m`（追加ヒットの倍率%）
-- `to`: 効く相手 — 省略=自身、`main` `all` `lux`（効果を持つ巡遊者と同じ属性の全員）`luxVers` `enemy`
+- `to`: 効く相手 — 省略=自身、`main` `all` `lux`（効果を持つ巡遊者と同じ属性の全員）`luxVers` `enemy`（敵へのデバフ。`taken` はその属性の味方だけ、`takenSkill` `takenBasic` `takenMark` は全員に効く）
+- `el`: `taken` の属性（「水属性被ダメージ」なら `水`）。省略時は、効果を持つ巡遊者の属性
 - `stk`: 最大の重複数、`cond`: 条件、`ht`: 会心の対象（`basic` `skill` `ult` `mark`）、`tags`: 対象のヒット
 - `ext: "cap"`: Lv6から上がらない（説明文の数値に `(Max!)` が付いているもの）。`over: {"7": …, "8": …, "9": …}`: Lv7〜9の値を直接指定
 
@@ -60,6 +61,11 @@
 
 - ゲーム内で確認できるのは **Lv1 と Lv6 だけ**。Lv2〜5 は、英語Wikiの表の値、または直線補間（未確認）。Lv7〜9 は、直前の増え方で延長した推定値です（`ext: "cap"` の数値は、Lv6のまま）。
 - 日本語Wikiの数値は、ゲーム内の画面と一致することを、テレサ「飛水・爆撃」で確認済み。英語Wikiのコア素質の数値は、古い（約2.2〜2.3倍小さい）ものが多く、日本語Wikiの値を優先します。
+
+## 注意: サイトの日本語名の入れ替わり（35組）
+
+プリセット共有サイトの `potentials` の `name_en` と `name_ja` の対応は、35組（70件）で入れ替わっています。例: テレサの `Power Strike` は、説明文（英語・日本語とも）が「スタン」なので「溜めの一撃」ですが、サイトでは「魔盾強化」になっています（ゲーム内の画面で、魔盾強化 = 通常攻撃ダメージ +162% を確認）。
+計算ツールの画面（`data/potential_ja.js`）は、日本語Wikiの名前（説明文の数値で英語名と照合済み）で直しています（`tools/fix_potential_ja.py`）。`data/shared/potentials.json` の `name_ja` は、サイトの値のままです。
 
 ## ライセンス・出典
 

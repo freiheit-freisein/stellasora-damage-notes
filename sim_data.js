@@ -58,6 +58,8 @@ window.SIM = window.SIM || {};
         ult: [H(3, 0, 1, "ult", "叩きつけ"), H(3, 1, 1, "skill", "光球")],
       } },
   ];
+  // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
+  (window.SIM_CHARS_AUTO || []).forEach(c => { if (!S.CH.some(x => x.en === c.en)) S.CH.push(c); });
 
   // 敵。def=防御倍率、res=属性ごとの耐性（既定250）、weak=弱点、weakMult=弱点補正（記事の値）。
   // extra は、実測に合わせるために入れた原因不明の倍率（「その他倍率」）。
@@ -101,4 +103,7 @@ window.SIM = window.SIM || {};
       { name: "六星輝章（Lv90）", kind: "star", slots: [{ k: "elemDmg", q: "rainbow" }, { k: "", q: "gold" }, { k: "", q: "gold" }, { k: "", q: "gold" }] },
     ],
   };
+  // 自動の巡遊者は、徽章を空にしておく（画面で選ぶ）
+  const EMB_EMPTY = () => ["三角章（Lv70）:triangle", "円形章（Lv80）:circle", "六星輝章（Lv90）:star"].map(s => ({ name: s.split(":")[0], kind: s.split(":")[1], slots: [0, 1, 2, 3].map(() => ({ k: "", q: "gold" })) }));
+  S.CH.forEach(c => { if (!S.EMB_DEFAULT[c.id]) S.EMB_DEFAULT[c.id] = EMB_EMPTY; });
 })(window.SIM);

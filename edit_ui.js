@@ -37,7 +37,7 @@
   if (!trekkers.some(x => x.en === S.t)) S.t = trekkers[0].en;
 
   // ---- 組み込みの効果表（検証済みの6人）----
-  const builtIn = (en, pot) => { const c = (window.SIM.CH || []).find(x => x.en === en); const sp = c && window.SIM.POT_SPEC[c.id]; return sp && sp[pot] || null; };
+  const builtIn = (en, pot) => { const c = (window.SIM.CH || []).find(x => x.en === en); const sp = c && window.SIM.POT_SPEC_BUILTIN[c.id]; return sp && sp[pot] || null; };
   const specOf = (en, pot) => (user[en] && user[en][pot]) || null;
   const draftOf = (en, role, pot) => (((window.SPEC_DRAFT || {})[en] || {})[role] || {})[pot] || null;
   const jpOf = (en, role, pot) => (((window.POT_JP || {})[en] || {})[role] || {})[pot] || null;

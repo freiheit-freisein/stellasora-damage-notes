@@ -163,7 +163,7 @@
     const col = ([k, l]) => {
       const id = G.team[k], c = chOf(id), p = `chars.${id}`;
       return `<div class="chcol"><h3>${l}</h3>
-        ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp]), str: true }))}
+        ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp + (x.auto ? "（未検証）" : "")]), str: true }))}
         ${fld("キャラレベル", `<span class="muted">90（固定）</span>`)}
         ${lvFld(id, "basic", "通常攻撃Lv")}${lvFld(id, "main", "主力スキルLv")}${lvFld(id, "support", "支援スキルLv")}${lvFld(id, "ult", "必殺技Lv", "11〜は推定")}
         ${fld("信頼ボーナスLv", inp(`${p}.trustLv`, { min: 0, max: 99, step: 1, w: 70 }))}
@@ -357,7 +357,7 @@
         const seen = {};
         sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; ctl.push(`<div class="lv">${stkIn(key, e)}</div>`); } });
         sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<div class="lv"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 70 })}<span class="muted">既定 ${e.c}</span></div>`); });
-        return `<div class="pot${core ? " core" : ""}" title="${esc(x.name)}"><b>${nm}</b>${core ? '<span class="tag-ok">コア</span>' : ""}${tagBonus(x.name)}${eff ? '<span class="tag-ok">反映</span>' : '<span class="tag-ng">火力に影響なし/未反映</span>'}${sp.off ? '<span class="tag-ng">既定は反映しない</span>' : ""}
+        return `<div class="pot${core ? " core" : ""}" title="${esc(x.name)}"><b>${nm}</b>${core ? '<span class="tag-ok">コア</span>' : ""}${tagBonus(x.name)}${eff ? '<span class="tag-ok">反映</span>' : '<span class="tag-ng">火力に影響なし/未反映</span>'}${sp.st === "auto" || sp.st === "draft" ? '<span class="tag-ng">下書き</span>' : ""}${sp.off ? '<span class="tag-ng">既定は反映しない</span>' : ""}
           <div class="muted">${esc(sp.txt)}</div>${ctl.join("")}</div>`;
       };
       const groups = t.potentials[role] || [];

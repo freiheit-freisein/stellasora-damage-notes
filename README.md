@@ -56,6 +56,7 @@ PCの横長画面（1920x1080）前提の簡易UIです。スマホ対応・見�
 | `edit.html` `edit_ui.js` `data/spec_user.js` `data/spec_draft.js` | 素質の効果の入力ツールと、その内容（確認済み／自動の下書き） |
 | `data/shared/potentials.json` `docs/shared-data.md` | プリセット共有サイトと共有する素質のデータ（キーはサイトと同じ trekker_id＋role＋name_en）。作り方は docs/shared-data.md |
 | `tools/import_jp_wiki.py` `tools/classify_effects.py` `tools/build_shared.py` | 日本語Wikiの取り込み・効果の下書き・共有データの作成 |
+| `data/sim_chars_auto.js` `tools/build_chars.py` | 計算ページで選べる残りの35人（英語Wikiのスキルの説明文から、ヒットを自動で作成。未検証）。手で直すときは `sim_data.js` に書く（そちらが優先） |
 | `SUMMARY.md` | 検証のまとめ（分かっていること・仮説） |
 
 ## 出典とライセンス

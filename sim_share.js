@@ -2,13 +2,17 @@
 // 先頭1バイト = 版(2bit)・圧縮の有無(1bit)・辞書の識別(5bit)、末尾1バイト = 誤字検出のチェック。
 // 辞書は、データ（巡遊者・素質・ロスレコ・徽章・敵）から作る。データが変わると辞書が変わり、古いコードは「古い版」として弾く。
 (function (S) {
-  const VER = 1;
+  const VER = 2;   // 版1 = 巡遊者6人のころのコード（読み込みだけ対応）、版2 = 全員
   const crc8 = u8 => { let c = 0; for (let i = 0; i < u8.length; i++) { c ^= u8[i]; for (let k = 0; k < 8; k++) c = (c & 0x80) ? ((c << 1) ^ 0x07) & 0xff : (c << 1) & 0xff; } return c; };
   const b64 = u8 => { let s = ""; u8.forEach(b => { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
   const unb64 = t => { const s = atob(t.replace(/-/g, "+").replace(/_/g, "/")); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
 
   // ---- 辞書 ----
-  function buildDict(def) {
+  // legacy=true: 版1のコード用（自動で増やした巡遊者を含めない。巡遊者を増やす前と同じ辞書になる）
+  function buildDict(def0, legacy) {
+    const CH = (S.CH || []).filter(c => !legacy || !c.auto);
+    const def = legacy ? Object.assign({}, def0, { chars: {} }) : def0;
+    if (legacy) CH.forEach(c => { if (def0.chars[c.id]) def.chars[c.id] = def0.chars[c.id]; });
     const set = new Set();
     const walk = o => {
       if (Array.isArray(o)) { o.forEach(walk); return; }
@@ -16,7 +20,7 @@
       if (typeof o === "string" && o) set.add(o);
     };
     walk(def);
-    (S.CH || []).forEach(c => { set.add(c.id); const t = TREKKERS.find(x => x.en === c.en); if (t && t.potentials) ["main", "support"].forEach(r => (t.potentials[r] || []).forEach(g => g.potentials.forEach(x => { set.add(x.name); set.add(S.potKey(x.name)); }))); });
+    CH.forEach(c => { set.add(c.id); const t = TREKKERS.find(x => x.en === c.en); if (t && t.potentials) ["main", "support"].forEach(r => (t.potentials[r] || []).forEach(g => g.potentials.forEach(x => { set.add(x.name); set.add(S.potKey(x.name)); }))); });
     (S.ENEMIES || []).forEach(e => set.add(e.id));
     Object.keys(S.DEFAULT_ENEMY_TRAITS || {}).forEach(k => S.DEFAULT_ENEMY_TRAITS[k].forEach(t => set.add(t.id)));
     (window.LOSTRECORDS || []).forEach(r => set.add(r.id));
@@ -129,8 +133,9 @@
     try { u8 = unb64(code.trim()); } catch (e) { throw new Error("コードの形式が正しくありません"); }
     if (u8.length < 3) throw new Error("コードが短すぎます");
     if (crc8(u8.subarray(0, u8.length - 1)) !== u8[u8.length - 1]) throw new Error("コードが壊れています（コピーの漏れや誤字がないか確認してください）");
-    const dict = buildDict(def);
-    if ((u8[0] >> 6) !== VER) throw new Error("このコードは、別の版のものです");
+    const ver = u8[0] >> 6;
+    if (ver !== VER && ver !== 1) throw new Error("このコードは、別の版のものです");
+    const dict = buildDict(def, ver === 1);
     if ((u8[0] & 31) !== dict.id) throw new Error("このコードは、古い版のデータで作られています（データが更新されたため読み込めません）");
     let body = u8.subarray(1, u8.length - 1);
     if (u8[0] & 32) { try { body = await inflate(body); } catch (e) { throw new Error("コードが壊れています（圧縮の展開に失敗）"); } }

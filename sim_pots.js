@@ -108,6 +108,7 @@ window.SIM = window.SIM || {};
       "Creed of Fortification": { txt: "ティリアの攻撃力%", e: [{ k: "atkPct", n: 0 }] },
     },
   };
+  S.POT_SPEC_BUILTIN = JSON.parse(JSON.stringify(SPEC));   // 手で書いた表だけ（共有データの builtin・編集ページの「組み込み」）
   // edit.html で入力した効果（data/spec_user.js とブラウザの保存）を、組み込みの表より優先して重ねる
   const US = JSON.parse(JSON.stringify(window.SPEC_USER || {}));
   try { const sv = JSON.parse(localStorage.getItem("stellasora-spec-user-v1")); if (sv) Object.keys(sv).forEach(t => { US[t] = Object.assign(US[t] || {}, sv[t]); }); } catch (err) { /* 保存なしでも動く */ }
@@ -115,7 +116,24 @@ window.SIM = window.SIM || {};
     const u = US[c.en];
     if (!u) return;
     SPEC[c.id] = SPEC[c.id] || {};
-    Object.keys(u).forEach(name => { SPEC[c.id][name] = { txt: u[name].txt || "", off: !!u[name].off, ext: u[name].ext, e: u[name].e || [] }; });
+    Object.keys(u).forEach(name => { SPEC[c.id][name] = { txt: u[name].txt || "", off: !!u[name].off, ext: u[name].ext, e: u[name].e || [], st: u[name].draft ? "draft" : "ok" }; });
+  });
+  // まだ表も入力もない素質は、自動の下書き（data/spec_draft.js：日本語Wikiの説明文からルールで作った、確認前の内容）を使う
+  const KN = { W: "属性ダメ", Bs: "スキルダメ", Bb: "通常ダメ", Bu: "必殺ダメ", mark: "印ダメ", atkPct: "攻撃力%", hpPct: "最大HP%", hpFlat: "最大HP", critRate: "会心率", critDmg: "会心ダメ",
+    taken: "敵の被ダメ", takenSkill: "敵のスキル被ダメ", takenBasic: "敵の通常被ダメ", takenMark: "敵の印被ダメ", extra: "追加ヒット" };
+  const TO = { all: "全員", main: "主力", lux: "同じ属性の全員", enemy: "" };
+  const summary = e => e.map(x => (KN[x.k] || x.k) + (x.to && TO[x.to] ? "（" + TO[x.to] + "）" : "") + (x.stk > 1 ? "×" + x.stk + "重" : "") + (x.k === "extra" && x.m ? " " + x.m + "%" : "")).join("・");
+  (S.CH || []).forEach(c => {
+    const dr = (window.SPEC_DRAFT || {})[c.en];
+    if (!dr || !c.auto) return;   // 手で書いた6人は使わない（ウィロー・ナツカ・エレノアは別の仕組みで素質を計算しているので、二重になる）
+    ["main", "support"].forEach(role => Object.keys(dr[role] || {}).forEach(name => {
+      const d = dr[role][name];
+      SPEC[c.id] = SPEC[c.id] || {};
+      if (SPEC[c.id][name]) return;
+      const e = d.e || [];
+      if (!e.length && !d.none) return;   // 分類できなかった（要確認）ものは入れない（画面では「計算に未反映」）
+      SPEC[c.id][name] = { txt: e.length ? "下書き：" + summary(e) + (d.review ? "（ほかに分類できなかった文あり）" : "") : "火力に影響しない（自動判定）", e, st: "auto", review: !!d.review };
+    }));
   });
   S.POT_SPEC = SPEC;
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
@@ -173,13 +191,13 @@ window.SIM = window.SIM || {};
     const out = {};
     team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
     const cond = (k, oid) => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? sameN(oid) === chs.length : k === "mainSame" ? chs[0].el === elOf(oid) : true);
-    const recvOf = (to, oid) => {
+    const recvOf = (to, oid, e) => {
       const el = elOf(oid);
       if (to === "lux") return team.filter((id, i) => chs[i].el === el);
       if (to === "all") return team.slice();
       if (to === "main") return [team[0]];
       if (to === "luxVers") return team.filter((id, i) => chs[i].el === el && chs[i].role === "バランサー");
-      if (to === "enemy") return team.filter((id, i) => chs[i].el === el);
+      if (to === "enemy") return e && e.k !== "taken" ? team.slice() : team.filter((id, i) => chs[i].el === ((e && e.el) || el));   // 属性の被ダメージ(taken)はその属性の味方だけ、スキル・通常・印の被ダメージは全員
       return [oid];
     };
     // 1件の効果の適用。key=状態のキー、ei=効果の番号、info=Wikiの数値
@@ -194,7 +212,7 @@ window.SIM = window.SIM || {};
       if (stk == null || stk === "") stk = e.stk || 1;
       v *= stk;
       if (e.perLux) v *= sameN(oid);
-      recvOf(e.to, oid).forEach(rid => {
+      recvOf(e.to, oid, e).forEach(rid => {
         const a = out[rid];
         if (e.k === "count") { a.count[e.hit] = (a.count[e.hit] || 0) + e.add; return; }
         if (e.k === "drop") { a.drop[e.hit] = true; return; }
