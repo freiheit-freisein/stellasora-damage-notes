@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>素質の効果の入力</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="common.css">
+<style>
+  .app { display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: 14px; padding: 12px; align-items: start; }
+  .panel { background: var(--surface); border: 2px solid var(--border); border-radius: 18px; padding: 14px; margin-bottom: 14px; }
+  .panel > h2 { margin: 0 0 8px; font-size: 15px; font-weight: 900; color: var(--indigo); }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 12px 0; }
+  .bar select { min-height: 36px; padding: 0 8px; border-radius: 10px; }
+  .phead { font-size: 14px; font-weight: 900; color: var(--indigo); margin: 12px 0 4px; }
+  .pgrid { display: grid; gap: 8px; margin: 4px 0 8px; }
+  .pc { border: 2px solid var(--border); border-radius: 12px; padding: 8px 10px; font-size: 12px; background: var(--surface); cursor: pointer; }
+  .pc:hover { background: var(--surface-soft); }
+  .pc.sel { outline: 3px solid var(--accent); }
+  .pc b { font-size: 13px; color: var(--indigo); }
+  .pc .en { color: var(--muted); font-size: 11px; display: block; }
+  .tag { display: inline-block; font-size: 11px; border-radius: 999px; padding: 0 8px; margin-left: 4px; font-weight: 700; }
+  .t-none { background: var(--pink-soft); } .t-user { background: #CFF3E8; } .t-built { background: #DDE3FF; } .t-core { background: #FFE9A8; }
+  .fld { display: grid; grid-template-columns: 110px 1fr; gap: 4px 8px; align-items: center; margin: 4px 0; font-size: 13px; }
+  .fld label { margin: 0; font-size: 12px; }
+  .eff { border: 2px dashed var(--border-strong); border-radius: 12px; padding: 8px; margin: 8px 0; background: var(--surface-soft); }
+  .eff select, .eff input[type=text], .eff input[type=number] { min-height: 32px; padding: 0 8px; border-radius: 8px; font-size: 13px; }
+  .txt { white-space: pre-wrap; font-size: 12px; background: #f6f4ff; border-radius: 10px; padding: 8px; margin: 6px 0; }
+  .muted { color: var(--muted); font-size: 12px; }
+  table.lv { border-collapse: collapse; font-size: 12px; margin: 4px 0; } table.lv td, table.lv th { border: 1px solid var(--border); padding: 2px 6px; }
+  textarea { width: 100%; min-height: 140px; font-family: monospace; font-size: 12px; border-radius: 10px; border: 2px solid var(--border); padding: 8px; }
+  #side { position: sticky; top: 8px; max-height: calc(100vh - 16px); overflow-y: auto; }
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap">
+  <span class="logo-ja">素質の効果の入力</span><span class="logo-en">EFFECT EDITOR</span>
+  <span style="flex:1"></span>
+  <a class="btn-add" href="sim.html" style="display:inline-flex;align-items:center;text-decoration:none">計算ページへ</a>
+</div></header>
+<div class="bar" id="bar"></div>
+<div class="app">
+  <div id="left"><div class="panel"><h2>素質の一覧（クリックで右に効果を入力）</h2><div id="list"></div></div></div>
+  <div id="side">
+    <div class="panel" id="editor"><h2>効果の入力</h2><p class="muted">左の素質を選んでください。</p></div>
+    <div class="panel"><h2>書き出し・読み込み</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button class="btn-add" data-act="export">書き出す（全員分）</button><button class="btn-add" data-act="copy">コピー</button><button class="btn-add" data-act="import">貼り付けた内容を読み込む</button><button class="btn-add" data-act="clear">この巡遊者の入力を消す</button></div>
+      <textarea id="io" placeholder="書き出した内容がここに出ます。読み込むときは、ここに貼り付けてください。"></textarea>
+      <p class="muted" id="iomsg"></p>
+    </div>
+  </div>
+</div>
+<script src="data/trekkers.js"></script>
+<script src="data.js"></script>
+<script src="data_sup.js"></script>
+<script src="record_level.js"></script>
+<script src="calc.js"></script>
+<script src="sim_data.js"></script>
+<script src="sim_pots.js"></script>
+<script src="data/potential_ja.js"></script>
+<script src="data/trekker_ja.js"></script>
+<script src="data/spec_user.js"></script>
+<script src="edit_ui.js"></script>
+</body>
+</html>

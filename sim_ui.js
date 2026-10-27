@@ -11,7 +11,7 @@
   const SLOTS = [["main", "主力"], ["s1", "支援1"], ["s2", "支援2"]];
   const TK = en => TREKKERS.find(x => x.en === en);
   const chOf = id => S.CH.find(c => c.id === id);
-  const JA = en => (window.POTENTIAL_JA || {})[en] || en;
+  const JA = (en, id) => { const c = id && chOf(id); const m = (window.POTENTIAL_JA || {})[c ? c.en : ""] || {}; return m[en] || en; };   // 巡遊者ごとの日本語名（同じ英語名でも巡遊者で違う）
   const KIND_NAME = { triangle: "初級", circle: "中級", star: "上級" };       // 徽章は 初級・中級・上級 で呼ぶ（巡遊者ごとに三角・円・六星の並びが違うため）
   const KIND_ORDER = ["triangle", "circle", "star"];
 
@@ -46,23 +46,10 @@
     g.chars.tilia.pots2[S.potKey("Renewed Spectrum")] = 1;
     return g;
   }
-  // セイナHC（記録Lv34・更新版）。素質の対応は、画面の名前とWikiの効果を照らして付けたもの
+  // セイナHC（記録Lv34）。共有コードから取り出した入力（初期値との差分）を、初期の入力に重ねる。徽章・ロスレコ・音符・素質を含む
+  const HC_PATCH = {"team":{"main":"noya","s1":"tilia","s2":"firefly"},"recordLv":34,"notes":{"強撃の音符":0,"幸運の音符":51,"爆発の音符":15,"体力の音符":35,"集中の音符":15,"器用の音符":30,"必殺の音符":15,"水の音符":0,"風の音符":0,"光の音符":38},"lrMain":{"0":"mirai","1":"negai","2":"yuuzu"},"lrSub":{"0":"anaaki","1":"kakegae","2":"nitamono"},"lrOn":{"mirai:c:taken":false},"lrManual":{"baseAtk":null,"baseHp":null,"elem":null,"elemEl":"光"},"chars":{"noya":{"skillLv":{"basic":9},"trustLv":20,"emb":{"0":{"slots":{"0":{"k":"elemDmg","cat":"ダメージ・貫通"},"1":{"k":"derivedCritRate","q":"gold","cat":"従者・派生"},"2":{"k":"critRate","q":"rainbow","cat":"会心"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"hpPct","cat":"ステータス"},"1":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"2":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"spMain","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Argent Mirage: Legion's End"},"1":{"k":"baseAtk","cat":"ステータス"},"2":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"hpPct","q":"rainbow","cat":"ステータス"}}}},"add":{"basic":0.12,"skill":0.12,"hpPct":0.15},"pots2":{"Lucent_Blitz":1,"Dawnflare":1,"Prism_Warp":6,"Resolve__Blitz":6,"Astral_Brilliance":6,"Argent_Mirage__Legion_s_End":9,"Veteran_s_Grit":6,"Lucent_Tide":6,"Guiding_Star":6,"Empyrean_Starfall__Devil_s_End":0}},"firefly":{"skillLv":{"basic":1,"main":3,"support":8,"ult":9},"trustLv":10,"emb":{"0":{"slots":{"0":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"1":{"k":"spSupport","cat":"その他"},"2":{"k":"atkPct","cat":"ステータス"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"1":{"k":"hpPct","q":"rainbow","cat":"ステータス"},"2":{"k":"spSupport","cat":"その他"},"3":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"}}},"2":{"slots":{"0":{"k":"potSupport","q":"rainbow2","cat":"スキル・素質","t":"Stellar Crash"},"1":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Persistent Warmth"},"2":{"k":"servantDmg","q":"rainbow","cat":"従者・派生"},"3":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"}}}},"pots2":{"Domain_of_Purity":6,"Stellar_Crash":6,"Radiance_Blade__Twin_Shadow":1,"Radiance_Blade__Firefly":1,"Lightforged_Blade":2,"Persistent_Warmth":4,"Sanctuary_of_Light":1},"pstk":{"Stellar_Crash":0}},"tilia":{"skillLv":{"basic":2,"main":4,"support":9,"ult":3},"emb":{"0":{"slots":{"0":{"k":"spSupport","q":"gold","cat":"その他"}}},"1":{"slots":{"0":{"k":"spSupport","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potSupport","q":"gold","cat":"スキル・素質","t":"Blinding Beam"}}}},"pots2":{"Holy_Inscription":1,"Renewed_Spectrum":1,"Enemy_Counter":6,"Blinding_Beam":7,"Revealed_Flaw":6,"Knight_s_Seal":1,"Banner_of_Glory":2,"Trick_Boost":0},"pon":{"Revealed_Flaw":false,"Holy_Inscription":false}}},"skOn":{"noya:ult":true}};
   function presetHC() {
-    const g = defState();
-    g.team = { main: "noya", s1: "tilia", s2: "firefly" };
-    g.recordLv = 34; g.enemy = "stomp"; g.glimmer = true;
-    g.notes = { "強撃の音符": 0, "幸運の音符": 51, "爆発の音符": 15, "体力の音符": 35, "集中の音符": 15, "器用の音符": 30, "必殺の音符": 15, "水の音符": 0, "風の音符": 0, "光の音符": 38 };
-    g.lrMain = []; g.lrSub = [];
-    g.lrManual = { baseAtk: 8565, baseHp: 6990, elem: 0.66, elemEl: "光", basicDmg: 0, skillDmg: 0, atkPct: 0 };
-    const K = S.potKey;
-    const n = g.chars.noya, f = g.chars.firefly, t = g.chars.tilia;
-    n.add = { basic: 0.12, skill: 0.12, hpPct: 0.15 };   // ロスレコのコア: 通常・スキルダメージ+12%（セイナのみ）、チームのHP+15%（未来導く明星）
-    [["Lucent Blitz", 1], ["Dawnflare", 1], ["Prism Warp", 6], ["Resolve: Blitz", 5], ["Astral Brilliance", 6], ["Argent Mirage: Legion's End", 9], ["Veteran's Grit", 6], ["Lucent Tide", 6], ["Guiding Star", 6]].forEach(([k, v]) => { n.pots2[K(k)] = v; });
-    [["Domain of Purity", 6], ["Stellar Crash", 6]].forEach(([k, v]) => { f.pots2[K(k)] = v; });
-    f.pstk[K("Stellar Crash")] = 0;
-    [["Holy Inscription", 1], ["Renewed Spectrum", 1], ["Enemy Counter", 6], ["Blinding Beam", 7], ["Revealed Flaw", 6], ["Knight's Seal", 1]].forEach(([k, v]) => { t.pots2[K(k)] = v; });
-    t.pon[K("Revealed Flaw")] = true;
-    return g;
+    return S.applyDiff(defState(), clone(HC_PATCH));
   }
   let G = defState();
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team) G = merge(defState(), s); } catch (e) { /* 保存なしでも動く */ }
@@ -160,7 +147,7 @@
       ${row("最大HP", fmt(o.hp))}${row("攻撃力", fmt(o.atk))}${row("会心率", pct(o.critRate))}${row("会心ダメージ", pct(o.critDmg))}
       ${row(c.el + "属性ダメージ", pct(1 + o.elemAdd))}${row("属性耐性貫通", fmt(o.pen))}</table>`;
     const def = `<table class="card-t"><tr><th colspan="3">防衛戦に入った直後</th></tr>
-      ${row("最大HP", fmt(d.hp), `基礎 ${fmt(d.baseHp)} × (1+${pct(d.hpPct)})`)}${row("攻撃力", fmt(d.atk), `基礎 ${fmt(d.baseAtk)} × (1+${pct(d.atkPct)})`)}
+      ${row("最大HP", fmt(d.hp), `+${pct(d.hpPct)}`)}${row("攻撃力", fmt(d.atk), `+${pct(d.atkPct)}`)}
       ${row("会心率", pct(d.critRate))}${row("会心ダメージ", pct(d.critDmg))}${row(c.el + "属性ダメージ", pct(1 + d.elemAdd))}
       ${row("通常攻撃ダメージ", pct(d.basicAdd))}${row("スキルダメージ", pct(d.skillAdd))}${row("必殺技ダメージ", pct(d.ultAdd))}${row("印ダメージ", pct(d.markAdd))}
       ${row("属性耐性貫通", fmt(d.pen))}</table>`;
@@ -180,8 +167,7 @@
         ${fld("キャラレベル", `<span class="muted">90（固定）</span>`)}
         ${lvFld(id, "basic", "通常攻撃Lv")}${lvFld(id, "main", "主力スキルLv")}${lvFld(id, "support", "支援スキルLv")}${lvFld(id, "ult", "必殺技Lv", "11〜は推定")}
         ${fld("信頼ボーナスLv", inp(`${p}.trustLv`, { min: 0, max: 99, step: 1, w: 70 }))}
-        ${fld("心相（段階）", inp(`${p}.talent`, { min: 0, max: 50, step: TK(c.en).rarity >= 5 ? 10 : 5, w: 70 }), `0〜50／${Math.floor((G.chars[id].talent || 0) / 10)}凸`)}
-        <div class="box"><div class="sel-row" style="margin:0"><button class="obtn" data-act="panel:emb:${k}" style="width:auto">徽章</button><button class="obtn" data-act="panel:pot:${k}" style="width:auto">素質</button><button class="obtn" data-act="panel:add:${k}" style="width:auto">その他</button></div></div>
+        <div class="box"><div class="sel-row" style="margin:0"><button class="obtn" data-act="panel:heart:${k}" style="width:auto">心相</button><button class="obtn" data-act="panel:emb:${k}" style="width:auto">徽章</button><button class="obtn" data-act="panel:pot:${k}" style="width:auto">素質</button><button class="obtn" data-act="panel:add:${k}" style="width:auto">その他</button></div></div>
         ${cardsHtml(id)}
       </div>`;
     };
@@ -278,7 +264,7 @@
     const o = optOf(sl.k);
     const q = (EMBLEM_QUALITY.find(x => x[0] === sl.q) || [])[1] || "";
     const v = qVal(o, sl.q);
-    return `${o.label} ${q}${v != null ? " " + valTxt(o, v) : ""}${sl.t ? `（${JA(sl.t)}）` : ""}`;
+    return `${o.label} ${q}${v != null ? " " + valTxt(o, v) : ""}${sl.t ? `（${JA(sl.t, id)}）` : ""}`;
   }
   function renderEmblem(k) {
     const id = G.team[k], c = chOf(id), cs = G.chars[id];
@@ -296,7 +282,7 @@
         let tg = "";
         if (o && o.type === "potLv") {
           const list = potTargets(id, sl.k);
-          tg = sel(`${sp}.t`, list.map(x => [x.en, JA(x.en)]), sl.t || "", "（対象の素質）");
+          tg = sel(`${sp}.t`, list.map(x => [x.en, JA(x.en, id)]), sl.t || "", "（対象の素質）");
         }
         return `<div class="emb-line"><button class="obtn" data-act="embclear:${id}:${i}:${j}" style="width:auto;min-height:30px">クリア</button>${sel(`${sp}.cat`, EMB_CATS.map(x => [x[0], x[0]]), cat, "（区分）")}${sel(`${sp}.k`, items, sl.k || "", "（項目）")}${o ? sel(`${sp}.q`, vals, (isLv(o) && sl.q === "rainbow") ? "rainbow3" : sl.q, "（値）") : ""}${tg}</div>`;
       }).join("");
@@ -306,10 +292,28 @@
     const sumTxt = Object.keys(sum).map(key => { const o = optOf(key); return `${o.label} ${valTxt(o, sum[key])}`; }).join(" ／ ");
     const ex = emx(id);
     const lvTxt = Object.keys(ex.lv).filter(x => ex.lv[x]).map(x => ({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" }[x] + "Lv+" + ex.lv[x])).join("・");
-    const potTxt = Object.keys(ex.pot).map(x => `${JA(x)} Lv+${ex.pot[x]}`).join("・");
+    const potTxt = Object.keys(ex.pot).map(x => `${JA(x, id)} Lv+${ex.pot[x]}`).join("・");
     return `<div class="wide"><h3>${esc(c.jp)}：徽章</h3><div>${order.map(card).join("")}</div>
       <div class="note">合計: ${sumTxt || "なし"}${lvTxt ? `<br>スキルレベル上昇: ${lvTxt}（スキルLvの欄に反映）` : ""}${potTxt ? `<br>素質レベル上昇: ${potTxt}（取得している素質に反映）` : ""}</div>
       <p class="muted">各枠は、左から 区分 → 項目 → 値 の順に選びます。金までしかない項目には虹を出しません。素質レベル上昇は、取得している素質（Lv1以上）にだけ足します。</p></div>`;
+  }
+
+  // ---- 心相（段階・戦闘中の効果）----
+  function renderHeart(k) {
+    const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`, st = R.team[id].st;
+    const hs = (S.HEART_SPEC || {})[id];
+    const rar = TK(c.en).rarity;
+    const tb = c.talentBonus || {}, tu = Math.min(10, Math.max(0, (cs.talent || 0) / 5));
+    const stat = [`基礎HP +${fmt(st.talHp)}`, `基礎攻撃 +${fmt(st.talAtk)}`].concat(tb.elem ? [`${c.el}属性ダメージ +${pct(tu * tb.elem)}`] : [], tb.basic ? [`通常攻撃ダメージ +${pct(tu * tb.basic)}`] : [], tb.skill ? [`スキルダメージ +${pct(tu * tb.skill)}`] : [], tb.ult ? [`必殺技ダメージ +${pct(tu * tb.ult)}`] : [], tb.crit ? [`会心ダメージ +${pct(tu * tb.crit)}`] : []).join(" ／ ");
+    const list = hs ? `<div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${hs.map(h => {
+      const un = (cs.talent || 0) >= h.n * 10, key = "heart" + h.n, onv = (cs.pon || {})[key], on = onv == null ? !h.off : onv;
+      return `<div class="pot${un ? " core" : ""}"><b>${h.n} ${esc(h.name)}</b>${un ? '<span class="tag-ok">解放済み</span>' : '<span class="tag-ng">未解放</span>'}
+        <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}</div>`;
+    }).join("")}</div>` : '<p class="muted">このキャラの、心相の戦闘中の効果は、まだ登録していません。反映したい効果は「その他」に入れてください。</p>';
+    return `<div class="wide"><h3>${esc(c.jp)}：心相</h3>
+      ${fld("心相（段階）", inp(`${p}.talent`, { min: 0, max: 50, step: rar >= 5 ? 10 : 5, w: 70 }), `0〜50／${Math.floor((cs.talent || 0) / 10)}凸（星${rar}は${rar >= 5 ? 10 : 5}段階ずつ）`)}
+      <p class="note">段階ごとのステータス: ${stat}</p>
+      <h3 style="margin:10px 0 6px;font-size:14px">凸の戦闘中の効果（10段階 = 1凸）</h3>${list}</div>`;
   }
 
   // ---- 素質 ----
@@ -338,10 +342,11 @@
         const sk = key + (e.sk ? ":" + e.sk : "");
         return `<span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重なり"}</span> ${inp(`${p}.pstk.${sk}`, { min: 0, max: e.stk, step: 1, w: 60 })}<span class="muted">/${e.stk}</span> `;
       };
-      // 主力・支援を縦に並べる（現在の枠に関係なく、両方出す）
-      const blocks = ["main", "support"].map(role => (t.potentials[role] || []).map(b => `<div style="grid-column:1/-1"><b style="color:var(--indigo);font-size:13px">${potGroupName(b.title, role)}</b></div>` + b.potentials.map(x => {
+      // 今の枠（主力 or 支援）の素質だけを出す。上にコア4つ、そのあと 特化構築1・2のサブ素質、汎用
+      const role = k === "main" ? "main" : "support", roleJa = k === "main" ? "主力" : "支援";
+      const card = x => {
         const sp = spec[x.name], key = S.potKey(x.name), core = x.type === 1;
-        const nm = esc(JA(x.name));
+        const nm = esc(JA(x.name, id));
         if (!sp) return `<div class="pot" title="${esc(x.name)}"><b>${nm}</b><span class="tag-ng">計算に未反映</span></div>`;
         const eff = sp.e.length > 0;
         const onv = (cs.pon || {})[key];
@@ -354,23 +359,23 @@
         sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<div class="lv"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 70 })}<span class="muted">既定 ${e.c}</span></div>`); });
         return `<div class="pot${core ? " core" : ""}" title="${esc(x.name)}"><b>${nm}</b>${core ? '<span class="tag-ok">コア</span>' : ""}${tagBonus(x.name)}${eff ? '<span class="tag-ok">反映</span>' : '<span class="tag-ng">火力に影響なし/未反映</span>'}${sp.off ? '<span class="tag-ng">既定は反映しない</span>' : ""}
           <div class="muted">${esc(sp.txt)}</div>${ctl.join("")}</div>`;
-      }).join("")).join("")).join("");
-      body = blocks;
+      };
+      const groups = t.potentials[role] || [];
+      const builds = groups.filter(g => !/Generic/i.test(g.title)), generic = groups.find(g => /Generic/i.test(g.title));
+      const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
+      const grid = (arr, cols) => `<div class="pgrid" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${arr.map(card).join("")}</div>`;
+      const coreRow = `<div class="pgrid" style="grid-template-columns:repeat(${Math.max(1, builds.length)},minmax(0,1fr));gap:14px">${builds.map(g => `<div><div class="phead">コア：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1), 2)}</div>`).join("")}</div>`;
+      const subRows = builds.map(g => `<div class="phead">${roleJa}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("");
+      const genRow = generic ? `<div class="phead">汎用</div>${grid(generic.potentials, 3)}` : "";
+      body = `<div style="grid-column:1/-1">${coreRow}${subRows}${genRow}</div>`;
       note = "名前は日本語（マウスを重ねると英語名）。効果は原文を読んで分類した内容を表の下に書いています。回数や重なりが原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。";
     } else {
-      const t = TK(c.en), groups = (t.potentials.support || []).concat(t.potentials.main || []);
-      body = groups.map(g => g.potentials.map(x => `<div class="pot${x.type === 1 ? " core" : ""}" title="${esc(x.name)}"><b>${esc(JA(x.name))}</b>${x.type === 1 ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ng">計算に未反映</span>
+      const t = TK(c.en), groups = (t.potentials[k === "main" ? "main" : "support"] || []);
+      body = groups.map(g => g.potentials.map(x => `<div class="pot${x.type === 1 ? " core" : ""}" title="${esc(x.name)}"><b>${esc(JA(x.name, id))}</b>${x.type === 1 ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ng">計算に未反映</span>
         <div class="lv">Lv ${inp(`${p}.pots2.${x.name.replace(/[^A-Za-z0-9]/g, "_")}`, { min: 0, max: 9, step: 1 })}</div></div>`).join("")).join("");
       note = "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「その他」に手で入れられます。";
     }
-    const hs = (S.HEART_SPEC || {})[id];
-    const heart = hs ? `<h3 style="margin:4px 0 6px;font-size:14px">心相（凸）の戦闘中の効果 <span class="muted">段階 ${cs.talent || 0}（${Math.floor((cs.talent || 0) / 10)}凸）</span></h3>
-      <div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-bottom:10px">${hs.map(h => {
-        const un = (cs.talent || 0) >= h.n * 10, key = "heart" + h.n, onv = (cs.pon || {})[key], on = onv == null ? !h.off : onv;
-        return `<div class="pot${un ? " core" : ""}"><b>${h.n} ${esc(h.name)}</b>${un ? '<span class="tag-ok">解放済み</span>' : '<span class="tag-ng">未解放</span>'}
-          <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}</div>`;
-      }).join("")}</div>` : "";
-    return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3>${heart}<div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
+    return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3><div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
   }
 
   // ---- 記録レベル ----
@@ -463,6 +468,7 @@
     if (V.panel === "overview") h = renderOverview();
     else if (V.panel === "direct") h = renderDirect();
     else if (a === "emb") h = renderEmblem(b);
+    else if (a === "heart") h = renderHeart(b);
     else if (a === "pot") h = renderPot(b);
     else if (a === "add") h = renderAdd(b);
     else if (V.panel === "record") h = renderRecord();

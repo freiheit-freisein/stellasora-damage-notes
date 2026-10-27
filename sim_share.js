@@ -104,6 +104,7 @@
   }
 
   // G=今の入力、def=初期の入力、team=出力する巡遊者（編成の3人だけを出す）
+  S.applyDiff = apply;   // 差分を、初期の入力に重ねる（プリセット用）
   S._shareDbg = { diff, enc, buildDict };
   S.shareEncode = async function (G, def, team) {
     const dict = buildDict(def);

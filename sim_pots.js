@@ -108,6 +108,15 @@ window.SIM = window.SIM || {};
       "Creed of Fortification": { txt: "ティリアの攻撃力%", e: [{ k: "atkPct", n: 0 }] },
     },
   };
+  // edit.html で入力した効果（data/spec_user.js とブラウザの保存）を、組み込みの表より優先して重ねる
+  const US = JSON.parse(JSON.stringify(window.SPEC_USER || {}));
+  try { const sv = JSON.parse(localStorage.getItem("stellasora-spec-user-v1")); if (sv) Object.keys(sv).forEach(t => { US[t] = Object.assign(US[t] || {}, sv[t]); }); } catch (err) { /* 保存なしでも動く */ }
+  (S.CH || []).forEach(c => {
+    const u = US[c.en];
+    if (!u) return;
+    SPEC[c.id] = SPEC[c.id] || {};
+    Object.keys(u).forEach(name => { SPEC[c.id][name] = { txt: u[name].txt || "", off: !!u[name].off, e: u[name].e || [] }; });
+  });
   S.POT_SPEC = SPEC;
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
 
@@ -128,6 +137,13 @@ window.SIM = window.SIM || {};
 
   // 心相（凸）の戦闘中の効果。段階が 10×n 以上で有効。説明文はゲームの画面から。
   const HEART = {
+    noya: [
+      { n: 1, name: "血と砂の過去", txt: "閃星の効果中、会心ダメージ +12%。ダメージを与えた時に閃星を獲得（5分に1回）。印の会心への反映は「ギミック」のスイッチ", e: [] },
+      { n: 2, name: "閃銀騎士の責務", txt: "最大HP +10%（戦闘中だけ。外の画面には出ない）。特殊主力スキル・特殊通常攻撃は、残光が付いた敵へのダメージ倍率 +36%（この倍率は未反映）", e: [{ k: "hpPct", raw: 0.10 }] },
+      { n: 3, name: "運命を超える覚悟", txt: "エリート以上の敵への光属性ダメージ +18%（未反映）", e: [] },
+      { n: 4, name: "闇夜に輝く一番星", txt: "光の印を発動した後8秒、通常攻撃ダメージ +24%（未反映）", e: [] },
+      { n: 5, name: "最高の名前", txt: "HPが20%超のとき、長剣の倍率 +21%・大剣の倍率 +18%（未反映）", e: [] },
+    ],
     firefly: [
       { n: 1, name: "無邪気な光", txt: "チーム内が光の印を発動した後6秒、敵の光被ダメージ +14%", e: [{ k: "taken", raw: 0.14, to: "enemy" }] },
       { n: 2, name: "適合者の才能", txt: "ホタルのスキル発動後30秒、攻撃力 +20%", e: [{ k: "atkPct", raw: 0.20 }] },
@@ -188,6 +204,7 @@ window.SIM = window.SIM || {};
         if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; return; }
         if (e.k === "takenMark") { if (G.markDebuff !== false) a.takenMark *= 1 + v; return; }
         if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
+        if (e.k === "takenBasic") { a.takenBasic = (a.takenBasic || 1) * (1 + v); return; }
         if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || (e.tags && (e.k === "Bs" || e.k === "Bb"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, cond: e.cond || null }); return; }
         if (e.k === "mark") { a.markAdd += v; return; }
         if (a[e.k] != null) a[e.k] += v;
@@ -196,7 +213,10 @@ window.SIM = window.SIM || {};
     team.forEach((oid, oi) => {
       const c = chs[oi], cs = G.chars[oid], spec = SPEC[oid];
       if (!spec) return;
+      const roleT = TREKKERS.find(x => x.en === c.en), roleList = new Set();
+      ((roleT && roleT.potentials && roleT.potentials[oi === 0 ? "main" : "support"]) || []).forEach(g => g.potentials.forEach(x => roleList.add(x.name)));   // 主力のときは主力の素質だけ、支援のときは支援の素質だけ
       Object.keys(spec).forEach(name => {
+        if (roleList.size && !roleList.has(name)) return;
         const key = S.potKey(name);
         const lv0 = (cs.pots2 || {})[key] || 0;
         if (!lv0) return;

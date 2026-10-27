@@ -109,7 +109,6 @@
     const talPct = wst ? (wst.talent.atkPct[tu] || 0) : 0;
     // 戦闘中だけの心相（外の画面には出ない）
     let battleHpPct = 0;
-    if (c.id === "noya" && tu >= 4) battleHpPct += 0.10;          // 心相2: 最大HP+10%
     if (isMain && G.enemyObj && G.enemyObj.hpBonus) battleHpPct += G.enemyObj.hpBonus;   // 深層ノ主: 主力の最大HP+20%
     const eo = G.enemyObj || {};      // 防衛戦: 全員の最大HP+15%・攻撃+15%・会心率+10%（実測で確認）
     battleHpPct += eo.teamHp || 0;
