@@ -91,7 +91,7 @@
       ${row("preset", "プリセットコード", "（ゲーム・プリセット共有サイトと同じ。編成と素質Lvだけ）", "ゲームの素質プリセットのコード")}
       ${row("code", "共有コード", "（この計算ページの入力すべて）", "共有コードを貼り付け")}
       ${row("url", "共有URL", "（共有コードの短縮URL。開くだけで読み込まれます）", "https://sim.stella-tool.com/s/…")}
-      <div class="row"><button class="btn-add xbtn" data-act="share-x">Xで共有</button> <span class="muted">短縮URLを作って、Xの投稿画面を開きます（編成の3人の名前とハッシュタグ入り）</span></div>
+      <div class="row"><button class="btn-add xbtn" data-act="share-x">Xで共有</button> <span class="muted">短縮URLを作って、Xの投稿画面を開きます（本文は編成の3人の名前とURLだけ）</span></div>
       <div class="row sub"><label for="bname">このブラウザに保存 <span class="muted" style="font-weight:400">（名前を付けて保存・読み込み）</span></label>
       <div class="line" style="grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto auto">
         <input type="text" id="bname" placeholder="名前"><button class="btn-add" data-act="bsave">保存</button>
@@ -717,7 +717,7 @@
     const w = window.open("about:blank", "_blank");
     say("url", "Xで共有する準備をしています…");   // メッセージは、ポップアップの共有URLの欄に出す
     makeShort().then(url => {
-      const text = `${teamTitle()}を計算しました #巡遊者の計算ノート #ステラソラ`;
+      const text = teamTitle();   // 本文は短く（ハッシュタグなし。共有する人が本文を長く書けるように）
       const intent = "https://x.com/intent/post?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
       if (w) w.location.href = intent; else location.href = intent;
       DV.url = url; say("url", "Xの投稿画面を開きました");
