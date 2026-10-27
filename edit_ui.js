@@ -188,7 +188,7 @@
     const v = t.type === "checkbox" ? t.checked : t.value;
     if (i != null) {
       const r = rows[+i];
-      if (f === "k") { const old = r.k; r.k = v; if (v === "extra" && old !== "extra") { r.src = "raw"; } const dt = KIND[v] && KIND[v][2] && KIND[v][2].to; if (dt) r.to = dt; else if (r.to === "enemy") r.to = ""; }
+      if (f === "k") { const old = r.k; r.k = v; if (v === "extra" && old !== "extra") { r.src = "raw"; if (!r.name) r.name = PJ(S.t, S.sel); } const dt = KIND[v] && KIND[v][2] && KIND[v][2].to; if (dt) r.to = dt; else if (r.to === "enemy") r.to = ""; }
       else r[f] = v;
     } else if (f === "none" || f === "off") { meta[f] = v; if (f === "none" && v) rows = []; }
     else if (f === "note") meta.note = v;

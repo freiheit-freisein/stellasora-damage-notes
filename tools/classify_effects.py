@@ -13,6 +13,7 @@ tk = json.load(open('data/trekkers.json', encoding='utf-8'))
 tk = tk if isinstance(tk, list) else tk.get('trekkers', tk)
 jp = json.load(open('data/potentials_jp.json', encoding='utf-8'))
 tja = js('data/trekker_ja.js')
+pja = js('data/potential_ja.js')
 EL = {'Aqua': '水', 'Ignis': '火', 'Lux': '光', 'Umbra': '闇', 'Ventus': '風', 'Terra': '地'}
 NUM = r'(\d+(?:\.\d+)?)'
 RNG = NUM + r'\s*[%％]?\s*[～~]\s*' + NUM + r'\s*[%％]?'
@@ -140,7 +141,7 @@ for t in tk:
         for pn, j in pots.items():
             p = enmap.get((role, pn))
             en_nums = [a for a in (p['nums'] if p else []) if a]
-            eff, notes, unk = classify(pn, j['text'], en_nums, el, role)
+            eff, notes, unk = classify(pja.get(en, {}).get(pn, pn), j['text'], en_nums, el, role)   # 追加ヒットの名前は、素質の日本語名
             # 用語の説明（メロウ状態など）に数値があれば、効果の中身なので「要確認」の文として残す（自動では効果にしない）
             unk += ['用語「' + x['term'] + '」：' + x['text'] for x in j.get('terms', []) if re.search(r'(ダメージ|攻撃力|会心)[^。]*?\d+(?:\.\d+)?\s*[%％]', x['text'])]
             d = {'draft': True, 'auto': True, 'e': eff, 'txt': ''}

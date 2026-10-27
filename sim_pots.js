@@ -183,6 +183,13 @@ window.SIM = window.SIM || {};
 
   // チーム全体の効果の集計。返り値: id → 集計
   // 敵の光被ダメージ(taken)は、足し算の1つの束にする（実測: ホタル心相1 +14% を含む束に ナイトパンチ +57% を足すと、印の増幅 ×6.67 と一致）。
+  // 追加ヒットの名前は、素質の日本語名で出す。名前が英語の素質名そのもの／空なら日本語名に、「光刃（Lucent Blitz）」のような英語の括弧は（日本語名）に置き換える
+  const jaHit = (nm, pn, ten) => {
+    const ja = pn && ((window.POTENTIAL_JA || {})[ten] || {})[pn];
+    if (!ja) return nm;
+    if (!nm || nm === pn || nm === "追加ヒット") return ja;
+    return nm.replace(/（[\x20-\x7e]+）/, "（" + ja + "）");
+  };
   function collect(G, team) {
     const chs = team.map(id => S.CH.find(c => c.id === id));
     // 「光属性の全員」などは、効果を持つ巡遊者と同じ属性の全員として扱う（光チーム以外にも使えるようにした）
@@ -220,7 +227,7 @@ window.SIM = window.SIM || {};
           let cnt = e.c;
           const cc = (cs.pcnt || {})[key + "#" + ei];
           if (cc != null && cc !== "") cnt = +cc;
-          a.xhits.push({ group: e.group, name: e.name, m: e.m != null ? e.m : v, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, owner: oid, key: key + "#" + ei });
+          a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m: e.m != null ? e.m : v, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, owner: oid, key: key + "#" + ei });
           return;
         }
         if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; return; }
@@ -246,7 +253,7 @@ window.SIM = window.SIM || {};
         const sp = spec[name];
         const onSet = (cs.pon || {})[key];
         if (onSet == null ? sp.off : !onSet) return;
-        const info = Object.assign({}, numsOf(c, name), { ext: sp.ext });
+        const info = Object.assign({}, numsOf(c, name), { ext: sp.ext, pn: name });
         sp.e.forEach((e, ei) => apply(e, ei, key, oid, cs, lv, info));
         out[oid].applied.push(name);
       });

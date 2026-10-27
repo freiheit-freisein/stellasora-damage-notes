@@ -16,7 +16,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "main",
-     "name": "波の追加（Cascade Strike）",
+     "name": "波の追加（飛水・爆撃）",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -96,20 +96,18 @@ window.SPEC_USER = {
   },
   "Stream: Cloud Ring": {
    "done": true,
-   "draft": false,
    "e": [
     {
      "k": "extra",
      "group": "main",
-     "name": "波（Cloud Ring）",
+     "name": "波（飛水・環雲）",
      "t": "skill",
      "c": 1,
      "edit": true,
      "m": 112
     }
    ],
-   "txt": "魔盾を得たとき、波 112%（スキル）。回数は仮に1回",
-   "verified": "日本語Wikiの文章（ゲーム内の画面では未確認）"
+   "txt": "魔盾を得たとき、波 112%（スキル）。回数は仮に1回"
   },
   "Stream: Drip's Overturn": {
    "done": true,
@@ -238,7 +236,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "support",
-     "name": "波（Surge: Ripple）",
+     "name": "波（絶流・波紋）",
      "t": "skill",
      "c": 10,
      "edit": true,
@@ -326,7 +324,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "support",
-     "name": "間欠泉（How About This）",
+     "name": "間欠泉（決めるにゃ！）",
      "t": "skill",
      "c": 5,
      "edit": true,
@@ -391,7 +389,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "main",
-     "name": "Rippling Radiance",
+     "name": "微震する流光",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -577,7 +575,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "support",
-     "name": "Kindred Bound",
+     "name": "雪兎の火力支援",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -593,7 +591,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "support",
-     "name": "Twin Moons",
+     "name": "夜兎の支援攻撃",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -614,7 +612,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "support",
-     "name": "Rabbit Flip",
+     "name": "アブナイウェイヴ",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -758,7 +756,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "main",
-     "name": "Phantom Step Radiance",
+     "name": "光の雪兎",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -773,7 +771,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "main",
-     "name": "Rimecrystal Edge",
+     "name": "スノーフォール",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -782,7 +780,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "main",
-     "name": "Rimecrystal Edge",
+     "name": "スノーフォール",
      "t": "skill",
      "c": 1,
      "edit": true,
@@ -797,7 +795,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "main",
-     "name": "Moonlight Overflow",
+     "name": "月の夜兎",
      "t": "basic",
      "c": 1,
      "edit": true,
@@ -817,7 +815,7 @@ window.SPEC_USER = {
     {
      "k": "extra",
      "group": "main",
-     "name": "Astral Pirouette",
+     "name": "ナイトフォロー",
      "t": "skill",
      "c": 1,
      "edit": true,
