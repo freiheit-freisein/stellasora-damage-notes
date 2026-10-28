@@ -230,15 +230,15 @@
   .decG { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 10px; }   /* 狭いときは2列・1列に折り返す */
   .decT td { white-space: normal; }
   .decT th:first-child { width: auto; }
-  .decT th:nth-child(2) { width: 150px; text-align: center; }
+  .decT th:nth-child(2) { width: 176px; text-align: center; }
   .decT th:nth-child(3) { width: 84px; }
-  .decT td.c { text-align: center; }
+  .decT td.c { text-align: center; overflow: visible; }
   .decT td.v { text-align: right; }
   .decin { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
   .decin .obtn { width: 24px; min-height: 24px; padding: 0; font-size: 11px; border-radius: 6px; }
   .decin .obtn:disabled { opacity: .35; cursor: default; }
-  .decin b { min-width: 40px; text-align: center; font-size: 12px; }
-  .decin .muted { font-size: 11px; }
+  .decin b { width: 48px; text-align: center; font-size: 12px; }
+  .decin .muted { width: 54px; text-align: right; font-size: 11px; }   /* 今の値と比べる値の幅をそろえ、◀▶が縦に並ぶように */
   .decin b.up { color: #C0392B; }
   .lr-line .obtn { padding: 0 4px; white-space: nowrap; font-size: 13px; }
   .lr-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 0 24px; }   /* 狭いときはメインの下にサブ */
