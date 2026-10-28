@@ -171,11 +171,17 @@
 
 
   // ---- 表示エリア: 巡遊者 ----
-  // スキルLvは2列×2行にまとめる（徽章の「＋」があるときは、欄の横に → 最終的なLv）
-  function lvCell(id, key, label, note) {
+  // 数値を −／＋ で変える入力（クリックやタッチで押しやすく）。真ん中の欄は、直接打ち込むこともできる
+  function stepper(path, min, max, def) {
+    const v = getPath(path), cur = v == null || v === "" ? def : +v;
+    const b = (d, ch, dis) => `<button type="button" class="stp-b" data-act="stp|${d}|${min}|${max}|${def}|${path}"${dis ? " disabled" : ""} aria-label="${d > 0 ? "1つ上げる" : "1つ下げる"}">${ch}</button>`;
+    return `<span class="stp">${b(-1, "−", cur <= min)}<input type="number" data-p="${path}" data-t="n" min="${min}" max="${max}" step="1" value="${cur}">${b(1, "＋", cur >= max)}</span>`;
+  }
+  // スキルLv（徽章の「＋」があるときは、横に → 最終的なLv）
+  function lvRow(id, key, label, note) {
     const bonus = emx(id).lv[key];
     const extra = (bonus ? `+${bonus} → Lv${(G.chars[id].skillLv[key] || 10) + bonus}` : "") + (note ? (bonus ? "／" : "") + note : "");
-    return `<label class="sk-cell"><span class="sk-lab">${label}</span><span class="sk-in">${inp(`chars.${id}.skillLv.${key}`, { min: 1, max: 13, step: 1, w: 56 })}${extra ? `<span class="muted">${extra}</span>` : ""}</span></label>`;
+    return `<div class="stp-row"><span class="stp-lab">${label}</span>${stepper(`chars.${id}.skillLv.${key}`, 1, 13, 10)}${extra ? `<span class="muted stp-note">${extra}</span>` : ""}</div>`;
   }
   // 心相・徽章・素質・その他のボタンに出す、今の状態
   function charSummary(k) {
@@ -191,8 +197,8 @@
       const nb = (pn, label, v) => `<button class="obtn ch-btn" data-act="panel:${pn}:${k}"><b>${label}</b><span>${v}</span></button>`;
       return `<div class="chcol${mHide(k)}" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="ch-h">${l}：${esc(c.jp)}${c.auto ? "*" : ""}</h3>
         ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp + (x.auto ? "*" : "")]), str: true }))}
-        <div class="sk-grid">${lvCell(id, "basic", "通常攻撃Lv")}${lvCell(id, "main", "主力スキルLv")}${lvCell(id, "support", "支援スキルLv")}${lvCell(id, "ult", "必殺技Lv", "11〜は推定")}</div>
-        ${fld("信頼ボーナスLv", inp(`${p}.trustLv`, { min: 0, max: 99, step: 1, w: 70 }))}
+        <div class="stp-list">${lvRow(id, "basic", "通常攻撃")}${lvRow(id, "main", "主力スキル")}${lvRow(id, "support", "支援スキル")}${lvRow(id, "ult", "必殺技", "11〜は推定")}
+          <div class="stp-row"><span class="stp-lab">信頼ボーナス</span>${stepper(`${p}.trustLv`, 0, 99, 0)}</div></div>
         <div class="ch-btns">${nb("heart", "心相", sm.heart)}${nb("emb", "徽章", sm.emb)}${nb("pot", "素質", sm.pot)}${nb("add", "その他", sm.add)}</div>
         ${cardsHtml(id)}
       </div>`;
@@ -934,6 +940,10 @@
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a.indexOf("stp|") === 0) {   // −／＋ のボタン
+      const m = /^stp\|(-?1)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);
+      if (m) { const v = getPath(m[5]), cur = v == null || v === "" ? +m[4] : +v; setPath(m[5], Math.min(+m[3], Math.max(+m[2], cur + +m[1]))); renderAll(); }
+    }
     else if (a.indexOf("unit:") === 0) { dmgUnit = a.slice(5); try { localStorage.setItem("stellasora-sim-unit", dmgUnit); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a.indexOf("plv|") === 0) { const m = /^plv\|(\d+)\|(.+)$/.exec(a); if (m) { setPath(m[2], +m[1]); renderAll(); } }   // 素質のLv
     else if (a.indexOf("pcore|") === 0) {   // コア素質: 取得／外す（1人2つまで。外すのはいつでもできる）

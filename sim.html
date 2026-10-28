@@ -130,11 +130,16 @@
   @media (max-width: 900px) { .pz-ngrid, .pz-cgrid { grid-template-columns: minmax(0, 1fr); } }
   /* 巡遊者の画面: 列の見出しに属性の色の線、スキルLvは2列×2行、心相・徽章・素質・その他のボタンに今の状態 */
   .ch-h { padding-bottom: 6px; border-bottom: 3px solid var(--elc, var(--indigo)); }
-  .sk-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 6px 0; }
-  .sk-cell { display: flex; flex-direction: column; gap: 2px; margin: 0; }
-  .sk-lab { font-size: 12px; font-weight: 700; color: var(--muted); }
-  .sk-in { display: flex; align-items: center; gap: 6px; font-size: 11px; }
-  .sk-in input[type=number] { min-height: 32px; padding: 0 8px; border-radius: 8px; }
+  .stp-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .stp-row { display: flex; align-items: center; gap: 10px; }
+  .stp-lab { width: 92px; flex: none; font-size: 13px; font-weight: 700; color: var(--indigo); }
+  .stp-note { font-size: 11px; }
+  .stp { display: inline-flex; align-items: stretch; height: 38px; border: 2px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; flex: none; }
+  .stp-b { width: 36px; border: 0; background: var(--surface-soft); color: var(--indigo); font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; }
+  .stp-b:hover { background: #E4E7F3; }
+  .stp-b:disabled { opacity: .35; cursor: default; }
+  .stp input[type=number] { width: 48px; border: 0; border-left: 2px solid var(--border); border-right: 2px solid var(--border); border-radius: 0; text-align: center; font-family: var(--font-en); font-size: 20px; padding: 0; min-height: 0; -moz-appearance: textfield; }
+  .stp input::-webkit-outer-spin-button, .stp input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .ch-btns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 8px 0; }
   .ch-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 4px 2px; line-height: 1.25; min-height: 46px; }
   .ch-btn span { font-size: 11px; font-weight: 700; color: var(--muted); }
