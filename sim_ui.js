@@ -540,7 +540,7 @@
     };
     SLOTS.forEach(([k]) => {
       const id = G.team[k], cs = G.chars[id], c = chOf(id);
-      const lvItem = (key, name, lv, set) => { const n = decOf(key, lv); drop("素質", `${c.jp}：${name} Lv${lv}`, k, g => set(g, lv - n), { key, n, max: lv, unit: "Lv" }); };
+      const lvItem = (key, name, lv, set) => { const n = decOf(key, lv); drop("素質", `${c.jp}：${name}`, k, g => set(g, lv - n), { key, n, max: lv, cur: lv, unit: "Lv" }); };
       Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
         const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p;
         lvItem(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], (g, v) => { g.chars[id].pots2[p] = v; });
@@ -560,12 +560,12 @@
       const rk = S.lrRankOf(G, rid);
       if (rk.can && rk.rank > 1) {
         const key = `lrc:${rid}`, n = decOf(key, rk.rank - 1);
-        drop("ロスレコ", `${r.name}：コア効果 突破${rk.rank}`, null, g => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: rk.rank - n }); }, { key, n, max: rk.rank - 1, unit: "突破" });
+        drop("ロスレコ", `${r.name}：コア効果`, null, g => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: rk.rank - n }); }, { key, n, max: rk.rank - 1, cur: rk.rank, unit: "突破" });
       }
       fx.assists.forEach(a => {
         const lv = S.lrAssistLv(S.notesTotal(G), a); if (!lv) return;
         const key = `lra:${rid}:${a.id}`, n = decOf(key, lv);
-        drop("ロスレコ", `${r.name}：${a.name} Lv${lv}`, null, g => { g._lrAssistDec = Object.assign({}, g._lrAssistDec, { [rid + ":" + a.id]: n }); }, { key, n, max: lv, unit: "Lv" });
+        drop("ロスレコ", `${r.name}：${a.name}`, null, g => { g._lrAssistDec = Object.assign({}, g._lrAssistDec, { [rid + ":" + a.id]: n }); }, { key, n, max: lv, cur: lv, unit: "Lv" });
       });
     });
     items.sort((a, b) => b.team - a.team);
@@ -681,9 +681,9 @@
     let items;
     try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}<h3>ビルド検証</h3><p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
     const pc = v => v == null ? "" : v > 0.0005 ? "−" + (Math.round(v * 1000) / 10).toFixed(1) + "%" : v < -0.0005 ? "+" + (Math.round(-v * 1000) / 10).toFixed(1) + "%" : "影響なし";
-    // 下げる幅: 既定1。◀▶で変える（最大まで下げると、まるごと外したときと同じ）。徽章は外したときだけ
-    const decIn = d => d ? `<span class="decin"><button class="obtn" data-act="decm|${esc(d.key)}"${d.n <= 1 ? " disabled" : ""}>◀</button><b>−${d.n}${d.unit}</b><button class="obtn" data-act="decp|${esc(d.key)}"${d.n >= d.max ? " disabled" : ""}>▶</button></span>` : '<span class="muted">外す</span>';
-    const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>上下</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}">${esc(x.label)}</td><td class="c">${decIn(x.dec)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
+    // 今の値 → 比べる値（既定で1つ下）。◀▶で比べる値を変える（0まで下げると、まるごと外したときと同じ）。徽章は外したときだけ
+    const decIn = d => d ? `<span class="decin"><span class="muted">${d.unit}${d.cur} →</span><button class="obtn" data-act="decp|${esc(d.key)}"${d.n >= d.max ? " disabled" : ""}>◀</button><b>${d.unit}${d.cur - d.n}</b><button class="obtn" data-act="decm|${esc(d.key)}"${d.n <= 1 ? " disabled" : ""}>▶</button></span>` : '<span class="muted">外す</span>';
+    const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}">${esc(x.label)}</td><td class="c">${decIn(x.dec)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}
       <h3 style="margin:18px 0 6px">ビルド検証（与ダメへの寄与率）</h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
@@ -692,7 +692,7 @@
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・自分の戦い方に合わせて、下の回数を書き換えてください。寄与率は、この回数で合計したダメージで出します。</p></div>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
-      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つだけ下げたときに3分間のダメージが何%下がるかです。素質・アシスト効果はLvを、ロスレコのコア効果は突破を、既定で1つ下げます（◀▶で下げる数を変えられます。最大まで下げると、まるごと外したときの値）。徽章は、1枚・1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>
+      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つの項目だけを比べる値にしたときに、3分間のダメージが何%下がるかです。「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます（Lv0まで下げると、まるごと外したときの値）。徽章は、1枚・1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>
       SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。</p>
       <div class="grid-in decG">
         <div class="box"><b>素質</b>${rows("素質")}</div>

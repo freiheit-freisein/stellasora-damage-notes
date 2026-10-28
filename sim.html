@@ -175,14 +175,15 @@
   .decG { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 10px; }   /* 狭いときは2列・1列に折り返す */
   .decT td { white-space: normal; }
   .decT th:first-child { width: auto; }
-  .decT th:nth-child(2) { width: 112px; text-align: center; }
+  .decT th:nth-child(2) { width: 150px; text-align: center; }
   .decT th:nth-child(3) { width: 84px; }
   .decT td.c { text-align: center; }
   .decT td.v { text-align: right; }
   .decin { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
   .decin .obtn { width: 24px; min-height: 24px; padding: 0; font-size: 11px; border-radius: 6px; }
   .decin .obtn:disabled { opacity: .35; cursor: default; }
-  .decin b { min-width: 46px; text-align: center; font-size: 12px; }
+  .decin b { min-width: 40px; text-align: center; font-size: 12px; }
+  .decin .muted { font-size: 11px; }
   .lr-line .obtn { padding: 0 4px; white-space: nowrap; font-size: 13px; }
   .lr-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 0 24px; }   /* 狭いときはメインの下にサブ */
   .cnt-grid { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
