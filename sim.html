@@ -84,6 +84,61 @@
   .emb-line { display: grid; grid-template-columns: 80px 150px 230px 130px 200px; gap: 6px; align-items: center; margin: 5px 0; }
   .emb-line select { width: 100%; min-height: 34px; padding: 0 8px; border-radius: 8px; font-size: 13px; }
   .emb-line .obtn { width: 100% !important; }
+  /* 素質の画面: 左に巡遊者の切り替え・コア素質・通常素質、右に選んだ素質（スクロールしても見えたまま） */
+  .pz { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
+  @media (max-width: 1400px) { .pz { grid-template-columns: minmax(0, 1fr) 340px; } }
+  .pz-main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .pz-mems { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pz-mem { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.3; min-height: 60px; padding: 8px 18px; border-radius: 16px; font: inherit; color: var(--text); cursor: pointer; text-align: left; background: #fff; border: 2px solid var(--border); }
+  .pz-mem.on { background: #E6F7F8; border-color: #0ABEC5; }
+  .pz-role { font-size: 11px; font-weight: 900; color: var(--indigo); }
+  .pz-sum { font-size: 11px; color: var(--muted); }
+  .pz-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .pz-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pz-pill { min-height: 40px; padding: 0 16px; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer; background: #fff; color: var(--indigo); border: 2px solid var(--border); }
+  .pz-pill.on { background: #4B5082; color: #fff; border-color: #4B5082; }
+  .pz-h { margin: 0 0 10px; font-size: 17px; font-weight: 900; color: var(--indigo); }
+  .pz-cnt { font-size: 13px; font-weight: 900; padding: 0 10px; border-radius: 999px; margin-left: 6px; background: #EEF0F8; color: #4B5082; }
+  .pz-cnt.full { background: #4B5082; color: #fff; }
+  .pz-cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .pz-ngrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
+  .pz-sub { grid-column: 1 / -1; font-size: 13px; font-weight: 900; color: var(--muted); margin-top: 4px; }
+  .pz-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .pz-name { flex: 1; min-width: 0; font-weight: 900; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+  .pz-grp { flex: none; font-size: 11px; color: var(--muted); }
+  .pz-desc { display: block; width: 100%; box-sizing: border-box; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 12px; color: #33386A; text-align: left; line-height: 1.6; }
+  .pz-cwrap { display: flex; flex-direction: column; gap: 6px; }
+  .pz-core { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px 16px; border-radius: 16px; font: inherit; color: var(--text); cursor: pointer; background: #fff; border: 2px solid var(--border); height: 100%; }
+  .pz-core.on { background: #FFF8E1; border-color: #E0AE2E; }
+  .pz-core.on .pz-desc { border-top-color: #E8D9A8; }
+  .pz-core:disabled { opacity: .55; cursor: not-allowed; }
+  .pz-sw { width: 44px; height: 26px; flex: none; border-radius: 999px; position: relative; background: var(--border); }
+  .pz-sw span { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .pz-sw.on { background: #4B5082; } .pz-sw.on span { left: 21px; }
+  .pz-norm { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 16px; background: #fff; border: 2px solid var(--border); }
+  .pz-norm.on { border-color: #0ABEC5; }
+  .pz-emb { flex: none; font-size: 11px; font-weight: 900; padding: 0 10px; border-radius: 999px; background: #EEF0F8; color: #5F6492; }
+  .pz-emb.on { background: #4B5082; color: #fff; }
+  .pz-lvs { flex: 1; display: flex; gap: 4px; }
+  .pz-lv { flex: 1; min-width: 0; height: 36px; border-radius: 8px; font-family: var(--font-en); font-size: 18px; cursor: pointer; background: #fff; color: #4B5082; border: 2px solid var(--border); padding: 0; }
+  .pz-lv.on { background: #0ABEC5; color: #1E2250; border-color: #0ABEC5; }
+  .pz-eff { flex: none; width: 104px; text-align: right; font-size: 13px; font-weight: 900; color: var(--text); }
+  .pz-eff.off { color: var(--muted); }
+  .pz-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .pz-ctl { display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; font-size: 12px; }
+  .pz-c { display: inline-flex; gap: 4px; align-items: center; }
+  .pz-ctl input[type=number] { min-height: 28px; padding: 0 6px; border-radius: 6px; }
+  .pz-side { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 14px; }
+  .pz-box { background: #fff; border: 2px solid var(--border); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 4px; }
+  .pz-ch { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--border); font-weight: 700; font-size: 13px; }
+  .pz-tc { flex: none; font-size: 11px; font-weight: 900; padding: 0 10px; border-radius: 999px; background: #FFF8E1; color: #7A5A00; border: 1px solid #E0AE2E; }
+  .pz-tn { flex: none; font-size: 12px; font-weight: 900; padding: 0 10px; border-radius: 999px; background: #E6F7F8; color: #05626A; }
+  .pz-dmg { background: #4B5082; color: #fff; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .pz-dmg h3 { margin: 0; font-size: 15px; font-weight: 900; color: #fff; }
+  .pz-mrow { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .pz-mrow b { font-family: var(--font-en); font-size: 30px; font-weight: 400; letter-spacing: .02em; }
+  .pz-link { align-self: flex-start; background: none; border: 0; padding: 0; color: #fff; font: inherit; font-weight: 700; font-size: 13px; text-decoration: underline; cursor: pointer; }
+  @media (max-width: 900px) { .pz { grid-template-columns: minmax(0, 1fr); } .pz-side { position: static; } .pz-ngrid, .pz-cgrid { grid-template-columns: minmax(0, 1fr); } }
   .pgrid { display: grid; gap: 8px; margin: 4px 0 10px; }
   .phead { font-size: 14px; font-weight: 900; color: var(--indigo); margin: 10px 0 4px; }
   .pcat { margin-bottom: 6px; }

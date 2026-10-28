@@ -330,64 +330,104 @@
     const m = /Build (\d)/i.exec(title);
     return (role === "main" ? "主力" : "支援") + "・" + (m ? "特化構築" + m[1] : "汎用");
   }
-  function renderPot(k) {
-    const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`;
-    const ex = emx(id);
-    const tagBonus = en => ex.pot[en] ? `<span class="tag-ok">徽章 +${ex.pot[en]}</span>` : "";
-    let body = "", note = "";
+  // ---- 素質（巡遊者を上で切り替え、コア素質と通常素質をカードで選ぶ。右に選んだ素質の一覧）----
+  // 計算は今までと同じ入力（pots2 / pots / sup）をそのまま使う。画面で選べるLvは0〜6（前の入力で7以上が入っているものは、そのまま残す）
+  const POT_LV_MAX = 6, CORE_MAX = 2;
+  // 1人分の素質の一覧: { name, en, core, lv, path, desc, tags, ctl, grp, bonus }
+  function potItems(k) {
+    const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`, ex = emx(id), out = [];
+    const tg = (t, ok) => `<span class="${ok ? "tag-ok" : "tag-ng"}">${t}</span>`;
     if (id === "willow") {
-      body = POTENTIALS.map(x => `<div class="pot${x.core ? " core" : ""}"><div class="ph"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}</div>
-        <div class="pd" title="${esc(x.text)}">${esc(x.text)}</div><div class="pc"><div class="lv">${x.core ? "取得(1=あり)" : "Lv"} ${inp(`${p}.pots.${x.id}`, { min: 0, max: 9, step: 1, w: 56 })}</div></div></div>`).join("");
-      note = "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。";
+      POTENTIALS.forEach(x => out.push({ name: x.jp, en: x.jp, core: !!x.core, lv: +((cs.pots || {})[x.id] || 0), path: `${p}.pots.${x.id}`, desc: x.text, tags: [], ctl: "", grp: "", bonus: 0 }));
     } else if (id === "nazuka" || id === "eleanor") {
-      body = SUP_POTS[id].map(x => `<div class="pot${x.core ? " core" : ""}"><div class="ph"><b>${esc(x.jp)}</b>${x.core ? '<span class="tag-ok">コア</span>' : ""}${x.verified ? '<span class="tag-ok">実測一致</span>' : '<span class="tag-ng">未検証</span>'}</div>
-        <div class="pd">${esc(x.note || x.verified || "")}</div>
-        <div class="pc"><div class="lv">Lv ${inp(`${p}.sup.${x.id}.lv`, { min: 0, max: 9, step: 1, w: 56 })}${x.on === false ? ` 条件を満たす ${inp(`${p}.sup.${x.id}.on`, { chk: 1 })}` : ""}</div></div></div>`).join("");
-      note = "支援として出場したときの素質（検証済みの分だけ効果を反映）。";
-    } else if (S.POT_SPEC[id]) {
-      const t = TK(c.en);
-      const spec = S.POT_SPEC[id];
-      const stkIn = (key, e) => {
-        const sk = key + (e.sk ? ":" + e.sk : "");
-        return `<span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${inp(`${p}.pstk.${sk}`, { min: 0, max: e.stk, step: 1, w: 60 })}<span class="muted">/${e.stk}</span> `;
-      };
-      // 今の枠（主力 or 支援）の素質だけを出す。上にコア4つ、そのあと 特化構築1・2のサブ素質、汎用
-      const role = k === "main" ? "main" : "support", roleJa = k === "main" ? "主力" : "支援";
-      const card = x => {
-        const sp = spec[x.name], key = S.potKey(x.name), core = x.type === 1;
-        const nm = esc(JA(x.name, id)) + (spec[x.name] && (spec[x.name].st === "auto" || spec[x.name].st === "draft") ? "*" : "");   // *＝未確認（説明文から自動で作った下書き）
-        const lvIn = `<div class="lv">${core ? "取得" : "Lv"} ${inp(`${p}.pots2.${key}`, { min: 0, max: core ? 1 : 9, step: 1, w: 56 })}`;
-        if (!sp) return `<div class="pot" title="${esc(x.name)}"><div class="ph"><b>${nm}</b><span class="tag-ng">未反映</span></div><div class="pd">効果がまだ入っていません</div><div class="pc">${lvIn}</div></div></div>`;
-        const eff = sp.e.length > 0;
-        const onv = (cs.pon || {})[key];
-        const on = onv == null ? !sp.off : onv;
-        const ctl = [];
-        const base = (cs.pots2 || {})[key] || 0;
-        ctl.push(`${lvIn}${base > 0 && ex.pot[x.name] ? ` → Lv${base + ex.pot[x.name]}` : ""}</div>`);
-        if (eff) ctl.push(`<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>`);
-        const seen = {};
-        sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; ctl.push(`<div class="lv">${stkIn(key, e)}</div>`); } });
-        sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<div class="lv"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 56, ph: e.c })}</div>`); });
-        const tags = (core ? '<span class="tag-ok">コア</span>' : "") + tagBonus(x.name) + (eff ? "" : '<span class="tag-ng">火力に影響なし</span>') +(sp.off ? '<span class="tag-ng">既定は反映しない</span>' : "");
-        return `<div class="pot${core ? " core" : ""}" title="${esc(x.name)}"><div class="ph"><b>${nm}</b>${tags}</div>
-          <div class="pd" title="${esc(sp.txt)}">${esc(sp.txt)}</div><div class="pc">${ctl.join("")}</div></div>`;
-      };
-      const groups = t.potentials[role] || [];
-      const builds = groups.filter(g => !/Generic/i.test(g.title)), generic = groups.find(g => /Generic/i.test(g.title));
-      const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
-      // 特化構築ごとに1行（コア2つ＋サブ3つ）、汎用はその下。どの行も同じ5列で、カードの幅と高さをそろえる
-      const grid = arr => `<div class="pgrid">${arr.map(card).join("")}</div>`;
-      const buildRows = builds.map(g => `<div class="phead">${roleJa}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1).concat(g.potentials.filter(x => x.type !== 1)))}`).join("");
-      const genRow = generic ? `<div class="phead">汎用</div>${grid(generic.potentials)}` : "";
-      body = `<div style="grid-column:1/-1">${buildRows}${genRow}</div>`;
-      note = "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。効果は原文を読んで分類した内容を表の下に書いています。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。";
+      SUP_POTS[id].forEach(x => out.push({ name: x.jp, en: x.jp, core: !!x.core, lv: +(((cs.sup || {})[x.id] || {}).lv || 0), path: `${p}.sup.${x.id}.lv`, desc: x.note || x.verified || "",
+        tags: [x.verified ? tg("実測一致", 1) : tg("未検証")], ctl: x.on === false ? `<label class="pz-c">条件を満たす ${inp(`${p}.sup.${x.id}.on`, { chk: 1 })}</label>` : "", grp: "", bonus: 0 }));
     } else {
-      const t = TK(c.en), groups = (t.potentials[k === "main" ? "main" : "support"] || []);
-      body = groups.map(g => g.potentials.map(x => `<div class="pot${x.type === 1 ? " core" : ""}" title="${esc(x.name)}"><div class="ph"><b>${esc(JA(x.name, id))}</b>${x.type === 1 ? '<span class="tag-ok">コア</span>' : ""}<span class="tag-ng">未反映</span></div>
-        <div class="pc"><div class="lv">Lv ${inp(`${p}.pots2.${x.name.replace(/[^A-Za-z0-9]/g, "_")}`, { min: 0, max: 9, step: 1, w: 56 })}</div></div></div>`).join("")).join("");
-      note = "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「その他」に手で入れられます。";
+      const t = TK(c.en), spec = S.POT_SPEC[id], role = k === "main" ? "main" : "support";
+      const groups = (t && t.potentials[role]) || [];
+      const bn = g => { const m = /Build (\d)/i.exec(g.title); return /Generic/i.test(g.title) ? "汎用" : "特化構築" + (m ? m[1] : "?"); };
+      groups.forEach(g => g.potentials.forEach(x => {
+        const sp = spec && spec[x.name], key = spec ? S.potKey(x.name) : x.name.replace(/[^A-Za-z0-9]/g, "_"), core = x.type === 1;
+        const it = { name: JA(x.name, id) + (sp && (sp.st === "auto" || sp.st === "draft") ? "*" : ""), en: x.name, core, lv: +((cs.pots2 || {})[key] || 0), path: `${p}.pots2.${key}`,
+          desc: sp ? sp.txt : "効果がまだ入っていません", tags: [], ctl: "", grp: bn(g), bonus: ex.pot[x.name] || 0 };
+        if (!sp) it.tags.push(tg("未反映"));
+        else {
+          const ctl = [];
+          if (!sp.e.length) it.tags.push(tg("火力に影響なし"));
+          else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; ctl.push(`<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`); }
+          if (sp.off) it.tags.push(tg("既定は反映しない"));
+          const seen = {};
+          sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${inp(`${p}.pstk.${sk}`, { min: 0, max: e.stk, step: 1, w: 56 })}<span class="muted">/${e.stk}</span></span>`); } });
+          sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 56, ph: e.c })}</span>`); });
+          it.ctl = ctl.join("");
+        }
+        out.push(it);
+      }));
     }
-    return `<div class="wide"><h3>${esc(c.jp)}：素質の一覧選択</h3><p class="muted">ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。</p><div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${body}</div><p class="muted">${note}</p></div>`;
+    return out;
+  }
+  const potCount = list => ({ core: list.filter(x => x.core && x.lv > 0).length, normal: list.filter(x => !x.core && x.lv > 0).length });
+  function renderPot(k) {
+    if (!SLOTS.some(s => s[0] === k)) k = "main";
+    const id = G.team[k], c = chOf(id), list = potItems(k), cnt = potCount(list), f = V.potFilter || "all";
+    const STAR = fill => `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="${fill}"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>`;
+    // 巡遊者の切り替え
+    const members = SLOTS.map(([k2, l]) => {
+      const id2 = G.team[k2], n = potCount(potItems(k2)), on = k2 === k;
+      return `<button type="button" role="tab" class="pz-mem${on ? " on" : ""}" aria-selected="${on}" data-act="panel:pot:${k2}"><span class="pz-role">${l}</span><b>${esc(chOf(id2).jp)}</b><span class="pz-sum">コア ${n.core}/${CORE_MAX} · 通常 ${n.normal}個</span></button>`;
+    }).join("");
+    const filters = [["all", "すべて"], ["core", "コアのみ"], ["normal", "通常のみ"], ["picked", "取得したものだけ"]]
+      .map(([v, l]) => `<button type="button" class="pz-pill${f === v ? " on" : ""}" aria-pressed="${f === v}" data-act="pfilt:${v}">${l}</button>`).join("");
+    const show = x => f !== "picked" || x.lv > 0;
+    const tags = x => x.tags.length ? `<div class="pz-tags">${x.tags.join("")}</div>` : "";
+    // コア素質: カード全体がボタン。1人2つまで（前の入力で3つ以上あるときは、外すことだけできる）
+    const full = cnt.core >= CORE_MAX;
+    const coreCard = x => {
+      const on = x.lv > 0, dis = !on && full;
+      return `<div class="pz-cwrap"><button type="button" class="pz-core${on ? " on" : ""}" aria-pressed="${on}" data-act="pcore|${x.path}"${dis ? " disabled" : ""} title="${esc(x.en)}">
+        <span class="pz-row">${STAR("#F4C84A")}<span class="pz-name">${esc(x.name)}</span>${x.grp ? `<span class="pz-grp">${x.grp}</span>` : ""}<span class="pz-sw${on ? " on" : ""}"><span></span></span></span>
+        <span class="pz-desc">${esc(x.desc)}</span></button>${tags(x)}${on && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}</div>`;
+    };
+    // 通常素質: Lv0〜6のボタン。右に最終的なLv（徽章の「＋」込み）
+    const finalLv = x => x.lv > 0 ? x.lv + x.bonus : 0;
+    const normCard = x => {
+      const fl = finalLv(x), eff = !x.lv ? "取得しない" : x.bonus ? `→ Lv${fl}${fl >= 7 ? "（推定）" : ""}` : `Lv${x.lv}${x.lv >= 7 ? "（推定）" : ""}`;
+      const btns = Array.from({ length: POT_LV_MAX + 1 }, (_, n) => `<button type="button" class="pz-lv${x.lv === n ? " on" : ""}" aria-pressed="${x.lv === n}" data-act="plv|${n}|${x.path}">${n}</button>`).join("");
+      return `<div class="pz-norm${x.lv > 0 ? " on" : ""}" title="${esc(x.en)}">
+        <div class="pz-row">${STAR("#9AA0C8")}<span class="pz-name">${esc(x.name)}</span>${x.bonus ? `<span class="pz-emb${x.lv > 0 ? " on" : ""}">徽章 +${x.bonus}</span>` : ""}</div>
+        <div class="pz-row"><div class="pz-lvs" role="group" aria-label="${esc(x.name)}のLv">${btns}</div><span class="pz-eff${x.lv ? "" : " off"}">${eff}</span></div>
+        ${x.lv > POT_LV_MAX ? `<div class="muted" style="font-size:11px">前の入力で Lv${x.lv} が入っています（ボタンを押すと Lv0〜6 に変わります）</div>` : ""}
+        ${tags(x)}${x.lv > 0 && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}
+        <div class="pz-desc">${esc(x.desc)}</div></div>`;
+    };
+    const cores = list.filter(x => x.core && show(x)), norms = list.filter(x => !x.core && show(x));
+    // 通常素質は、特化構築ごと・汎用ごとに見出しを付ける（見出しは同じグリッドの1行）
+    let lastGrp = null;
+    const normHtml = norms.map(x => { const h = x.grp && x.grp !== lastGrp ? `<div class="pz-sub">${x.grp}</div>` : ""; lastGrp = x.grp; return h + normCard(x); }).join("");
+    const coreSec = f === "normal" ? "" : `<section><h3 class="pz-h">コア素質 <span class="pz-cnt${full ? " full" : ""}">${cnt.core} / ${CORE_MAX}</span></h3>
+      ${cores.length ? `<div class="pz-cgrid">${cores.map(coreCard).join("")}</div>` : '<p class="muted">ありません</p>'}</section>`;
+    const normSec = f === "core" ? "" : `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
+      ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
+    // 右: 選んだ素質と、ダメージの要約
+    const chosen = list.filter(x => x.lv > 0).sort((a, b) => b.core - a.core).map(x => `<div class="pz-ch"><span>${esc(x.name)}</span><span class="${x.core ? "pz-tc" : "pz-tn"}">${x.core ? "コア" : `Lv${x.lv}${x.bonus ? `（+${x.bonus} → ${finalLv(x)}）` : ""}`}</span></div>`).join("");
+    const o = R.team[id], g = o && o.groups, mini = (l, v) => `<div class="pz-mrow"><span>${l}</span><b>${fmt(v)}</b></div>`;
+    const miniHtml = !g ? "" : k === "main" ? mini("通常1ローテ", g.basic.totExp) + mini("主力スキル", g.main.totExp) + mini("必殺技", g.ult.totExp) : mini(c.jp + " 支援スキル", g.support.totExp);
+    const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。"
+      : (id === "nazuka" || id === "eleanor") ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
+      : S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。"
+      : "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「その他」に手で入れられます。";
+    return `<div class="pz">
+      <div class="pz-main">
+        <div class="pz-mems" role="tablist" aria-label="巡遊者">${members}</div>
+        <div class="pz-bar"><div class="pz-pills" role="group" aria-label="表示の切り替え">${filters}</div>
+          <p class="muted" style="margin:0;font-size:12px">ここで選べるのは Lv6 まで。徽章の「＋」は徽章画面の入力から自動で足されます（Lv7〜9 は推定値）。</p></div>
+        ${coreSec}${normSec}
+        <p class="muted">ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。<br>${note}</p>
+      </div>
+      <aside class="pz-side">
+        <section class="pz-box"><h3 class="pz-h">選んだ素質（${esc(c.jp)}）</h3>${chosen || '<p class="muted" style="margin:0">まだ選んでいません。</p>'}</section>
+        ${miniHtml ? `<section class="pz-dmg"><h3>ダメージ（会心の期待値）</h3>${miniHtml}<button type="button" class="pz-link" data-act="goresult">すべての結果を見る</button></section>` : ""}
+      </aside></div>`;
   }
 
   // ---- 記録レベル ----
@@ -744,7 +784,7 @@
     let nav = "";
     if (/^(emb|heart|pot|add)$/.test(a)) {
       const nb = (p, l) => `<button class="tab" aria-selected="${a === p}" data-act="panel:${p}:${b}">${l}</button>`;
-      nav = `<div class="subnav"><button class="btn-add" data-act="panel:overview">← 巡遊者に戻る</button><div class="tabs" style="margin:0">${nb("heart", "心相")}${nb("emb", "徽章")}${nb("pot", "素質")}${nb("add", "その他")}</div></div>`;
+      nav = `<div class="subnav">${a === "pot" ? "" : '<button class="btn-add" data-act="panel:overview">← 巡遊者に戻る</button>'}<div class="tabs" style="margin:0">${nb("heart", "心相")}${nb("emb", "徽章")}${nb("pot", "素質")}${nb("add", "その他")}</div></div>`;
     }
     $("display").innerHTML = nav + h;
   }
@@ -891,6 +931,14 @@
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a.indexOf("plv|") === 0) { const m = /^plv\|(\d+)\|(.+)$/.exec(a); if (m) { setPath(m[2], +m[1]); renderAll(); } }   // 素質のLv
+    else if (a.indexOf("pcore|") === 0) {   // コア素質: 取得／外す（1人2つまで。外すのはいつでもできる）
+      const path = a.slice(6), on = +getPath(path) > 0, k = (V.panel.split(":")[1]) || "main";
+      if (on) setPath(path, 0); else if (potCount(potItems(k)).core < CORE_MAX) setPath(path, 1);
+      renderAll();
+    }
+    else if (a.indexOf("pfilt:") === 0) { V.potFilter = a.slice(6); renderAll(); }
+    else if (a === "goresult") { const r = $("result"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); }
     else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
