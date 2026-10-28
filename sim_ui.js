@@ -125,7 +125,7 @@
     // 徽章・素質などの巡遊者ごとの画面は「巡遊者」のタブの中
     const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
     const b = (key, label, en) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${label}</span></button>`;
-    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS") + b("direct", "直接入力", "DIRECT") + b("record", "記録レベル", "RECORD") + b("lr", "ロスレコ・音符", "LOST RECORDS") + b("gimmick", "ギミック(敵)", "ENEMY") + b("adjust", "補正", "ADJUST") + b("score", "ビルドカード", "BUILD CARD");
+    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS") + b("direct", "直接入力", "DIRECT") + b("record", "記録レベル", "RECORD") + b("lr", "ロスレコ・音符", "LOST RECORDS") + b("gimmick", "ギミック(敵)", "ENEMY") + b("adjust", "補正", "ADJUST") + b("score", "ビルド", "BUILD");
   }
   // スマホ: 巡遊者を1人ずつ出すための切り替え（PCでは出さない）
   const mChar = () => `<div class="m-only mchar">${SLOTS.map(([k, l]) => `<button class="tab" aria-selected="${V.mChar === k}" data-act="mchar:${k}">${l}</button>`).join("")}</div>`;
@@ -406,13 +406,19 @@
     const L = LOSTRECORDS;
     // 枠: クリア → 属性 → 名前（徽章と同じ形）。属性だけ選んだ状態は画面の中だけで持つ
     const ELS = ["水", "火", "風", "地", "光", "闇"].filter(e => L.some(x => x.element === e)).concat([...new Set(L.map(x => x.element))].filter(e => ["水", "火", "風", "地", "光", "闇"].indexOf(e) < 0));
+    // 突破（メインだけ。サブは初期音符だけなので要らない）
+    const rankSel = (arr, id) => {
+      if (arr !== "lrMain") return "";
+      const rk = id ? S.lrRankOf(G, id) : { can: false };
+      return rk.can ? `<select data-p="lrRank.${id}" data-t="n" title="突破">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === rk.rank ? " selected" : ""}>突破${n}</option>`).join("")}</select>` : `<span class="muted" style="font-size:11px">${id ? "突破は固定" : ""}</span>`;
+    };
     const slot = (arr, i, lab) => {
       const path = `${arr}.${i}`, cur = (G[arr] || [])[i] || "", r = L.find(x => x.id === cur);
       const el = V.lrEl[path] != null ? V.lrEl[path] : (r ? r.element : "");
       const names = L.filter(x => !el || x.element === el);
       return `<div class="lr-line"><span class="lab">${lab}</span><button class="obtn" data-act="lrclear:${path}" style="min-height:30px">クリア</button>
-        <select data-lrel="${path}"><option value="">（属性）</option>${ELS.map(e => `<option${e === el ? " selected" : ""}>${e}</option>`).join("")}</select>
-        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(lrName(x))}</option>`).join("")}</select></div>`;
+        <select data-lrel="${path}"><option value="">属性</option>${ELS.map(e => `<option${e === el ? " selected" : ""}>${e}</option>`).join("")}</select>
+        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(lrName(x))}</option>`).join("")}</select>${rankSel(arr, cur)}</div>`;
     };
     const m = "lrManual";
     // 音符: ゲームと同じく、色と名前 → 数 → 効果 を縦に並べ、1行にする
@@ -442,7 +448,7 @@
         return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}</div>`;
       };
       const rk = S.lrRankOf(G, id);
-      const rankSel = rk.can ? ` <span class="muted">突破</span> <select data-p="lrRank.${id}" data-t="n">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === rk.rank ? " selected" : ""}>${n}</option>`).join("")}</select>${rk.r0 ? `<span class="muted">（画面で確かめた値は突破${rk.r0}。ほかの突破はWikiの伸び方で計算。基礎ステータスは変わりません）</span>` : ""}` : "";
+      const rankSel = rk.can ? ` <span class="muted">突破${rk.rank}${rk.r0 ? `（画面で確かめた値は突破${rk.r0}。ほかの突破はWikiの伸び方で計算。基礎ステータスは変わりません）` : ""}</span>` : "";
       const core = fx.core.map(it => item(id + ":c:" + it.id, it, rk.rank, rk.scale)).join("");
       const as = fx.assists.map(a => {
         const lv = S.lrAssistLv(S.notesTotal(G), a);
@@ -524,33 +530,50 @@
       s1: r.team[g.team.s1].groups.support.totExp * n(g.team.s1, "support"), s2: r.team[g.team.s2].groups.support.totExp * n(g.team.s2, "support") };
   }
   const sum3 = d => d.main + d.s1 + d.s2;
+  // 項目ごとに「いくつ下げるか」（既定1）。素質はLv、アシスト効果はLv、コア効果は突破。徽章は1枚・1枠を外す（幅はない）
+  const decOf = (key, max) => Math.min(max, Math.max(1, +((V.dec || {})[key]) || 1));
   function calcContrib() {
     const d0 = dmgParts(G), t0 = sum3(d0), items = [];
-    const drop = (kind, label, slot, fn) => {
+    const drop = (kind, label, slot, fn, dec) => {
       const g = clone(G); fn(g); const d = dmgParts(g);
-      items.push({ kind, label, team: t0 > 0 ? 1 - sum3(d) / t0 : 0, own: slot && d0[slot] > 0 ? 1 - d[slot] / d0[slot] : null });
+      items.push({ kind, label, dec, team: t0 > 0 ? 1 - sum3(d) / t0 : 0, own: slot && d0[slot] > 0 ? 1 - d[slot] / d0[slot] : null });
     };
     SLOTS.forEach(([k]) => {
       const id = G.team[k], cs = G.chars[id], c = chOf(id);
+      const lvItem = (key, name, lv, set) => { const n = decOf(key, lv); drop("素質", `${c.jp}：${name} Lv${lv}`, k, g => set(g, lv - n), { key, n, max: lv, unit: "Lv" }); };
       Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
         const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p;
-        drop("素質", `${c.jp}：${JA(en, id)} Lv${cs.pots2[p]}`, k, g => { g.chars[id].pots2[p] = 0; });
+        lvItem(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], (g, v) => { g.chars[id].pots2[p] = v; });
       });
-      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => drop("素質", `${c.jp}：${((window.POTENTIALS || []).find(x => x.id === p) || {}).jp || p} Lv${cs.pots[p]}`, k, g => { g.chars[id].pots[p] = 0; }));
-      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => drop("素質", `${c.jp}：${(((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p} Lv${cs.sup[p].lv}`, k, g => { g.chars[id].sup[p].lv = 0; }));
+      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => lvItem(`p:${id}:${p}`, ((window.POTENTIALS || []).find(x => x.id === p) || {}).jp || p, +cs.pots[p], (g, v) => { g.chars[id].pots[p] = v; }));
+      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => lvItem(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, (g, v) => { g.chars[id].sup[p].lv = v; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
-        drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章（1枚まるごと）`, k, g => { g.chars[id].embOn[i] = 0; });
+        drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章`, k, g => { g.chars[id].embOn[i] = 0; });
         e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章 ${slotLabel(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }); });
       });
     });
-    S.NOTE_KEYS.forEach(n => { const v = (G.notes || {})[n]; if (v > 0) drop("音符", `${n.replace("の音符", "")} ${v}`, null, g => { g.notes[n] = 0; }); });
+    // ロスレコ（メインのものだけ効果がある）: アシスト効果はLvを、コア効果は突破を下げる
+    const LR = window.LOSTRECORDS || [];
+    (G.lrMain || []).filter(Boolean).forEach(rid => {
+      const fx = S.LR_FX[rid], r = LR.find(x => x.id === rid); if (!fx || !r) return;
+      const rk = S.lrRankOf(G, rid);
+      if (rk.can && rk.rank > 1) {
+        const key = `lrc:${rid}`, n = decOf(key, rk.rank - 1);
+        drop("ロスレコ", `${r.name}：コア効果 突破${rk.rank}`, null, g => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: rk.rank - n }); }, { key, n, max: rk.rank - 1, unit: "突破" });
+      }
+      fx.assists.forEach(a => {
+        const lv = S.lrAssistLv(S.notesTotal(G), a); if (!lv) return;
+        const key = `lra:${rid}:${a.id}`, n = decOf(key, lv);
+        drop("ロスレコ", `${r.name}：${a.name} Lv${lv}`, null, g => { g._lrAssistDec = Object.assign({}, g._lrAssistDec, { [rid + ":" + a.id]: n }); }, { key, n, max: lv, unit: "Lv" });
+      });
+    });
     items.sort((a, b) => b.team - a.team);
     return items;
   }
   let contribCache = { key: "", items: null };
   function getContrib() {
-    const key = JSON.stringify(G);   // 入力が変わっていなければ、前の結果を使う
+    const key = JSON.stringify(G) + JSON.stringify(V.dec || {});   // 入力が変わっていなければ、前の結果を使う
     if (contribCache.key !== key) contribCache = { key, items: calcContrib() };
     return contribCache.items;
   }
@@ -618,9 +641,10 @@
     const by = 800, LR = window.LOSTRECORDS || [];
     rr(24, by, W - 48, 176, 18, "#4B5082");
     const lrn = id => { const r = id && LR.find(q => q.id === id); return r ? r.name + (r.auto || r.autoFx ? "*" : "") : "—"; };
+    txt("ロスレコ", 56, by + 42, 18, "#D9DCED");   // 右の音符（見出し＋2行）と行をそろえる
     [["メイン", G.lrMain], ["サブ", G.lrSub]].forEach(([n, arr], i) => {
-      const yy = by + 42 + i * 44;
-      txt(n, 56, yy, 18, "#D9DCED");
+      const yy = by + 80 + i * 34;
+      txt(n, 56, yy, 19, "#D9DCED", { w: 500 });
       [0, 1, 2].forEach(j => txt(lrn((arr || [])[j]), 140 + j * 250, yy, 20, "#FFFFFF", { max: 236 }));
     });
     const total = S.NOTE_KEYS.reduce((a, n) => a + (+(G.notes || {})[n] || 0), 0);
@@ -655,23 +679,25 @@
       return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${f}</div>`;
     }).join("");
     let items;
-    try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}<p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
+    try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}<h3>ビルド検証</h3><p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
     const pc = v => v == null ? "" : v > 0.0005 ? "−" + (Math.round(v * 1000) / 10).toFixed(1) + "%" : v < -0.0005 ? "+" + (Math.round(-v * 1000) / 10).toFixed(1) + "%" : "影響なし";
-    const rows = (kind, own) => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt"><tr><th style="text-align:left">項目</th><th>編成の合計</th>${own ? "<th>本人の分</th>" : ""}</tr>${it.map(x => `<tr><td title="${esc(x.label)}" style="width:auto;white-space:normal">${esc(x.label)}</td><td style="text-align:right;width:80px">${pc(x.team)}</td>${own ? `<td style="text-align:right;width:80px">${pc(x.own)}</td>` : ""}</tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
+    // 下げる幅: 既定1。最大まで下げると、まるごと外したときと同じ
+    const decIn = d => d ? `<span style="white-space:nowrap">−<input type="number" data-dec="${esc(d.key)}" min="1" max="${d.max}" step="1" value="${d.n}" style="width:46px">${d.unit}</span>` : "";
+    const rows = (kind, own, dec) => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt"><tr><th style="text-align:left">項目</th>${dec ? "<th>下げる</th>" : ""}<th>編成の合計</th>${own ? "<th>本人の分</th>" : ""}</tr>${it.map(x => `<tr><td title="${esc(x.label)}" style="width:auto;white-space:normal">${esc(x.label)}</td>${dec ? `<td style="text-align:right;width:84px">${decIn(x.dec)}</td>` : ""}<td style="text-align:right;width:76px">${pc(x.team)}</td>${own ? `<td style="text-align:right;width:76px">${pc(x.own)}</td>` : ""}</tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}
-      <h3 style="margin:14px 0 6px;font-size:15px">与ダメへの寄与率</h3>
+      <h3 style="margin:18px 0 6px">ビルド検証（与ダメへの寄与率）</h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
         <p style="margin:4px 0 0;font-size:12px;line-height:1.6">指名手配の3分間で、スキルと必殺技をCDが明けたらすぐ使い、残りは通常攻撃をし続けた、という想定です。実際の戦闘の回数とは違います。<br>
         ・CDは日本語Wikiの値です（セイナ(原点)はゲーム内の表示）。SPが足りずに必殺技が撃てない場合や、CDが戻る効果（ホタルの必殺技など）は入っていません。<br>
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・自分の戦い方に合わせて、下の回数を書き換えてください。寄与率は、この回数で合計したダメージで出します。</p></div>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
-      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つだけ外したときに3分間のダメージが何%下がるかです。<b>編成の合計</b>＝主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル（それぞれ上の回数ぶん）。<b>本人の分</b>＝主力は通常・主力スキル・必殺技、支援は支援スキルだけ。<br>
-      SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。音符は、アシスト効果の解放も含めた値です。</p>
+      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つだけ下げたときに3分間のダメージが何%下がるかです。素質・アシスト効果はLvを、ロスレコのコア効果は突破を、既定で1つ下げます（「下げる」の数を変えられます。最大まで下げると、まるごと外したときの値）。徽章は、1枚・1枠を外したときです。<br><b>編成の合計</b>＝主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル（それぞれ上の回数ぶん）。<b>本人の分</b>＝主力は通常・主力スキル・必殺技、支援は支援スキルだけ。<br>
+      SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。</p>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-        <div class="box"><b>素質</b>（1つ外すと）${rows("素質", true)}</div>
-        <div class="box"><b>徽章</b>（1枚・1枠外すと）${rows("徽章", true)}</div>
-        <div class="box"><b>音符</b>（1種類外すと）${rows("音符", false)}</div>
+        <div class="box"><b>素質</b>${rows("素質", true, true)}</div>
+        <div class="box"><b>徽章</b>（外すと）${rows("徽章", true, false)}</div>
+        <div class="box"><b>ロスレコ</b>${rows("ロスレコ", false, true)}</div>
       </div></div>`;
   }
 
@@ -783,6 +809,8 @@
       } else { G[arr][+i] = t.value; delete V.lrEl[path]; }
       renderAll(); return;
     }
+    const dk = t.getAttribute && t.getAttribute("data-dec");
+    if (dk) { V.dec = V.dec || {}; V.dec[dk] = Math.max(1, +t.value || 1); renderAll(); return; }
     const p = t.getAttribute && t.getAttribute("data-p");
     if (!p) return;
     const ty = t.getAttribute("data-t");
