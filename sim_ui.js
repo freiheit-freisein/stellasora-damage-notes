@@ -612,7 +612,7 @@
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
         drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章`, k, g => { g.chars[id].embOn[i] = 0; });
-        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
+        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}　${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
       });
     });
     // ロスレコ（メインのものだけ効果がある）: アシスト効果はLv（0〜5。未発動も、上げたときを見られる）、コア効果は突破（1〜6）
