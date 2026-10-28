@@ -583,10 +583,10 @@
     t = t == null ? (cur > lo ? cur - 1 : cur + 1) : Math.min(hi, Math.max(lo, +t));
     return t === cur ? (cur > lo ? cur - 1 : cur + 1) : t;
   };
-  // 徽章の枠の短い名前: 素質のレベル上昇は素質名と値、ほかは項目名（かっこの補足は外す）と値（「HP　12%」「ナイトパンチ　+3」）
+  // 徽章の枠の短い名前: 素質のレベル上昇は素質名と値、ほかは項目名（かっこの補足は外す）と値（「HP 12%」「ナイトパンチ +3」）
   const embShort = (id, sl) => {
     const o = optOf(sl.k); if (!o) return "";
-    const v = qVal(o, sl.q), vt = v != null ? "　" + valTxt(o, v) : "";
+    const v = qVal(o, sl.q), vt = v != null ? " " + valTxt(o, v) : "";
     return (o.type === "potLv" && sl.t ? JA(sl.t, id) : o.label.replace(/（.*?）/g, "")) + vt;
   };
   function calcContrib() {
