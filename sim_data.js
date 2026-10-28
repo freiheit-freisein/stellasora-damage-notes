@@ -70,19 +70,25 @@ window.SIM = window.SIM || {};
   const BOSS = { def: 0.5, resDefault: 750, weakMult: 1, extra: {} };
   const RES_WEAK = 250, RES_RESIST = 2000;   // 耐性の属性: 翠煌ノ刃(光)で 徽章なし808・両方（光ダメ122%・貫通145）2,763 が耐性2000の式と一致（gistの第3段の上限）
   S.ENEMIES = [
-    Object.assign({ id: "stomp", name: "暴走のストンプクラブ", res: { 水: RES_WEAK, 火: RES_WEAK }, weak: ["水", "火"], markX: 1.68, hpBonus: 0,
+    Object.assign({ id: "stomp", name: "暴走のストンプクラブ（指名手配・水火弱点）", res: { 水: RES_WEAK, 火: RES_WEAK }, weak: ["水", "火"], markX: 1.68, hpBonus: 0,
       note: "ボス（防御0.5・弱点の水と火は耐性250・ほかは等倍の750）。テスト3（信頼Lv21）のセイナ(原点)の通常1撃目 77,865（光は等倍）、光貫通35で 86,380（×1.0846＝耐性750の式）。耐性の属性は未確認。印の倍率は セイナ(光)の実測 ≒1.65〜1.68。" }, BOSS),
     { id: "defense", name: "骸魔防衛戦の雑魚（初段のみ）", def: 1, res: { 光: 250, 水: 250, 風: 250 }, weak: [], weakMult: 1,
       extra: {}, markX: 1, hpBonus: 0, teamHp: 0.15, teamAtk: 0.15, teamCrit: 0.10,
       note: "耐性250・防御1.00（徽章なしのセイナ初段 323,158 が式と完全一致）。全員に 最大HP+15%・攻撃+15%・会心率+10%。雑魚は1撃で倒れるので初段だけ測れる。印の倍率は未確認（1とした）。" },
-    Object.assign({ id: "deep", name: "深層ノ主", res: { 風: RES_WEAK, 光: RES_WEAK, 闇: RES_RESIST }, weak: ["風", "光"], markX: 1.41, hpBonus: 0.20,
+    Object.assign({ id: "deep", name: "深層ノ主（指名手配・風光弱点・闇耐性）", res: { 風: RES_WEAK, 光: RES_WEAK, 闇: RES_RESIST }, weak: ["風", "光"], markX: 1.41, hpBonus: 0.20,
       note: "ボス（防御0.5・弱点の風と光は耐性250・耐性の闇は2000・ほかは750）。テスト3（信頼Lv21）のセイナ(原点)の通常1撃目 167,421、光貫通35で 186,105（×1.0868＝耐性250の式）。主力の最大HP+20%。" }, BOSS),
-    Object.assign({ id: "mikoi", name: "未恋ノ禍実（首領討伐・難易度3）", res: { 光: RES_WEAK, 闇: RES_RESIST }, weak: ["光"], markX: 1, hpBonus: 0,
+    Object.assign({ id: "mikoi", name: "未恋ノ禍実（首領討伐・難易度3・光弱点・闇耐性）", res: { 光: RES_WEAK, 闇: RES_RESIST }, weak: ["光"], markX: 1, hpBonus: 0,
       note: "首領討伐。光が有効（耐性250）、闇が耐性。テスト5（信頼Lv21）のセイナ(原点)の通常1撃目 60,655、光貫通35で 68,408（×1.0868）。印の倍率は未確認（1とした）。" }, BOSS),
-    Object.assign({ id: "suikou", name: "翠煌ノ刃（首領討伐・難易度3）", res: { 闇: RES_WEAK, 光: RES_RESIST }, weak: ["闇"], markX: 1, hpBonus: 0,
+    Object.assign({ id: "suikou", name: "翠煌ノ刃（首領討伐・難易度3・闇弱点・光耐性）", res: { 闇: RES_WEAK, 光: RES_RESIST }, weak: ["闇"], markX: 1, hpBonus: 0,
       note: "首領討伐。闇が有効（耐性250）、光が耐性（2000）。テスト5のセイナ(原点)の通常1撃目 808（徽章なし）、両方の徽章（光ダメ122%・貫通145）で 2,763、70徽章だけ（光ダメ118%・貫通110）で 2,264。最初に測った 1,256・2,186 は取り違え（1,256 は80徽章＝貫通35の予想1,257と一致）。印の倍率は未確認（1とした）。" }, BOSS),
-    Object.assign({ id: "gekiryu", name: "激流ノ角鯨（首領討伐・難易度3）", res: { 地: RES_WEAK, 水: RES_RESIST }, weak: ["地"], markX: 1, hpBonus: 0,
+    Object.assign({ id: "gekiryu", name: "激流ノ角鯨（首領討伐・難易度3・地弱点・水耐性）", res: { 地: RES_WEAK, 水: RES_RESIST }, weak: ["地"], markX: 1, hpBonus: 0,
       note: "首領討伐。地が有効（耐性250）、水が耐性。光は等倍（750）: テスト5のセイナ(原点)の通常1撃目 32,349、光貫通35で 36,410（×1.0846）。印の倍率は未確認（1とした）。" }, BOSS),
+    Object.assign({ id: "hasai", name: "破砕ノ牙（首領討伐・難易度3・風弱点・地耐性）", res: { 風: RES_WEAK, 地: RES_RESIST }, weak: ["風"], markX: 1, hpBonus: 0,
+      note: "首領討伐。風が有効（耐性250）、地が耐性（2000）、ほかは等倍（750）。防御0.5。実測は未確認（ほかのボスと同じ形として入れた）。印の倍率は未確認（1とした）。" }, BOSS),
+    Object.assign({ id: "kyoshin", name: "太古ノ巨神兵（首領討伐・難易度3・水弱点・火耐性）", res: { 水: RES_WEAK, 火: RES_RESIST }, weak: ["水"], markX: 1, hpBonus: 0,
+      note: "首領討伐。水が有効（耐性250）、火が耐性（2000）、ほかは等倍（750）。防御0.5。実測は未確認（ほかのボスと同じ形として入れた）。印の倍率は未確認（1とした）。" }, BOSS),
+    Object.assign({ id: "genwaku", name: "幻惑ノ花（首領討伐・難易度3・火弱点・風耐性）", res: { 火: RES_WEAK, 風: RES_RESIST }, weak: ["火"], markX: 1, hpBonus: 0,
+      note: "首領討伐。火が有効（耐性250）、風が耐性（2000）、ほかは等倍（750）。防御0.5。実測は未確認（ほかのボスと同じ形として入れた）。印の倍率は未確認（1とした）。" }, BOSS),
   ];
   S.DEFAULT_ENEMY_TRAITS = {
     stomp: [{ id: "crack", name: "ひび割れた好機（必殺後15秒・スキル被ダメ+15%）", on: false }],
