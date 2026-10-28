@@ -380,7 +380,7 @@
     // 巡遊者の切り替え
     const members = SLOTS.map(([k2, l]) => {
       const id2 = G.team[k2], n = potCount(potItems(k2)), on = k2 === k;
-      return `<button type="button" role="tab" class="pz-mem${on ? " on" : ""}" aria-selected="${on}" data-act="panel:pot:${k2}"><span class="pz-role">${l}</span><b>${esc(chOf(id2).jp)}</b><span class="pz-sum">コア ${n.core}/${CORE_MAX} · 通常 ${n.normal}個</span></button>`;
+      return `<button type="button" role="tab" class="pz-mem${on ? " on" : ""}" aria-selected="${on}" data-act="panel:pot:${k2}" title="${l}"><b>${esc(chOf(id2).jp)}</b><span class="pz-sum">コア ${n.core}/${CORE_MAX} · 通常 ${n.normal}個</span></button>`;
     }).join("");
     const tags = x => x.tags.length ? `<div class="pz-tags">${x.tags.join("")}</div>` : "";
     // コア素質: カード全体がボタン。1人2つまで（前の入力で3つ以上あるときは、外すことだけできる）
@@ -784,7 +784,7 @@
     let nav = "";
     if (/^(emb|heart|pot|add)$/.test(a)) {
       const nb = (p, l) => `<button class="tab" aria-selected="${a === p}" data-act="panel:${p}:${b}">${l}</button>`;
-      nav = `<div class="subnav">${a === "pot" ? "" : '<button class="btn-add" data-act="panel:overview">← 巡遊者に戻る</button>'}<div class="tabs" style="margin:0">${nb("heart", "心相")}${nb("emb", "徽章")}${nb("pot", "素質")}${nb("add", "その他")}</div></div>`;
+      nav = `<div class="subnav"><button class="btn-add" data-act="panel:overview">← 巡遊者に戻る</button><div class="tabs" style="margin:0">${nb("heart", "心相")}${nb("emb", "徽章")}${nb("pot", "素質")}${nb("add", "その他")}</div></div>`;
     }
     $("display").innerHTML = nav + h;
   }
