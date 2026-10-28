@@ -394,14 +394,12 @@
         <span class="pz-row">${STAR("#F4C84A")}<span class="pz-name">${esc(x.name)}</span>${x.grp ? `<span class="pz-grp">${x.grp}</span>` : ""}<span class="pz-sw${on ? " on" : ""}"><span></span></span></span>
         <span class="pz-desc">${esc(x.desc)}</span></button>${tags(x)}${on && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}</div>`;
     };
-    // 通常素質: Lv0〜6のボタン。右に最終的なLv（徽章の「＋」込み）
-    const finalLv = x => x.lv > 0 ? x.lv + x.bonus : 0;
+    // 通常素質: Lv0〜6のボタン。徽章の「＋」は、名前の行の右端（6のボタンの上）に出す
     const normCard = x => {
-      const fl = finalLv(x), eff = !x.lv ? "取得しない" : x.bonus ? `→ Lv${fl}${fl >= 7 ? "（推定）" : ""}` : `Lv${x.lv}${x.lv >= 7 ? "（推定）" : ""}`;
       const btns = Array.from({ length: POT_LV_MAX + 1 }, (_, n) => `<button type="button" class="pz-lv${x.lv === n ? " on" : ""}" aria-pressed="${x.lv === n}" data-act="plv|${n}|${x.path}">${n}</button>`).join("");
       return `<div class="pz-norm${x.lv > 0 ? " on" : ""}" title="${esc(x.en)}">
         <div class="pz-row">${STAR("#9AA0C8")}<span class="pz-name">${esc(x.name)}</span>${x.bonus ? `<span class="pz-emb${x.lv > 0 ? " on" : ""}">徽章 +${x.bonus}</span>` : ""}</div>
-        <div class="pz-row"><div class="pz-lvs" role="group" aria-label="${esc(x.name)}のLv">${btns}</div><span class="pz-eff${x.lv ? "" : " off"}">${eff}</span></div>
+        <div class="pz-row"><div class="pz-lvs" role="group" aria-label="${esc(x.name)}のLv">${btns}</div></div>
         ${x.lv > POT_LV_MAX ? `<div class="muted" style="font-size:11px">前の入力で Lv${x.lv} が入っています（ボタンを押すと Lv0〜6 に変わります）</div>` : ""}
         ${tags(x)}${x.lv > 0 && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}
         <div class="pz-desc">${esc(x.desc)}</div></div>`;
