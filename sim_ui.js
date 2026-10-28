@@ -375,16 +375,13 @@
   const potCount = list => ({ core: list.filter(x => x.core && x.lv > 0).length, normal: list.filter(x => !x.core && x.lv > 0).length });
   function renderPot(k) {
     if (!SLOTS.some(s => s[0] === k)) k = "main";
-    const id = G.team[k], c = chOf(id), list = potItems(k), cnt = potCount(list), f = V.potFilter || "all";
+    const id = G.team[k], c = chOf(id), list = potItems(k), cnt = potCount(list);
     const STAR = fill => `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="${fill}"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>`;
     // 巡遊者の切り替え
     const members = SLOTS.map(([k2, l]) => {
       const id2 = G.team[k2], n = potCount(potItems(k2)), on = k2 === k;
       return `<button type="button" role="tab" class="pz-mem${on ? " on" : ""}" aria-selected="${on}" data-act="panel:pot:${k2}"><span class="pz-role">${l}</span><b>${esc(chOf(id2).jp)}</b><span class="pz-sum">コア ${n.core}/${CORE_MAX} · 通常 ${n.normal}個</span></button>`;
     }).join("");
-    const filters = [["all", "すべて"], ["core", "コアのみ"], ["normal", "通常のみ"], ["picked", "取得したものだけ"]]
-      .map(([v, l]) => `<button type="button" class="pz-pill${f === v ? " on" : ""}" aria-pressed="${f === v}" data-act="pfilt:${v}">${l}</button>`).join("");
-    const show = x => f !== "picked" || x.lv > 0;
     const tags = x => x.tags.length ? `<div class="pz-tags">${x.tags.join("")}</div>` : "";
     // コア素質: カード全体がボタン。1人2つまで（前の入力で3つ以上あるときは、外すことだけできる）
     const full = cnt.core >= CORE_MAX;
@@ -405,13 +402,13 @@
         ${tags(x)}${x.lv > 0 && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}
         <div class="pz-desc">${esc(x.desc)}</div></div>`;
     };
-    const cores = list.filter(x => x.core && show(x)), norms = list.filter(x => !x.core && show(x));
+    const cores = list.filter(x => x.core), norms = list.filter(x => !x.core);
     // 通常素質は、特化構築ごと・汎用ごとに見出しを付ける（見出しは同じグリッドの1行）
     let lastGrp = null;
     const normHtml = norms.map(x => { const h = x.grp && x.grp !== lastGrp ? `<div class="pz-sub">${x.grp}</div>` : ""; lastGrp = x.grp; return h + normCard(x); }).join("");
-    const coreSec = f === "normal" ? "" : `<section><h3 class="pz-h">コア素質 <span class="pz-cnt${full ? " full" : ""}">${cnt.core} / ${CORE_MAX}</span></h3>
+    const coreSec = `<section><h3 class="pz-h">コア素質 <span class="pz-cnt${full ? " full" : ""}">${cnt.core} / ${CORE_MAX}</span></h3>
       ${cores.length ? `<div class="pz-cgrid">${cores.map(coreCard).join("")}</div>` : '<p class="muted">ありません</p>'}</section>`;
-    const normSec = f === "core" ? "" : `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
+    const normSec = `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
       ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
     const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。"
       : (id === "nazuka" || id === "eleanor") ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
@@ -420,7 +417,7 @@
     return `<div class="pz">
       <div class="pz-main">
         <div class="pz-mems" role="tablist" aria-label="巡遊者">${members}</div>
-        <div class="pz-bar"><div class="pz-pills" role="group" aria-label="表示の切り替え">${filters}</div>
+        <div class="pz-bar">
           <p class="muted" style="margin:0;font-size:12px">ここで選べるのは Lv6 まで。徽章の「＋」は徽章画面の入力から自動で足されます（Lv7〜9 は推定値）。</p></div>
         ${coreSec}${normSec}
         <p class="muted">ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。<br>${note}</p>
@@ -941,7 +938,6 @@
       if (on) setPath(path, 0); else if (potCount(potItems(k)).core < CORE_MAX) setPath(path, 1);
       renderAll();
     }
-    else if (a.indexOf("pfilt:") === 0) { V.potFilter = a.slice(6); renderAll(); }
     else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
