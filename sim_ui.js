@@ -432,19 +432,20 @@
       const fx = S.LR_FX[id], r = L.find(x => x.id === id);
       if (!r) return "";
       if (!fx) return `<div class="pot"><b>${esc(lrName(r))}</b><span class="tag-ng">効果は未反映（基礎攻撃・基礎HP・属性ダメージだけ反映）</span></div>`;
-      const item = (key, it, lv) => {
-        const txt = typeof it.txt === "function" ? it.txt(lv) : it.txt;
+      const item = (key, it, lv, mul) => {
+        let txt = typeof it.txt === "function" ? it.txt(lv) : it.txt;
+        if (mul && mul !== 1) txt = txt.replace(/\+([0-9.]+)%/g, (m0, n) => "+" + Math.round(+n * mul * 100) / 100 + "%");   // 手で入れたロスレコの突破
         if (it.skip) return `<div style="margin:3px 0;color:var(--muted)">${esc(txt)} <span class="tag-ng">計算に未反映</span></div>`;
         const stk = (it.e || []).find(e => e.stk > 1);
         const isOn = (G.lrOn || {})[key] == null ? !it.off : (G.lrOn || {})[key];
         const tog = it.off ? ` 反映 <input type="checkbox" data-p="lrOn.${key}" data-t="b"${isOn ? " checked" : ""}>` : (it.need ? ` <span class="muted">条件: ${(S.LR_COUNTS.find(c => c.key === it.need[0]) || {}).label} が ${it.need[1]} 以上</span>` : (it.n ? ` <span class="muted">数: ${(S.LR_COUNTS.find(c => c.key === it.n) || {}).label}</span>` : ` <span class="tag-ok">常時</span>`));
         return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}</div>`;
       };
-      const rank = fx.auto ? Math.min(6, Math.max(1, +((G.lrRank || {})[id]) || 1)) : 1;
-      const rankSel = fx.auto ? ` <span class="muted">突破</span> ${inp(`lrRank.${id}`, { sel: [1, 2, 3, 4, 5, 6].map(n => [n, String(n)]) })}` : "";
-      const core = fx.core.map(it => item(id + ":c:" + it.id, it, rank)).join("");
+      const rk = S.lrRankOf(G, id);
+      const rankSel = rk.can ? ` <span class="muted">突破</span> <select data-p="lrRank.${id}" data-t="n">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === rk.rank ? " selected" : ""}>${n}</option>`).join("")}</select>${rk.r0 ? `<span class="muted">（画面で確かめた値は突破${rk.r0}。ほかの突破はWikiの伸び方で計算。基礎ステータスは変わりません）</span>` : ""}` : "";
+      const core = fx.core.map(it => item(id + ":c:" + it.id, it, rk.rank, rk.scale)).join("");
       const as = fx.assists.map(a => {
-        const lv = S.lrAssistLv(G.notes, a);
+        const lv = S.lrAssistLv(S.notesTotal(G), a);
         const need = a.notes.map(n => n.replace("の音符", "")).join("・");
         return `<div style="margin-top:6px"><b>${esc(a.name)}</b> ${lv ? `<span class="tag-ok">Lv${lv} 発動</span>` : '<span class="tag-ng">未発動</span>'}<span class="muted"> 解放: ${need} ${a.base}以上（Lvごとに+15）</span>
           ${lv ? a.items.map(it => item(id + ":" + a.id + ":" + it.id, it, lv)).join("") : ""}</div>`;
@@ -496,11 +497,31 @@
       ${els.map(e => `<tr><td>${e}${en.weak.indexOf(e) >= 0 ? "（弱点）" : ""}</td><td>${inp(`enemyOv.res.${e}`, { w: 90 })}<span class="muted"> 既定 ${en.res[e] != null ? en.res[e] : (en.resDefault != null ? en.resDefault : 250)}</span></td><td>${inp(`enemyOv.extra.${e}`, { w: 90 })}<span class="muted"> 既定 ${(en.extra && en.extra[e]) || 1}</span></td></tr>`).join("")}</table>
       <p class="muted">耐性の式は、有効耐性 = 耐性 − 貫通 のとき 倍率 = 1 − 0.25×(E/250)²（実測と一致）。「その他」は、原因が分かっていない差を合わせるための倍率です。</p></div>`;
   }
+  // ---- 指名手配の3分間の回数（かなり雑な目安）----
+  // スキル・必殺技は、CDが明けたらすぐ使う想定で ceil(180 ÷ CD) 回（SPは考えない）。CDは日本語Wiki（data/skill_ct.js）、
+  // ゲーム内で確かめた値があればそちらを使う。通常攻撃は 180 ÷ 1ローテの秒数（スキル中・ダッシュの中断は入れない）。
+  // 回数は G.rot[巡遊者][basic|main|ult|support] で上書きできる
+  const FIGHT_SEC = 180;
+  const CT_GAME = { "Firstlight Noya": { main: 10, support: 12, ult: 30 } };   // ゲーム内の表示（2026-10-28 ユーザー）
+  const BASIC_SEC = { "Firstlight Noya": 5 };   // 通常1ローテの秒数（最終段から最終段までを目で見た値）。ほかは未測定
+  const BASIC_SEC_DEFAULT = 5;
+  function rotDefault(id) {
+    const c = chOf(id), ct = Object.assign({}, (window.SKILL_CT || {})[c.en] || {}, CT_GAME[c.en] || {});
+    const n = k => ct[k] ? Math.ceil(FIGHT_SEC / ct[k]) : null;
+    const bs = BASIC_SEC[c.en];
+    return { ct, basicSec: bs || BASIC_SEC_DEFAULT, basicMeasured: !!bs, basic: Math.floor(FIGHT_SEC / (bs || BASIC_SEC_DEFAULT)), main: n("main"), ult: n("ult"), support: n("support") };
+  }
+  function rotCount(g, id, k) {
+    const v = ((g.rot || {})[id] || {})[k];
+    if (v != null && v !== "") return Math.max(0, +v);
+    return rotDefault(id)[k] || 0;
+  }
   // ---- 与ダメへの寄与率（今の入力のまま、1つ外すと何%下がるか）----
-  // 巡遊者ごとの対象のダメージ: 主力は 通常1ローテ＋主力スキル＋必殺技（印を含む）、支援は 支援スキル
+  // 巡遊者ごとの対象のダメージ（3分間）: 主力は 通常×回数＋主力スキル×回数＋必殺技×回数（印を含む）、支援は 支援スキル×回数
   function dmgParts(g) {
-    const r = E.calcTeam(clone(g)), m = r.team[g.team.main];
-    return { main: m.groups.basic.totExp + m.groups.main.totExp + m.groups.ult.totExp, s1: r.team[g.team.s1].groups.support.totExp, s2: r.team[g.team.s2].groups.support.totExp };
+    const r = E.calcTeam(clone(g)), mid = g.team.main, m = r.team[mid], n = (id, k) => rotCount(g, id, k);
+    return { main: m.groups.basic.totExp * n(mid, "basic") + m.groups.main.totExp * n(mid, "main") + m.groups.ult.totExp * n(mid, "ult"),
+      s1: r.team[g.team.s1].groups.support.totExp * n(g.team.s1, "support"), s2: r.team[g.team.s2].groups.support.totExp * n(g.team.s2, "support") };
   }
   const sum3 = d => d.main + d.s1 + d.s2;
   function calcContrib() {
@@ -625,14 +646,28 @@
         ${cardUrl ? `<a class="btn-add" href="${cardUrl}" download="build-card.png" style="display:inline-flex;align-items:center;text-decoration:none">画像を保存</a><button class="btn-add xbtn" data-act="share-x">Xで共有</button>` : ""}
         <span class="muted">${cardUrl ? "Xで共有は、短縮URL付きの投稿画面を開きます。画像は保存してから添付してください。入力を変えたら作り直してください。" : "3人分の徽章・素質・ロスレコ・音符を1枚の画像にします。"}</span></div>
         ${cardUrl ? `<img src="${cardUrl}" alt="ビルドカード" style="width:100%;margin-top:8px;border-radius:12px;border:2px solid var(--border)">` : ""}</div>`;
+    // 3分間の回数（目安）の入力
+    const rotIn = (id, k, label, d) => fld(label, inp(`rot.${id}.${k}`, { min: 0, step: 1, w: 70, ph: d[k] == null ? "未設定" : String(d[k]) }),
+      k === "basic" ? `空欄=${d.basic}（1ローテ${d.basicSec}秒${d.basicMeasured ? "" : "・未測定"}）` : (d.ct[k] ? `空欄=${d[k]}（CD ${d.ct[k]}秒）` : "CDが分かりません。回数を入れてください"));
+    const rotHtml = SLOTS.map(([k, l]) => {
+      const id = G.team[k], d = rotDefault(id);
+      const f = k === "main" ? rotIn(id, "basic", "通常1ローテ", d) + rotIn(id, "main", "主力スキル", d) + rotIn(id, "ult", "必殺技", d) : rotIn(id, "support", "支援スキル", d);
+      return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${f}</div>`;
+    }).join("");
     let items;
     try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}<p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
     const pc = v => v == null ? "" : v > 0.0005 ? "−" + (Math.round(v * 1000) / 10).toFixed(1) + "%" : v < -0.0005 ? "+" + (Math.round(-v * 1000) / 10).toFixed(1) + "%" : "影響なし";
     const rows = (kind, own) => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt"><tr><th style="text-align:left">項目</th><th>編成の合計</th>${own ? "<th>本人の分</th>" : ""}</tr>${it.map(x => `<tr><td title="${esc(x.label)}" style="width:auto;white-space:normal">${esc(x.label)}</td><td style="text-align:right;width:80px">${pc(x.team)}</td>${own ? `<td style="text-align:right;width:80px">${pc(x.own)}</td>` : ""}</tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}
       <h3 style="margin:14px 0 6px;font-size:15px">与ダメへの寄与率</h3>
-      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つだけ外したときにダメージが何%下がるかです。<b>編成の合計</b>＝主力の通常1ローテ＋主力スキル＋必殺技（印を含む）＋支援2人の支援スキル。<b>本人の分</b>＝主力は通常・主力スキル・必殺技、支援は支援スキルだけ。<br>
-      SP獲得効率は、計算が1ローテ固定なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。音符は、アシスト効果の解放も含めた値です。</p>
+      <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
+        <p style="margin:4px 0 0;font-size:12px;line-height:1.6">指名手配の3分間で、スキルと必殺技をCDが明けたらすぐ使い、残りは通常攻撃をし続けた、という想定です。実際の戦闘の回数とは違います。<br>
+        ・CDは日本語Wikiの値です（セイナ(原点)はゲーム内の表示）。SPが足りずに必殺技が撃てない場合や、CDが戻る効果（ホタルの必殺技など）は入っていません。<br>
+        ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
+        ・自分の戦い方に合わせて、下の回数を書き換えてください。寄与率は、この回数で合計したダメージで出します。</p></div>
+      <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
+      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つだけ外したときに3分間のダメージが何%下がるかです。<b>編成の合計</b>＝主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル（それぞれ上の回数ぶん）。<b>本人の分</b>＝主力は通常・主力スキル・必殺技、支援は支援スキルだけ。<br>
+      SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。音符は、アシスト効果の解放も含めた値です。</p>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">
         <div class="box"><b>素質</b>（1つ外すと）${rows("素質", true)}</div>
         <div class="box"><b>徽章</b>（1枚・1枠外すと）${rows("徽章", true)}</div>

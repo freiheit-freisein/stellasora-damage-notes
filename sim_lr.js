@@ -112,6 +112,22 @@
     return 0;
   };
 
+  // 突破（凸 1〜6）。自動のロスレコは、Wikiの突破ごとの値（既定1）。
+  // 手で入れたロスレコは、画面で確かめた突破（データの core.rank）の値を基準に、Wikiと同じ「突破1つごとに 突破1の値の+20%」で伸ばす
+  // （突破6 = 突破1の2倍。未来導く明星・願い星の願い・夕涼みのWikiの値と一致）。基礎ステータスは突破で変えない（伸び方が未確認）
+  const ROMAN = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 };
+  const rankMul = n => 1 + 0.2 * (n - 1);
+  S.lrRankOf = (G, rid) => {
+    const fx = S.LR_FX[rid], r = L.find(x => x.id === rid);
+    const v = +((G.lrRank || {})[rid]);
+    if (!fx) return { rank: 1, scale: 1, can: false };
+    if (fx.auto) return { rank: v >= 1 && v <= 6 ? v : 1, scale: 1, can: true };
+    const r0 = ROMAN[(r && r.core && r.core.rank) || ""];
+    if (!r0 || !r || r.rarity < 5) return { rank: r0 || 1, scale: 1, can: false };   // 星3など、突破ごとの値が分からないもの
+    const rank = v >= 1 && v <= 6 ? v : r0;
+    return { rank, r0, scale: rankMul(rank) / rankMul(r0), can: true };
+  };
+
   // 効果を集計して、各巡遊者の集計(out)へ足す。呼び出し元: sim_pots.js の collect
   S.lrCollect = function (G, team, chs, out) {
     const mains = (G.lrMain || []).filter(Boolean);
@@ -138,14 +154,14 @@
       else if (e.k === "mark") a.markAdd += v;
       else if (a[e.k] != null) a[e.k] += v;
     };
-    const apply = (key, item, lv) => {
+    const apply = (key, item, lv, mul) => {
       if (item.skip) return;
       const isOn = on[key] == null ? !item.off : on[key];
       if (!isOn) return;
       if (item.need && (+N[item.need[0]] || 0) < item.need[1]) return;
       const cnt = item.n ? Math.max(0, +N[item.n] || 0) : 1;
       item.e.forEach(e => {
-        let v = typeof e.v === "function" ? e.v(lv) : e.v;
+        let v = (typeof e.v === "function" ? e.v(lv) : e.v) * (mul || 1);
         const c = e.cap != null ? Math.min(cnt, e.cap) : cnt;
         v *= c;
         recv(e).forEach(rid => put(e, v, rid));
@@ -154,8 +170,8 @@
     mains.forEach(rid => {
       const fx = S.LR_FX[rid];
       if (!fx) return;
-      const rank = fx.auto ? Math.min(6, Math.max(1, +((G.lrRank || {})[rid]) || 1)) : 1;   // 自動のロスレコは突破（既定1）
-      fx.core.forEach(it => apply(rid + ":c:" + it.id, it, rank));
+      const rk = S.lrRankOf(G, rid);
+      fx.core.forEach(it => apply(rid + ":c:" + it.id, it, rk.rank, rk.scale));
       fx.assists.forEach(a => {
         const lv = S.lrAssistLv(S.notesTotal(G), a);
         if (!lv) return;
