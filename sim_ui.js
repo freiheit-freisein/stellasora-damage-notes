@@ -617,7 +617,7 @@
       Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, POT_LV_MAX, (g, v) => { g.chars[id].sup[p].lv = v; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
-        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}　${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
+        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}\n${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
       });
     });
     // ロスレコ（メインのものだけ効果がある）: アシスト効果はLv（0〜5。未発動も、上げたときを見られる）、コア効果は突破（1〜6）
@@ -758,7 +758,7 @@
       const btn = (dir, ch) => { const v = nx(dir); return `<button class="obtn" data-act="cmp|${v == null ? "" : v}|${esc(d.key)}"${v == null ? " disabled" : ""}>${ch}</button>`; };
       return `<span class="decin"><span class="muted">${d.unit}${d.cur} →</span>${btn(-1, "◀")}<b class="${d.t > d.cur ? "up" : ""}">${d.unit}${d.t}</b>${btn(1, "▶")}</span>`;
     };
-    const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}">${esc(x.label)}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
+    const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label.replace("\n", " "))}">${x.label.split("\n").map(esc).join('<br><span class="ind">') + (x.label.indexOf("\n") >= 0 ? "</span>" : "")}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}
       <h3 style="margin:18px 0 6px">ビルド検証（与ダメへの寄与率）</h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
