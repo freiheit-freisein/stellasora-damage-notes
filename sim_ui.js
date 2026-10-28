@@ -390,7 +390,8 @@
     const full = cnt.core >= CORE_MAX;
     const coreCard = x => {
       const on = x.lv > 0, dis = !on && full;
-      return `<div class="pz-cwrap"><button type="button" class="pz-core${on ? " on" : ""}" aria-pressed="${on}" data-act="pcore|${x.path}"${dis ? " disabled" : ""} title="${esc(x.en)}">
+      // カードの上（名前・スイッチ・説明）が押せるボタン。「反映」などはボタンの外（カードの中の下）に置く
+      return `<div class="pz-core${on ? " on" : ""}${dis ? " dis" : ""}" title="${esc(x.en)}"><button type="button" class="pz-ctog" aria-pressed="${on}" data-act="pcore|${x.path}"${dis ? " disabled" : ""}>
         <span class="pz-row">${STAR("#F4C84A")}<span class="pz-name">${esc(x.name)}</span>${x.grp ? `<span class="pz-grp">${x.grp}</span>` : ""}<span class="pz-sw${on ? " on" : ""}"><span></span></span></span>
         <span class="pz-desc">${esc(x.desc)}</span></button>${tags(x)}${on && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}</div>`;
     };
