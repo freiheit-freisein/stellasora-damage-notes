@@ -718,7 +718,7 @@
       txt(n.replace("の音符", ""), nx, ny, 19, "#D9DCED", { w: 500 });
       txt(String(v), nx + 128, ny, 22, v ? "#FFFFFF" : "#8A90BE", { align: "right", w: 900 });
     });
-    txt((hasAuto ? "＊は未確認のデータ。" : "") + "sim.stella-tool.com・α版", 56, by + 156, 15, "#D9DCED", { w: 500, max: W - 112 });
+    txt((hasAuto ? "＊は未確認のデータ。" : "") + "sim.stella-tool.com・β版", 56, by + 156, 15, "#D9DCED", { w: 500, max: W - 112 });
     return cv;
   }
   let cardUrl = "";
@@ -947,7 +947,7 @@
     else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
-    else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta-closed", "1"); } catch (e) { /* 無視 */ } }
+    else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta2-closed", "1"); } catch (e) { /* 無視 */ } }
     else if (a === "rp-send") sendReport();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
@@ -1013,13 +1013,13 @@
     }).catch(e => { if (w) w.close(); shareMsg = e.message; say("url", e.message, true); });   // ポップアップの外（カードから押したとき）でも分かるよう、上部にも出す
   }
 
-  // ---- 報告（α版の間、データや計算の誤りなどを送ってもらう）。送った内容はサーバーのデータベースに入り、あとで確認する。今の入力（共有コード）を添えると同じ状態を再現できる ----
+  // ---- 報告（β版の間、データや計算の誤りなどを送ってもらう）。送った内容はサーバーのデータベースに入り、あとで確認する。今の入力（共有コード）を添えると同じ状態を再現できる ----
   const RP = { kind: "", body: "", contact: "", attach: true, msg: null, done: false, busy: false };
   const RP_KINDS = ["計算式・数値", "素質の効果", "ロスレコ・音符", "徽章・ステータス", "表示・使い方", "その他"];
   function renderReport() {
     const team = [G.team.main, G.team.s1, G.team.s2].map(id => chOf(id).jp).join("・");
     $("reportBody").innerHTML = `<h2 id="reportDlgT"><span class="en">REPORT</span>報告</h2>
-      <p class="muted" style="margin:0">α版なので、データや計算が間違っている所がまだあると思います。計算の数値がゲームと合わない、素質やロスレコの効果がちがう、ここが使いにくい…など、なんでも気軽に教えてください！（返信はできないこともあります）</p>
+      <p class="muted" style="margin:0">β版なので、データや計算が間違っている所がまだあると思います。計算の数値がゲームと合わない、素質やロスレコの効果がちがう、ここが使いにくい…など、なんでも気軽に教えてください！（返信はできないこともあります）</p>
       ${RP.done ? `<p class="msg ok" style="font-size:14px;margin-top:14px">送りました。教えてくれてありがとうございます！</p><div class="foot"><button class="btn-add" data-act="rp-close">閉じる</button></div>` : `
       <div class="row"><label for="rp-kind">種類</label><select id="rp-kind"><option value="">（選んでください）</option>${RP_KINDS.map(k => `<option${RP.kind === k ? " selected" : ""}>${k}</option>`).join("")}</select></div>
       <div class="row"><label for="rp-body">内容 <span class="muted" style="font-weight:400">（どこが・どう違うか。ゲーム内の値が分かれば、その値も）</span></label>
@@ -1044,8 +1044,8 @@
   }
 
   renderAll();
-  // α版のお知らせ（閉じたら、このブラウザでは次から出さない）
-  try { if (!localStorage.getItem("stellasora-sim-beta-closed")) $("betabar").hidden = false; } catch (e) { $("betabar").hidden = false; }
+  // β版のお知らせ（閉じたら、このブラウザでは次から出さない）
+  try { if (!localStorage.getItem("stellasora-sim-beta2-closed")) $("betabar").hidden = false; } catch (e) { $("betabar").hidden = false; }
   // URLから読み込む（読み込んだらURLからは消す）: #c=共有コード（短縮URLから移動してきたとき）、#p=プリセットコード（プリセット共有サイトなどから）
   const hc = location.hash;
   if (hc.indexOf("#c=") === 0 || hc.indexOf("#p=") === 0) {
