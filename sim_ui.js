@@ -68,6 +68,8 @@
     const step = o.step != null ? o.step : "any";
     return `<input type="number" data-p="${path}" data-t="n" step="${step}"${o.min != null ? ` min="${o.min}"` : ""}${o.max != null ? ` max="${o.max}"` : ""} value="${v == null ? "" : v}"${o.ph != null ? ` placeholder="${esc(o.ph)}"` : ""}${o.w ? ` style="width:${o.w}px"` : ""}>`;
   };
+  const helpTxt = (id, short, long, style) => { const open = !!(V.help || {})[id];
+    return `<div class="muted help"${style ? ` style="${style}"` : ""}>${short}${long ? ` <button type="button" class="help-btn" data-act="help:${id}" aria-expanded="${open}">？ 詳しく</button>${open ? `<div class="help-body">${long}</div>` : ""}` : ""}</div>`; };
   const fld = (label, html, note) => `<div class="fld"><label>${label}</label><div>${html}${note ? `<span class="muted"> ${note}</span>` : ""}</div></div>`;
   const emx = id => S.emblemExtra(G.chars[id].emb, G.chars[id].embOn);
 
@@ -204,7 +206,7 @@
       </div>`;
     };
     return `${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div>
-      <p class="muted">キャラレベルは90で計算します。名前の後ろの「*」は未確認（技のヒットや素質を、Wikiの説明文から自動で作ったもの）です。ステータスがゲームの画面と合わないときは、「実測合わせ：直接入力」に画面の値を入れると、その欄だけ上書きして計算します。</p>`;
+      ${helpTxt("overview", "キャラレベルは90で計算。「*」は未確認のデータです。", "名前の後ろの「*」は未確認（技のヒットや素質を、Wikiの説明文から自動で作ったもの）です。ステータスがゲームの画面と合わないときは、「実測合わせ：直接入力」に画面の値を入れると、その欄だけ上書きして計算します。")}`;
   }
   // ---- 巡遊者（直接入力）----
   function renderDirect() {
@@ -221,7 +223,7 @@
       </div>`;
     };
     return `<div class="wide"><label class="check" style="font-weight:700"><input type="checkbox" data-p="directPriority" data-t="b"${G.directPriority !== false ? " checked" : ""}>入力されている欄は直接入力を優先する</label>
-      <p class="muted">空欄は反映せず、計算のままです（薄い数字は今の計算値）。入力がある欄は、その値で上書きして計算します。「属性ダメージ」は 100% を除いた加算分（画面が112%なら12）です。戦闘中だけ付く効果は画面に出ないので、その分は素質・ロスレコ・「その他」で補います。</p>
+      ${helpTxt("direct", "空欄は計算のまま。入れた欄だけ上書きして計算します。", "薄い数字は今の計算値です。「属性ダメージ」は 100% を除いた加算分（画面が112%なら12）です。戦闘中だけ付く効果は画面に出ないので、その分は素質・ロスレコ・「その他」で補います。")}
       ${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div></div>`;
   }
   function renderAdd(k) {
@@ -263,7 +265,7 @@
     if (!body) body = '<span class="muted">このキャラの、火力に関わるスキルのバフ効果は、ありません（または未登録です）。</span>';
     return `<h3 style="margin:0 0 6px;font-size:14px">スキルのバフ効果</h3><p class="muted">スキルLv: ${lvs}（スキルLvは「巡遊者」の欄で変えます）</p>
       <div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">${body}</div>
-      <p class="muted">値はスキルLvで変わります。主力のときは 主力スキル・必殺技、支援のときは 支援スキルのバフだけ使えます。ここに無いバフは、下の加算に入れてください。</p>`;
+      ${helpTxt("skillfx", "主力は主力スキル・必殺技、支援は支援スキルのバフだけ使えます。", "値はスキルLvで変わります。ここに無いバフは、下の加算に入れてください。")}`;
   }
 
   // ---- 徽章 ----
@@ -330,7 +332,7 @@
     const potTxt = Object.keys(ex.pot).map(x => `${JA(x, id)} Lv+${ex.pot[x]}`).join("・");
     return `<div class="wide"><h3>${esc(c.jp)}：徽章</h3><div>${order.map(card).join("")}</div>
       <div class="note">合計: ${sumTxt || "なし"}${lvTxt ? `<br>スキルレベル上昇: ${lvTxt}（スキルLvの欄に反映）` : ""}${potTxt ? `<br>素質レベル上昇: ${potTxt}（取得している素質に反映）` : ""}</div>
-      <p class="muted">各枠は、左から 区分 → 項目 → 値 の順に選びます。金までしかない項目には虹を出しません。素質レベル上昇は、取得している素質（Lv1以上）にだけ足します。</p></div>`;
+      ${helpTxt("emb", "各枠は、左から 区分 → 項目 → 値 の順に選びます。", "金までしかない項目には虹を出しません。素質レベル上昇は、取得している素質（Lv1以上）にだけ足します。")}</div>`;
   }
 
   // ---- 心相（段階・戦闘中の効果）----
@@ -435,7 +437,7 @@
         <div class="pz-bar">
           <p class="muted" style="margin:0;font-size:12px">ここで選べるのは Lv6 まで。徽章の「＋」は徽章画面の入力から自動で足されます（Lv7〜9 は推定値）。</p></div>
         ${coreSec}${normSec}
-        <p class="muted">ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。<br>${note}</p>
+        ${helpTxt("pot", "Lv2〜5はWikiの値、Lv7〜9は推定値です。", `ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。<br>${note}`)}
       </div>
       </div>`;
   }
@@ -506,8 +508,7 @@
       ${fld("記録レベル", inp("recordLv", { sel: recOpts }), `戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）`)}
       <h3 style="margin-top:14px">ロスレコ・音符</h3>
       <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div>${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
-      <p class="muted">ロスレコの基礎攻撃力・基礎HP・属性ダメージ%は、全員に入ります（属性が違うロスレコの属性ダメージは、その属性の巡遊者だけ）。コア効果・アシスト効果は、メインのものだけです。<br>
-      名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。コア効果は「突破」で値を選べます。条件付きの効果は、既定では反映しません（チェックで反映）。</p>
+      ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。コア効果は「突破」で値を選べます。条件付きの効果は、既定では反映しません（チェックで反映）。")}
       <h3 style="margin-top:12px;font-size:14px">音符効果（探索で獲得した数を入力。サブのロスレコの初期音符は自動で足します）</h3>
       <div class="notes-row">${noteIn}</div>
       <h3 style="margin-top:12px;font-size:14px">効果の数（暁光・星願など。戦闘中のある時点を想定して入力）</h3>
@@ -762,13 +763,12 @@
     return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}
       <h3 style="margin:18px 0 6px">ビルド検証（与ダメへの寄与率）</h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
-        <p style="margin:4px 0 0;font-size:12px;line-height:1.6">指名手配の3分間で、スキルと必殺技をCDが明けたらすぐ使い、残りは通常攻撃をし続けた、という想定です。実際の戦闘の回数とは違います。<br>
+        ${helpTxt("rot", "自分の戦い方に合わせて、下の回数を書き換えてください。", `指名手配の3分間で、スキルと必殺技をCDが明けたらすぐ使い、残りは通常攻撃をし続けた、という想定です。実際の戦闘の回数とは違います。<br>
         ・CDは日本語Wikiの値です（セイナ(原点)はゲーム内の表示）。SPが足りずに必殺技が撃てない場合や、CDが戻る効果（ホタルの必殺技など）は入っていません。<br>
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
-        ・自分の戦い方に合わせて、下の回数を書き換えてください。寄与率は、この回数で合計したダメージで出します。</p></div>
+        ・寄与率は、この回数で合計したダメージで出します。`, "margin-top:4px;color:#33386A")}</div>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
-      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つの項目だけを比べる値にしたときに、3分間のダメージが何%変わるかです。「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>
-      SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。</p>
+      ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 6px")}
       <div class="grid-in decG">
         <div class="box"><b>素質</b>${rows("素質")}</div>
         <div class="box"><b>徽章</b>${rows("徽章")}</div>
@@ -943,6 +943,7 @@
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a.indexOf("help:") === 0) { V.help = V.help || {}; V.help[a.slice(5)] = !V.help[a.slice(5)]; renderAll(); }
     else if (a.indexOf("stp|") === 0) {   // −／＋ のボタン
       const m = /^stp\|(-?1)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);
       if (m) { const v = getPath(m[5]), cur = v == null || v === "" ? +m[4] : +v; setPath(m[5], Math.min(+m[3], Math.max(+m[2], cur + +m[1]))); renderAll(); }

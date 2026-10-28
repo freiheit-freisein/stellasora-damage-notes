@@ -137,6 +137,11 @@
   .stp { display: inline-flex; align-items: stretch; height: 38px; border: 2px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; flex: none; }
   .stp-b { width: 36px; border: 0; background: var(--surface-soft); color: var(--indigo); font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; }
   .stp-b:hover { background: #E4E7F3; }
+  /* 説明文: 1行だけ出し、残りは「？ 詳しく」で開く */
+  .help { font-size: 12px; line-height: 1.6; margin: 6px 0; }
+  .help-btn { margin-left: 6px; padding: 0 8px; min-height: 22px; border: 1.5px solid var(--border); border-radius: 999px; background: #fff; color: var(--indigo); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .help-btn[aria-expanded="true"] { background: var(--surface-soft); }
+  .help-body { margin-top: 4px; padding: 8px 10px; border-radius: 8px; background: var(--surface-soft); }
   .stp.sm { height: 30px; border-radius: 8px; }
   .stp.sm .stp-b { width: 24px; font-size: 14px; }
   .stp.sm input[type=number] { width: 34px; font-size: 16px; }
