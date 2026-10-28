@@ -15,7 +15,7 @@
     return 1 - (0.9 + 0.09 * Math.pow((E - 751) / 1249, 2));
   }
   function enemyD(en, el, pen, G) {
-    const res = en.res[el] != null ? en.res[el] : 250;
+    const res = en.res[el] != null ? en.res[el] : (en.resDefault != null ? en.resDefault : 250);   // 書いていない属性は resDefault（ボスは等倍＝750）
     const weak = en.weak.indexOf(el) >= 0;
     const parts = { def: en.def, weak: weak ? en.weakMult : 1, res: resMult(res - pen), extra: (en.extra && en.extra[el]) || 1 };
     parts.D = parts.def * parts.weak * parts.res * parts.extra;
