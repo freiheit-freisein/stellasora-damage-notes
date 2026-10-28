@@ -530,50 +530,62 @@
       s1: r.team[g.team.s1].groups.support.totExp * n(g.team.s1, "support"), s2: r.team[g.team.s2].groups.support.totExp * n(g.team.s2, "support") };
   }
   const sum3 = d => d.main + d.s1 + d.s2;
-  // 項目ごとに「いくつ下げるか」（既定1）。素質はLv、アシスト効果はLv、コア効果は突破。徽章は1枚・1枠を外す（幅はない）
-  const decOf = (key, max) => Math.min(max, Math.max(1, +((V.dec || {})[key]) || 1));
+  // 項目ごとの「比べる値」。素質はLv、アシスト効果はLv、コア効果は突破。既定は今の1つ下（下げられなければ1つ上）。
+  // 今より上にもできる（上げたときの伸び）。徽章は1枚・1枠を外す（比べる値はない）
+  const cmpOf = (key, cur, lo, hi) => {
+    let t = (V.cmp || {})[key];
+    t = t == null ? (cur > lo ? cur - 1 : cur + 1) : Math.min(hi, Math.max(lo, +t));
+    return t === cur ? (cur > lo ? cur - 1 : cur + 1) : t;
+  };
   function calcContrib() {
     const d0 = dmgParts(G), t0 = sum3(d0), items = [];
-    const drop = (kind, label, slot, fn, dec) => {
+    const drop = (kind, label, slot, fn, cmp) => {
       const g = clone(G); fn(g); const d = dmgParts(g);
-      items.push({ kind, label, dec, team: t0 > 0 ? 1 - sum3(d) / t0 : 0, own: slot && d0[slot] > 0 ? 1 - d[slot] / d0[slot] : null });
+      items.push({ kind, label, cmp, team: t0 > 0 ? 1 - sum3(d) / t0 : 0 });
+    };
+    // 比べる値つきの項目（lo〜hi の範囲。今と同じ値は飛ばす）
+    const cmpItem = (kind, label, slot, key, cur, lo, hi, unit, set) => {
+      if (hi <= lo) return;
+      const t = cmpOf(key, cur, lo, hi);
+      drop(kind, label, slot, g => set(g, t), { key, cur, t, lo, hi, unit });
     };
     SLOTS.forEach(([k]) => {
-      const id = G.team[k], cs = G.chars[id], c = chOf(id);
-      const lvItem = (key, name, lv, set) => { const n = decOf(key, lv); drop("素質", `${c.jp}：${name}`, k, g => set(g, lv - n), { key, n, max: lv, cur: lv, unit: "Lv" }); };
+      const id = G.team[k], cs = G.chars[id], c = chOf(id), tk = TK(c.en), role = k === "main" ? "main" : "support";
+      const core = new Set();   // コア素質（取得するかどうかだけ。Lvは0か1）
+      ((tk && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { if (p.type === 1) core.add(S.potKey(p.name)); }));
+      const pot = (key, name, lv, max, set) => cmpItem("素質", `${c.jp}：${name}`, k, key, lv, 0, max, "Lv", set);
       Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
         const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p;
-        lvItem(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], (g, v) => { g.chars[id].pots2[p] = v; });
+        pot(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], core.has(p) ? 1 : 9, (g, v) => { g.chars[id].pots2[p] = v; });
       });
-      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => lvItem(`p:${id}:${p}`, ((window.POTENTIALS || []).find(x => x.id === p) || {}).jp || p, +cs.pots[p], (g, v) => { g.chars[id].pots[p] = v; }));
-      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => lvItem(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, (g, v) => { g.chars[id].sup[p].lv = v; }));
+      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => {
+        const x = (window.POTENTIALS || []).find(q => q.id === p) || {};
+        pot(`p:${id}:${p}`, x.jp || p, +cs.pots[p], x.core ? 1 : 9, (g, v) => { g.chars[id].pots[p] = v; });
+      });
+      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, 9, (g, v) => { g.chars[id].sup[p].lv = v; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
         drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章`, k, g => { g.chars[id].embOn[i] = 0; });
         e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章 ${slotLabel(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }); });
       });
     });
-    // ロスレコ（メインのものだけ効果がある）: アシスト効果はLvを、コア効果は突破を下げる
+    // ロスレコ（メインのものだけ効果がある）: アシスト効果はLv（0〜5。未発動も、上げたときを見られる）、コア効果は突破（1〜6）
     const LR = window.LOSTRECORDS || [];
     (G.lrMain || []).filter(Boolean).forEach(rid => {
       const fx = S.LR_FX[rid], r = LR.find(x => x.id === rid); if (!fx || !r) return;
       const rk = S.lrRankOf(G, rid);
-      if (rk.can && rk.rank > 1) {
-        const key = `lrc:${rid}`, n = decOf(key, rk.rank - 1);
-        drop("ロスレコ", `${r.name}：コア効果`, null, g => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: rk.rank - n }); }, { key, n, max: rk.rank - 1, cur: rk.rank, unit: "突破" });
-      }
+      if (rk.can) cmpItem("ロスレコ", `${r.name}：コア効果`, null, `lrc:${rid}`, rk.rank, 1, 6, "突破", (g, v) => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: v }); });
       fx.assists.forEach(a => {
-        const lv = S.lrAssistLv(S.notesTotal(G), a); if (!lv) return;
-        const key = `lra:${rid}:${a.id}`, n = decOf(key, lv);
-        drop("ロスレコ", `${r.name}：${a.name}`, null, g => { g._lrAssistDec = Object.assign({}, g._lrAssistDec, { [rid + ":" + a.id]: n }); }, { key, n, max: lv, cur: lv, unit: "Lv" });
+        const lv = S.lrAssistLv(S.notesTotal(G), a);
+        cmpItem("ロスレコ", `${r.name}：${a.name}`, null, `lra:${rid}:${a.id}`, lv, 0, 5, "Lv", (g, v) => { g._lrAssistDec = Object.assign({}, g._lrAssistDec, { [rid + ":" + a.id]: lv - v }); });
       });
     });
-    items.sort((a, b) => b.team - a.team);
+    items.sort((a, b) => Math.abs(b.team) - Math.abs(a.team));
     return items;
   }
   let contribCache = { key: "", items: null };
   function getContrib() {
-    const key = JSON.stringify(G) + JSON.stringify(V.dec || {});   // 入力が変わっていなければ、前の結果を使う
+    const key = JSON.stringify(G) + JSON.stringify(V.cmp || {});   // 入力が変わっていなければ、前の結果を使う
     if (contribCache.key !== key) contribCache = { key, items: calcContrib() };
     return contribCache.items;
   }
@@ -681,9 +693,14 @@
     let items;
     try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}<h3>ビルド検証</h3><p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
     const pc = v => v == null ? "" : v > 0.0005 ? "−" + (Math.round(v * 1000) / 10).toFixed(1) + "%" : v < -0.0005 ? "+" + (Math.round(-v * 1000) / 10).toFixed(1) + "%" : "影響なし";
-    // 今の値 → 比べる値（既定で1つ下）。◀▶で比べる値を変える（0まで下げると、まるごと外したときと同じ）。徽章は外したときだけ
-    const decIn = d => d ? `<span class="decin"><span class="muted">${d.unit}${d.cur} →</span><button class="obtn" data-act="decp|${esc(d.key)}"${d.n >= d.max ? " disabled" : ""}>◀</button><b>${d.unit}${d.cur - d.n}</b><button class="obtn" data-act="decm|${esc(d.key)}"${d.n <= 1 ? " disabled" : ""}>▶</button></span>` : '<span class="muted">外す</span>';
-    const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}">${esc(x.label)}</td><td class="c">${decIn(x.dec)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
+    // 今の値 → 比べる値。◀▶で比べる値を変える（今と同じ値は飛ばす。0まで下げると、まるごと外したときと同じ）。徽章は外したときだけ
+    const decIn = d => {
+      if (!d) return '<span class="muted">外す</span>';
+      const nx = dir => { let v = d.t + dir; if (v === d.cur) v += dir; return v >= d.lo && v <= d.hi ? v : null; };
+      const btn = (dir, ch) => { const v = nx(dir); return `<button class="obtn" data-act="cmp|${v == null ? "" : v}|${esc(d.key)}"${v == null ? " disabled" : ""}>${ch}</button>`; };
+      return `<span class="decin"><span class="muted">${d.unit}${d.cur} →</span>${btn(-1, "◀")}<b class="${d.t > d.cur ? "up" : ""}">${d.unit}${d.t}</b>${btn(1, "▶")}</span>`;
+    };
+    const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}">${esc(x.label)}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}
       <h3 style="margin:18px 0 6px">ビルド検証（与ダメへの寄与率）</h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
@@ -692,7 +709,7 @@
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・自分の戦い方に合わせて、下の回数を書き換えてください。寄与率は、この回数で合計したダメージで出します。</p></div>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
-      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つの項目だけを比べる値にしたときに、3分間のダメージが何%下がるかです。「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます（Lv0まで下げると、まるごと外したときの値）。徽章は、1枚・1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>
+      <p class="muted" style="margin:0 0 6px">今の入力のまま、1つの項目だけを比べる値にしたときに、3分間のダメージが何%変わるかです。「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。徽章は、1枚・1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>
       SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。</p>
       <div class="grid-in decG">
         <div class="box"><b>素質</b>${rows("素質")}</div>
@@ -867,7 +884,7 @@
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
-    else if (a.indexOf("decm|") === 0 || a.indexOf("decp|") === 0) { const k = a.slice(5); V.dec = V.dec || {}; V.dec[k] = Math.max(1, (+V.dec[k] || 1) + (a[3] === "p" ? 1 : -1)); renderAll(); }
+    else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
     else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta-closed", "1"); } catch (e) { /* 無視 */ } }

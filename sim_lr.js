@@ -174,7 +174,7 @@
       fx.core.forEach(it => apply(rid + ":c:" + it.id, it, rk.rank, rk.scale));
       fx.assists.forEach(a => {
         const dec = (G._lrAssistDec || {})[rid + ":" + a.id] || 0;   // ビルド検証で、Lvを下げて比べるとき
-        const lv = Math.max(0, S.lrAssistLv(S.notesTotal(G), a) - dec);
+        const lv = Math.min(5, Math.max(0, S.lrAssistLv(S.notesTotal(G), a) - dec));   // 上げて比べるときは dec が負
         if (!lv) return;
         a.items.forEach(it => apply(rid + ":" + a.id + ":" + it.id, it, lv));
       });
