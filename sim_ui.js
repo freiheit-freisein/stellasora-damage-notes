@@ -144,6 +144,12 @@
     // 入力する順に番号を付けて並べる。ゲームの画面と数値を合わせるための画面（直接入力・補正）は、右端に「実測合わせ」としてまとめる
     $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS", 1) + b("lr", "記録・ロスレコ・音符", "RECORD", 2) + b("gimmick", "敵", "ENEMY", 3) + b("score", "ビルド", "BUILD", 4)
       + `<span class="tab-sep" aria-hidden="true"></span><span class="tab-grp">実測合わせ</span>` + b("direct", "直接入力", "DIRECT") + b("adjust", "補正", "ADJUST");
+    // スマホ: タブの列は横にスクロールするので、選んだタブを真ん中より少し左に寄せる（右に続きのタブが見えるように）
+    const row = $("selectors"), on = row.querySelector('[aria-selected="true"]');
+    if (on && row.scrollWidth > row.clientWidth) {
+      const x = Math.max(0, row.scrollLeft + on.getBoundingClientRect().left - row.getBoundingClientRect().left - row.clientWidth * 0.3);
+      if (V.lastTop !== top) { row.scrollTo({ left: x, behavior: V.lastTop == null ? "auto" : "smooth" }); V.lastTop = top; } else row.scrollLeft = x;
+    }
   }
   // スマホ: 巡遊者を1人ずつ出すための切り替え（PCでは出さない）
   const mChar = () => `<div class="m-only mchar">${SLOTS.map(([k, l]) => `<button class="tab" aria-selected="${V.mChar === k}" data-act="mchar:${k}">${l}</button>`).join("")}</div>`;
