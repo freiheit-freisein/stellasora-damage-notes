@@ -497,64 +497,82 @@
       <p class="muted">耐性の式は、有効耐性 = 耐性 − 貫通 のとき 倍率 = 1 − 0.25×(E/250)²（実測と一致）。「その他」は、原因が分かっていない差を合わせるための倍率です。</p></div>`;
   }
   // ---- スコア（素質・徽章・音符の与ダメへの寄与）----
-  // 心相とロスレコは凸で人によって違うので、外した「標準の条件」で計算する: 心相0・ロスレコなし・その他の加算なし・直接入力なし・
-  // 重複数や反映のチェックは既定・敵は等倍の標準ボス（防御0.5・全属性の耐性750）。
-  // ダメージ = 編成の合計（主力の通常1ローテ＋主力スキル＋必殺技（印を含む）＋支援2人の支援スキル）。
-  // スコア = 素質・徽章・音符をすべて外したダメージを100として、1つだけ入れたとき（合計は3つ全部入れたとき）の値
+  // 心相とロスレコは凸で人によって違うので、外した「標準の条件」で計算する: 心相0・ロスレコのコア効果と基礎ステータスなし・その他の加算なし・
+  // 直接入力なし・重複数や反映のチェックは既定・敵は等倍の標準ボス（防御0.5・全属性の耐性750）。
+  // メインのロスレコのアシスト効果は、音符で解放するものなので「アシスト効果」として数える（条件付きのアシストも反映する。凸は関係しない）。
+  // 対象のダメージ: 主力は 通常1ローテ＋主力スキル＋必殺技（印を含む）、支援は 支援スキル だけ。編成の合計はその和。
+  // スコア = 素質・徽章・音符（アシスト効果も）をすべて外したダメージを100として、1つだけ入れたとき（合計は全部入れたとき）の値
   const ELS6 = ["水", "火", "風", "地", "光", "闇"];
-  function scoreEnv(g0) {
+  function scoreEnv(g0, withAssist) {
     const g = clone(g0), team = [g.team.main, g.team.s1, g.team.s2];
     team.forEach(id => { const cs = g.chars[id]; cs.talent = 0; cs.add = {}; cs.manual = {}; cs.pon = {}; cs.pstk = {}; cs.pcnt = {}; });
-    g.lrMain = []; g.lrSub = []; g.lrOn = {}; g.lrN = {}; g.lrManual = { baseAtk: 0, baseHp: 0, elem: 0, elemEl: "", basicDmg: 0, skillDmg: 0, atkPct: 0 };
-    g.directPriority = false; g.skOn = {}; g.traits = {}; g.other = { mult: 1, taken: 1 }; g.heartCrit = false;
+    g.lrOn = {}; g.lrManual = { baseAtk: 0, baseHp: 0, elem: 0, elemEl: "", basicDmg: 0, skillDmg: 0, atkPct: 0 };
+    if (withAssist) {
+      // メインのロスレコは、アシスト効果だけ（コア効果は外し、条件付きのアシストも反映）。サブは初期音符だけ。基礎ステータスは入れない
+      g.lrStatsOff = true;
+      (g.lrMain || []).filter(Boolean).forEach(rid => {
+        const fx = S.LR_FX[rid]; if (!fx) return;
+        (fx.core || []).forEach(it => { g.lrOn[rid + ":c:" + it.id] = false; });
+        (fx.assists || []).forEach(a => (a.items || []).forEach(it => { g.lrOn[rid + ":" + a.id + ":" + it.id] = true; }));
+      });
+    } else { g.lrMain = []; g.lrSub = []; g.lrN = {}; }
+    g.directPriority = false; g.skOn = {}; g.traits = {}; g.other = { mult: 1, taken: 1 };
     g.enemy = "stomp"; g.enemyOv = { def: 0.5, weakMult: 1, markX: 1, res: {}, extra: {} }; ELS6.forEach(e => { g.enemyOv.res[e] = 750; });
     return g;
   }
   const potOff = g => [g.team.main, g.team.s1, g.team.s2].forEach(id => { const cs = g.chars[id]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
   const embOff = g => [g.team.main, g.team.s1, g.team.s2].forEach(id => { g.chars[id].embOn = [0, 0, 0]; });
   const noteOff = g => { Object.keys(g.notes || {}).forEach(k => { g.notes[k] = 0; }); };
-  function teamDmg(g) {
+  // 巡遊者ごとの対象のダメージ（主力: 通常・主力スキル・必殺技、支援: 支援スキル）
+  function dmgParts(g) {
     const r = E.calcTeam(clone(g)), m = r.team[g.team.main];
-    return m.groups.basic.totExp + m.groups.main.totExp + m.groups.ult.totExp + r.team[g.team.s1].groups.support.totExp + r.team[g.team.s2].groups.support.totExp;
+    return { main: m.groups.basic.totExp + m.groups.main.totExp + m.groups.ult.totExp, s1: r.team[g.team.s1].groups.support.totExp, s2: r.team[g.team.s2].groups.support.totExp };
   }
+  const sum3 = d => d.main + d.s1 + d.s2;
+  const teamDmg = g => sum3(dmgParts(g));
   function calcScore() {
-    const full = scoreEnv(G);
-    const only = keep => { const g = clone(full); if (keep !== "pot") potOff(g); if (keep !== "emb") embOff(g); if (keep !== "note") noteOff(g); return teamDmg(g); };
-    const base = only(null), all = teamDmg(full);
-    const sc = { base, all, pot: only("pot") / base, emb: only("emb") / base, note: only("note") / base, total: all / base, items: [] };
-    // 項目ごとの寄与: 全部入れた状態から1つ外して、何%下がるか
-    const drop = (kind, label, fn) => { const g = clone(full); fn(g); const d = teamDmg(g); sc.items.push({ kind, label, v: all / d - 1 }); };
-    SLOTS.forEach(([k, l]) => {
-      const id = full.team[k], cs = full.chars[id], c = chOf(id);
+    const fullN = scoreEnv(G, false), fullA = scoreEnv(G, true);
+    const set = (src, keep) => { const g = clone(src); if (keep.indexOf("pot") < 0) potOff(g); if (keep.indexOf("emb") < 0) embOff(g); if (keep.indexOf("note") < 0) noteOff(g); return g; };
+    const base = teamDmg(set(fullN, []));
+    const allParts = dmgParts(fullA), all = sum3(allParts);
+    const noteOnly = teamDmg(set(fullN, ["note"]));
+    const sc = { base, all, pot: teamDmg(set(fullN, ["pot"])) / base, emb: teamDmg(set(fullN, ["emb"])) / base, note: noteOnly / base,
+      assist: teamDmg(set(fullA, ["note"])) / noteOnly, total: all / base, items: [] };
+    // 項目ごとの寄与: 全部入れた状態から1つ外して、何%下がるか（素質・徽章はその巡遊者の対象のダメージ、音符は編成の合計で見る）
+    const drop = (kind, label, slot, fn) => {
+      const g = clone(fullA); fn(g); const d = dmgParts(g);
+      const before = slot ? allParts[slot] : all, after = slot ? d[slot] : sum3(d);
+      sc.items.push({ kind, label, v: after > 0 ? before / after - 1 : 0 });
+    };
+    SLOTS.forEach(([k]) => {
+      const id = fullA.team[k], cs = fullA.chars[id], c = chOf(id);
       Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
         const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p;
-        drop("素質", `${c.jp}：${JA(en, id)} Lv${cs.pots2[p]}`, g => { g.chars[id].pots2[p] = 0; });
+        drop("素質", `${c.jp}：${JA(en, id)} Lv${cs.pots2[p]}`, k, g => { g.chars[id].pots2[p] = 0; });
       });
-      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => drop("素質", `${c.jp}：${((window.POTENTIALS || []).find(x => x.id === p) || {}).jp || p} Lv${cs.pots[p]}`, g => { g.chars[id].pots[p] = 0; }));
-      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => drop("素質", `${c.jp}：${((window.SUP_POTS || {})[id] || []).find(x => x.id === p)?.jp || p} Lv${cs.sup[p].lv}`, g => { g.chars[id].sup[p].lv = 0; }));
+      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => drop("素質", `${c.jp}：${((window.POTENTIALS || []).find(x => x.id === p) || {}).jp || p} Lv${cs.pots[p]}`, k, g => { g.chars[id].pots[p] = 0; }));
+      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => drop("素質", `${c.jp}：${(((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p} Lv${cs.sup[p].lv}`, k, g => { g.chars[id].sup[p].lv = 0; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i]) return;
-        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章 ${slotLabel(id, sl)}`, g => { g.chars[id].emb[i].slots[j].k = ""; }); });
+        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章 ${slotLabel(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }); });
       });
     });
-    S.NOTE_KEYS.forEach(n => { const v = (full.notes || {})[n]; if (v > 0) drop("音符", `${n.replace("の音符", "")} ${v}`, g => { g.notes[n] = 0; }); });
+    S.NOTE_KEYS.forEach(n => { const v = (fullA.notes || {})[n]; if (v > 0) drop("音符", `${n.replace("の音符", "")} ${v}`, null, g => { g.notes[n] = 0; }); });
     sc.items.sort((a, b) => b.v - a.v);
-    sc.embList = embScores(full, all);
+    sc.embList = embScores(fullA, allParts);
     return sc;
   }
-  // 徽章1枚ごとのスコアとランク。スコア = その徽章を外したときに、編成の合計ダメージが何%下がるか（標準の条件）。
-  // 理想 = 同じ種類（初級・中級・上級）で、4枠すべてに一番効く項目を最高の品質で入れた徽章（同じ項目は1枚に1つまで。1枠ずつ一番伸びるものを選ぶ）。
-  // ランク = 理想に対する割合（SS 90%以上・S 75%・A 60%・B 45%・C それ未満）
-  const GRADES = [[0.9, "SS"], [0.75, "S"], [0.6, "A"], [0.45, "B"], [0, "C"]];
+  // 徽章1枚ごとのスコア = その徽章を外したときに、その巡遊者の対象のダメージが何%下がるか（標準の条件）。
+  // 理想 = 同じ種類（初級・中級・上級）で、4枠すべてに一番効く項目を最高の品質で入れた徽章（同じ項目は1枚に1つまで。1枠ずつ一番伸びるものを選ぶ）
   const maxQ = o => isLv(o) ? "rainbow3" : (o.tiers.rainbow != null ? "rainbow" : "gold");   // レベル上昇は虹+3（汎用素質も、セイナの徽章で+3を確認済み）
-  function embScores(full, all) {
+  function embScores(full, allParts) {
     const out = [];
     SLOTS.forEach(([k]) => {
-      const id = full.team[k], cs = full.chars[id];
+      const id = full.team[k], cs = full.chars[id], D = g => dmgParts(g)[k];
       (cs.emb || []).forEach((e, i) => {
         const off = clone(full); off.chars[id].embOn[i] = 0;
-        const dOff = teamDmg(off);
-        const user = cs.embOn[i] ? all / dOff - 1 : 0;
+        const dOff = D(off);
+        const user = cs.embOn[i] && dOff > 0 ? allParts[k] / dOff - 1 : 0;
         // 理想の徽章を、1枠ずつ選ぶ
         const g = clone(full); g.chars[id].embOn[i] = 1;
         const slots = g.chars[id].emb[i].slots;
@@ -566,24 +584,25 @@
             const ts = o.type === "potLv" ? potTargets(id, o.key).map(x => x.en) : [null];
             ts.forEach(t => {
               slots[j] = { k: o.key, q: maxQ(o), cat: catOfKey(o.key) }; if (t) slots[j].t = t;
-              const d = teamDmg(g);
+              const d = D(g);
               if (!best || d > best.d) best = { d, sl: clone(slots[j]) };
             });
           });
           if (!best) break;
           slots[j] = best.sl; used.push(best.sl.k);
         }
-        const ideal = teamDmg(g) / dOff - 1;
-        const ratio = ideal >= 0.005 ? user / ideal : null;   // 理想でも0.5%未満しか動かない徽章は、ランクを付けない（—）
-        out.push({ id, k, i, kind: e.kind, user, ideal, ratio, grade: ratio == null ? "—" : GRADES.find(x => ratio >= x[0])[1], slots: cs.emb[i].slots.filter(sl => sl.k), on: !!cs.embOn[i], idealSlots: slots.filter(sl => sl.k) });
+        const ideal = dOff > 0 ? D(g) / dOff - 1 : 0;
+        const ratio = ideal >= 0.005 ? user / ideal : null;   // 理想でも0.5%未満しか動かない徽章は、割合を出さない
+        out.push({ id, k, i, kind: e.kind, user, ideal, ratio, slots: cs.emb[i].slots.filter(sl => sl.k), on: !!cs.embOn[i], idealSlots: slots.filter(sl => sl.k) });
       });
     });
     return out;
   }
+  const p1 = v => (Math.round(v * 1000) / 10).toFixed(1);
+  const plusPct = v => (v >= 0 ? "+" : "") + p1(v) + "%";
   // ---- ビルドカード（画像）。1人1列で3人分、下にスコアと音符。絵は使わず、名前・属性の色・数字で描く ----
   const EL_COLOR = { 光: "#E8B10F", 水: "#2BA6DE", 火: "#E5533D", 風: "#3FA86A", 地: "#A0703C", 闇: "#6B4FA0" };
   const Q_COLOR = { green: "#4FB58A", blue: "#4E8FD6", gold: "#E3A93A", rainbow: "#C25FD0", rainbow2: "#C25FD0", rainbow3: "#C25FD0" };
-  const GRADE_COLOR = { SS: "#6C72A8", S: "#E3A93A", A: "#9B6FD6", B: "#4E8FD6", C: "#4FB58A", "—": "#B9BEDB" };
   function shortSlot(id, sl) {
     const o = optOf(sl.k); if (!o) return "";
     const v = qVal(o, sl.q);
@@ -603,33 +622,33 @@
     SLOTS.forEach(([k, l], ci) => {
       const id = G.team[k], c = chOf(id), cs = G.chars[id], col = EL_COLOR[c.el] || "#4B5082", X0 = 24 + ci * (colW + gap);
       rr(X0, top, colW, 760, 18, "#FFFFFF", "#D9DCED");
-      // 見出し（属性の色の帯）
-      x.save(); x.beginPath(); x.roundRect(X0, top, colW, 96, [18, 18, 0, 0]); x.fillStyle = col; x.fill(); x.restore();
-      txt(l, X0 + 20, top + 32, 20, "rgba(255,255,255,.9)");
-      txt(c.jp + (c.auto ? "*" : ""), X0 + 20, top + 76, 38, "#FFFFFF", { w: 900, max: 330 });
-      const lv = cs.skillLv || {}, eb = emx(id).lv;
-      txt(`${c.el}属性`, X0 + colW - 20, top + 32, 20, "rgba(255,255,255,.9)", { align: "right" });
-      txt(`通常${(lv.basic || 10) + (eb.basic || 0)}・主力${(lv.main || 10) + (eb.main || 0)}・支援${(lv.support || 10) + (eb.support || 0)}・必殺${(lv.ult || 10) + (eb.ult || 0)}`, X0 + colW - 20, top + 60, 18, "#FFFFFF", { align: "right" });
-      txt(`信頼Lv${cs.trustLv || 0}・心相${cs.talent || 0}`, X0 + colW - 20, top + 84, 18, "#FFFFFF", { align: "right" });
+      // 見出し（属性の色の帯）: 左に「主力・水属性」と名前、右にスキルLv（2行）と信頼・心相
+      x.save(); x.beginPath(); x.roundRect(X0, top, colW, 100, [18, 18, 0, 0]); x.fillStyle = col; x.fill(); x.restore();
+      txt(`${l}・${c.el}属性`, X0 + 20, top + 32, 19, "rgba(255,255,255,.92)");
+      txt(c.jp + (c.auto ? "*" : ""), X0 + 20, top + 80, 32, "#FFFFFF", { w: 900, max: 330 });
+      const lv = cs.skillLv || {}, eb = emx(id).lv, L = key => (lv[key] || 10) + (eb[key] || 0);
+      txt(`通常${L("basic")}・主力${L("main")}`, X0 + colW - 20, top + 32, 18, "#FFFFFF", { align: "right" });
+      txt(`支援${L("support")}・必殺${L("ult")}`, X0 + colW - 20, top + 58, 18, "#FFFFFF", { align: "right" });
+      txt(`信頼Lv${cs.trustLv || 0}・心相${cs.talent || 0}`, X0 + colW - 20, top + 84, 18, "rgba(255,255,255,.92)", { align: "right" });
       // ステータス（戦闘中＝今の入力のまま）
       const b = R.team[id], st = b.st, ef = b.ef;
       const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
       const stats = [["HP", fmt(st.hp)], ["攻撃力", fmt(batk)], ["会心率", pct(st.critRate)], ["会心ダメージ", pct(st.critDmg)], [c.el + "属性ダメージ", pct(1 + st.elemAdd + ef.W)], ["属性耐性貫通", fmt(Math.min(st.pen, 250))]];
-      stats.forEach(([n, v], i) => { const yy = top + 132 + i * 32; txt(n, X0 + 22, yy, 20, "#5F6492"); txt(v, X0 + colW - 22, yy, 22, "#1E2250", { align: "right", w: 900 }); });
-      // 徽章3枚（ランク・枠・スコア）
+      stats.forEach(([n, v], i) => { const yy = top + 136 + i * 32; txt(n, X0 + 22, yy, 20, "#5F6492"); txt(v, X0 + colW - 22, yy, 22, "#1E2250", { align: "right", w: 900 }); });
+      // 徽章3枚（スコア・枠）
       const list = sc.embList.filter(e => e.k === k).sort((a, b2) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b2.kind));
       list.forEach((e, i) => {
-        const yy = top + 330 + i * 112;
+        const yy = top + 330 + i * 112, has = e.on && e.slots.length;
         rr(X0 + 14, yy, colW - 28, 102, 12, "#F6F7FC", "#E4E7F3");
-        rr(X0 + 24, yy + 12, 62, 40, 8, GRADE_COLOR[e.grade] || "#B9BEDB");
-        txt(e.grade, X0 + 55, yy + 44, 32, "#FFFFFF", { en: true, w: 400, align: "center" });
-        txt(`${KIND_NAME[e.kind] || ""}徽章`, X0 + 24, yy + 80, 18, "#4B5082");
-        txt(e.on ? "+" + (Math.round(e.user * 1000) / 10).toFixed(1) + "%" : "未装備", X0 + colW - 26, yy + 88, 18, "#5F6492", { align: "right" });
+        txt(`${KIND_NAME[e.kind] || ""}徽章`, X0 + 26, yy + 28, 17, "#4B5082");
+        txt(has ? plusPct(e.user) : "—", X0 + 26, yy + 70, 34, "#1E2250", { en: true, w: 400 });
+        if (has && e.ratio != null) txt(`理想の${Math.round(e.ratio * 100)}%`, X0 + 26, yy + 92, 15, "#5F6492", { w: 500 });
         const ss = e.on ? cs.emb[e.i].slots.filter(sl => sl.k) : [];
+        if (!ss.length) txt("（徽章なし）", X0 + 150, yy + 58, 17, "#9AA0C8", { w: 500 });
         ss.slice(0, 4).forEach((sl, j) => {
-          const sx = X0 + 104 + (j % 2) * 220, sy = yy + 30 + Math.floor(j / 2) * 30;
+          const sx = X0 + 150 + (j % 2) * 205, sy = yy + 44 + Math.floor(j / 2) * 34;
           x.fillStyle = Q_COLOR[sl.q] || "#9AA0C8"; x.beginPath(); x.arc(sx, sy - 6, 5, 0, Math.PI * 2); x.fill();
-          txt(shortSlot(id, sl), sx + 10, sy, 17, "#1E2250", { max: 205, w: 500 });
+          txt(shortSlot(id, sl), sx + 10, sy, 17, "#1E2250", { max: 190, w: 500 });
         });
       });
       // 素質（取得しているもの。コアを先に）
@@ -644,47 +663,49 @@
       for (const ch of pl) { if (x.measureText(line + ch).width > colW - 44) { txt(line, X0 + 22, ly, 17, "#1E2250", { w: 500 }); line = ""; ly += 26; if (++lines >= 2) break; } line += ch; }
       if (lines < 2 && line) txt(line, X0 + 22, ly, 17, "#1E2250", { w: 500, max: colW - 44 });
     });
-    // 下の帯: スコアと音符
+    // 下の帯: スコア5つと音符（0も出し、位置は固定）
     const by = 800;
     rr(24, by, W - 48, 176, 18, "#4B5082");
-    const sc4 = [["素質", sc.pot], ["徽章", sc.emb], ["音符", sc.note], ["合計", sc.total]];
-    sc4.forEach(([n, v], i) => { const bx = 60 + i * 230; txt(n + "スコア", bx, by + 46, 20, "#D9DCED"); txt(Math.round(v * 100).toLocaleString(), bx, by + 108, i === 3 ? 60 : 48, i === 3 ? "#F4C84A" : "#FFFFFF", { en: true, w: 400 }); });
-    const nt = S.NOTE_KEYS.map(n => { const v = (G.notes || {})[n] || 0; return v ? n.replace("の音符", "") + v : ""; }).filter(Boolean).join("  ") || "なし";
-    txt("音符", 990, by + 46, 20, "#D9DCED"); txt(nt, 990, by + 82, 22, "#FFFFFF", { max: W - 1040 });
-    txt("スコア＝素質・徽章・音符なしを100とした与ダメ（心相0・ロスレコなし・等倍の標準ボス）。徽章のランクは理想の徽章との比。" + (hasAuto ? "＊は未確認のデータ" : ""), 60, by + 150, 16, "#D9DCED", { w: 500, max: W - 520 });
-    txt("巡遊者の計算ノート", W - 64, by + 118, 30, "#FFFFFF", { align: "right", w: 900 });
-    txt("sim.stella-tool.com ・ α版", W - 64, by + 150, 18, "#D9DCED", { align: "right" });
+    [["素質", sc.pot], ["徽章", sc.emb], ["音符", sc.note], ["アシスト", sc.assist], ["合計", sc.total]].forEach(([n, v], i) => {
+      const bx = 56 + i * 168, last = i === 4;
+      txt(n + "スコア", bx, by + 42, 18, "#D9DCED");
+      txt(Math.round(v * 100).toLocaleString(), bx, by + 104, last ? 58 : 46, last ? "#F4C84A" : "#FFFFFF", { en: true, w: 400 });
+    });
+    txt("音符", 930, by + 42, 18, "#D9DCED");
+    S.NOTE_KEYS.forEach((n, i) => {
+      const nx = 930 + (i % 5) * 162, ny = by + 80 + Math.floor(i / 5) * 34, v = (G.notes || {})[n] || 0;
+      txt(n.replace("の音符", ""), nx, ny, 19, "#D9DCED", { w: 500 });
+      txt(String(v), nx + 128, ny, 22, v ? "#FFFFFF" : "#8A90BE", { align: "right", w: 900 });
+    });
+    txt("スコア＝素質・徽章・音符（アシスト効果も）なしを100とした与ダメ（心相0・ロスレコのコア効果なし・等倍の標準ボス）。主力は通常・主力スキル・必殺技、支援は支援スキルで計算。" + (hasAuto ? "＊は未確認のデータ。" : "") + "  sim.stella-tool.com・α版", 56, by + 156, 15, "#D9DCED", { w: 500, max: W - 112 });
     return cv;
   }
   let cardUrl = "";
   async function makeCard() {
     try { await document.fonts.ready; } catch (e) { /* 無視 */ }
-    const key = JSON.stringify(scoreEnv(G));
-    if (scoreCache.key !== key) scoreCache = { key, sc: calcScore() };
-    cardUrl = drawCard(scoreCache.sc).toDataURL("image/png");
+    cardUrl = drawCard(getScore()).toDataURL("image/png");
     renderAll();
   }
 
   let scoreCache = { key: "", sc: null };
+  function getScore() {
+    const key = JSON.stringify(scoreEnv(G, true));   // 入力が変わっていなければ、前の結果を使う（理想の徽章の計算は少し重い）
+    if (scoreCache.key !== key) scoreCache = { key, sc: calcScore() };
+    return scoreCache.sc;
+  }
   function renderScore() {
     let sc;
-    try {
-      const key = JSON.stringify(scoreEnv(G));   // 入力が変わっていなければ、前の結果を使う（理想の徽章の計算は少し重い）
-      if (scoreCache.key !== key) scoreCache = { key, sc: calcScore() };
-      sc = scoreCache.sc;
-    } catch (e) { return `<div class="wide"><h3>スコア</h3><p class="muted">計算できませんでした（${esc(e.message)}）</p></div>`; }
-    const gradeTag = gr => `<span class="grade g-${gr}">${gr}</span>`;
+    try { sc = getScore(); } catch (e) { return `<div class="wide"><h3>スコア</h3><p class="muted">計算できませんでした（${esc(e.message)}）</p></div>`; }
     const embBlock = SLOTS.map(([k, l]) => {
       const list = sc.embList.filter(x => x.k === k);
       if (!list.length) return "";
       const id = list[0].id;
-      return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${list.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind)).map(x => `<div class="embsc">
-        <div class="embsc-h">${gradeTag(x.grade)}<b>${KIND_NAME[x.kind] || ""}徽章</b><span class="muted">スコア</span> <b>${x.on ? "+" + (Math.round(x.user * 1000) / 10).toFixed(1) + "%" : "未装備"}</b><span class="muted">／理想 +${(Math.round(x.ideal * 1000) / 10).toFixed(1)}%${x.ratio != null ? `（${Math.round(x.ratio * 100)}%）` : ""}</span></div>
-        <div class="embsc-s">${x.on && x.slots.length ? x.slots.map(sl => esc(slotLabel(id, sl))).join(" ／ ") : '<span class="muted">（枠なし）</span>'}</div>
-        <div class="embsc-i muted">理想：${x.idealSlots.map(sl => esc(slotLabel(id, sl))).join(" ／ ")}</div></div>`).join("")}</div>`;
+      return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${list.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind)).map(x => { const has = x.on && x.slots.length; return `<div class="embsc">
+        <div class="embsc-h"><b>${KIND_NAME[x.kind] || ""}徽章</b><span class="muted">スコア</span> <b style="font-size:15px">${has ? plusPct(x.user) : "—"}</b><span class="muted">／理想 ${plusPct(x.ideal)}${has && x.ratio != null ? `（理想の${Math.round(x.ratio * 100)}%）` : ""}</span></div>
+        <div class="embsc-s">${has ? x.slots.map(sl => esc(slotLabel(id, sl))).join(" ／ ") : '<span class="muted">（枠なし）</span>'}</div>
+        <div class="embsc-i muted">理想：${x.idealSlots.map(sl => esc(slotLabel(id, sl))).join(" ／ ")}</div></div>`; }).join("")}</div>`;
     }).join("");
-    const p1 = x => (Math.round(x * 1000) / 10).toFixed(1);
-    const card = (label, x, sub) => `<div class="tile"><span>${label}</span><b>${Math.round(x * 100)}</b><small>${x >= 1 ? "+" : ""}${p1(x - 1)}%${sub ? "／" + sub : ""}</small></div>`;
+    const card = (label, v, sub) => `<div class="tile"><span>${label}</span><b>${Math.round(v * 100).toLocaleString()}</b><small>${plusPct(v - 1)}${sub ? "／" + sub : ""}</small></div>`;
     const rows = kind => { const it = sc.items.filter(x => x.kind === kind); return it.length ? `<table class="stt"><tr><th style="text-align:left">項目</th><th>外すと</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}" style="width:auto;white-space:normal">${esc(x.label)}</td><td style="text-align:right;width:90px">${x.v > 0.0005 ? "−" + p1(x.v / (1 + x.v)) + "%" : "影響なし"}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     const cardHtml = `<div class="box" style="margin:0 0 10px"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
         <b>ビルドカード</b><button class="btn-add pri" data-act="card-make" style="background:var(--accent);border-color:var(--accent);font-weight:900">${cardUrl ? "カードを作り直す" : "カードを作る"}</button>
@@ -692,18 +713,19 @@
         <span class="muted">${cardUrl ? "Xで共有は、短縮URL付きの投稿画面を開きます。画像は保存してから添付してください。入力を変えたら作り直してください。" : "3人分の徽章・素質・スコアを1枚の画像にします。"}</span></div>
         ${cardUrl ? `<img src="${cardUrl}" alt="ビルドカード" style="width:100%;margin-top:8px;border-radius:12px;border:2px solid var(--border)">` : ""}</div>`;
     return `<div class="wide"><h3>スコア（素質・徽章・音符の与ダメへの寄与）</h3>${cardHtml}
-      <div class="tiles" style="grid-template-columns:repeat(4,minmax(0,1fr))">${card("素質スコア", sc.pot)}${card("徽章スコア", sc.emb)}${card("音符スコア", sc.note)}${card("合計スコア", sc.total, "3つ全部")}</div>
-      <p class="muted" style="margin-top:8px">素質・徽章・音符をすべて外したダメージを <b>100</b> として、それぞれ1つだけ入れたときの値です（合計は3つ全部を入れたときで、掛け合わせの分も含みます）。<br>
-      <b>標準の条件</b>：心相とロスレコは凸で人によって違うので外しています（心相0・ロスレコなし）。「その他」の加算と直接入力も使いません。重複数・反映のチェックは既定値、敵は等倍の標準ボス（防御0.5・全属性の耐性750）です。ダメージは編成の合計（主力の通常1ローテ＋主力スキル＋必殺技（印を含む）＋支援2人の支援スキル）です。<br>
+      <div class="tiles" style="grid-template-columns:repeat(5,minmax(0,1fr))">${card("素質スコア", sc.pot)}${card("徽章スコア", sc.emb)}${card("音符スコア", sc.note, "音符の効果")}${card("アシストスコア", sc.assist, "音符で解放")}${card("合計スコア", sc.total, "全部")}</div>
+      <p class="muted" style="margin-top:8px">素質・徽章・音符（アシスト効果も）をすべて外したダメージを <b>100</b> として、それぞれ1つだけ入れたときの値です（合計は全部入れたときで、掛け合わせの分も含みます）。<br>
+      <b>音符</b>は、音符そのものの効果（攻撃力+0.3%/Lv など）です。<b>アシスト</b>は、その音符でメインのロスレコのアシスト効果を解放したことによる伸びです（条件付きのアシストも反映。ロスレコの凸は関係しません）。<br>
+      <b>標準の条件</b>：心相とロスレコのコア効果は、凸で人によって違うので外しています（心相0・コア効果と基礎ステータスなし）。「その他」の加算と直接入力も使いません。重複数・反映のチェックは既定値、敵は等倍の標準ボス（防御0.5・全属性の耐性750）です。<br>
+      <b>対象のダメージ</b>：主力は 通常1ローテ＋主力スキル＋必殺技（印を含む）、支援は 支援スキル だけで見ます（素質・徽章の寄与も、その巡遊者の分だけ）。<br>
       「*」の付いた巡遊者・素質（自動の下書き）を含む場合は、スコアもずれることがあります。</p>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
-        <div class="box"><b>素質</b>（1つ外すと）${rows("素質")}</div>
-        <div class="box"><b>徽章</b>（1枠外すと）${rows("徽章")}</div>
-        <div class="box"><b>音符</b>（1種類外すと）${rows("音符")}</div>
+        <div class="box"><b>素質</b>（1つ外すと、その巡遊者の分が）${rows("素質")}</div>
+        <div class="box"><b>徽章</b>（1枠外すと、その巡遊者の分が）${rows("徽章")}</div>
+        <div class="box"><b>音符</b>（1種類外すと、編成の合計が。アシスト込み）${rows("音符")}</div>
       </div>
-      <h3 style="margin:14px 0 6px;font-size:15px">徽章ごとのスコアとランク</h3>
-      <p class="muted" style="margin:0 0 6px">スコア＝その徽章を外したときに、編成の合計ダメージが何%下がるか（上と同じ標準の条件）。理想＝同じ種類で、4枠すべてに一番効く項目を最高の品質で入れた徽章（同じ項目は1枚に1つまで）。ランクは理想に対する割合で、SS 90%以上・S 75%以上・A 60%以上・B 45%以上・C それ未満です。理想でも0.5%未満しか動かない徽章（支援で、編成の合計にほとんど効かないものなど）は「—」です。<br>
-      理想は「4枠とも最高の品質」なので、ゲーム内で実際に作れる徽章より高めです。</p>
+      <h3 style="margin:14px 0 6px;font-size:15px">徽章ごとのスコア</h3>
+      <p class="muted" style="margin:0 0 6px">スコア＝その徽章を外したときに、その巡遊者の対象のダメージが何%下がるか（上と同じ標準の条件）。理想＝同じ種類で、4枠すべてに一番効く項目を最高の品質で入れた徽章（同じ項目は1枚に1つまで）。理想は「4枠とも最高の品質」なので、ゲーム内で実際に作れる徽章より高めです。</p>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">${embBlock}</div></div>`;
   }
 

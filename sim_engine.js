@@ -73,6 +73,7 @@
   }
   function lrSum(G, el) {
     const t = { baseAtk: 0, baseHp: 0, elem: 0, basicDmg: 0, skillDmg: 0, ultDmg: 0, atkPct: 0 };
+    if (G.lrStatsOff) return t;   // スコアの計算用: ロスレコの基礎ステータスを入れない（アシスト効果だけを見るため）
     const add = (id, isMain) => {
       const r = (window.LOSTRECORDS || []).find(x => x.id === id);
       if (!r) return;
