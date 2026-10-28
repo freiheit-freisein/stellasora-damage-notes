@@ -111,8 +111,8 @@
   }
 
   // ---- 倍率タイル（種類を問わない共通の倍率） ----
-  let multOpen = false;
-  try { multOpen = localStorage.getItem("stellasora-sim-mult") === "1"; } catch (e) { /* 無視 */ }
+  let multOpen = true;   // 既定は大きく出す。「コンパクトにする」で1行に
+  try { multOpen = localStorage.getItem("stellasora-sim-mult") !== "0"; } catch (e) { /* 無視 */ }
   function renderTiles() {
     const id = G.team[V.tilesFor] || G.team.main;
     const o = R.team[id];
@@ -123,10 +123,10 @@
     const taken = o.ef.taken * (G.other.taken || 1) * (G.other.mult || 1) * dd.extra;
     $("tilesFor").innerHTML = SLOTS.map(([k, l]) => `<button class="sbtn${V.tilesFor === k ? " on" : ""}" data-act="tf:${k}" style="min-height:26px;padding:0 10px;font-size:12px">${l}</button>`).join(" ") + ` ${esc(c.jp)}`;
     const t = (label, val, sub) => `<div class="tile"><span>${label}</span><b>${val}</b><small>${sub || ""}</small></div>`;
-    // ふだんは1行にまとめる（計算を確かめたいときだけ開く）。開いたかどうかは、このブラウザに覚える
-    $("multBtn").textContent = multOpen ? "閉じる" : "開く";
+    // 既定は大きく出し、「コンパクトにする」で1行にまとめる。どちらにしたかは、このブラウザに覚える
+    $("multBtn").textContent = multOpen ? "コンパクトにする" : "大きく表示";
     $("multBtn").setAttribute("aria-expanded", multOpen);
-    $("multSum").innerHTML = multOpen ? "" : `基礎値 ${fmt(ref)}／属性 ×${f3(W)}／耐性 ×${f3(dd.res * dd.weak)}／防御 ${f3(dd.def)}／その他 ×${f3(taken)}`;
+    $("multSum").innerHTML = multOpen ? "" : `基礎値 ${fmt(ref)} ／ 属性 ×${f3(W)} ／ 耐性 ×${f3(dd.res * dd.weak)} ／ 防御 ${f3(dd.def)} ／ その他 ×${f3(taken)}`;
     $("tiles").style.display = multOpen ? "" : "none";
     $("tiles").innerHTML =
       t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力") +
