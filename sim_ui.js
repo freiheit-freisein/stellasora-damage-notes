@@ -336,7 +336,7 @@
     const m = /Build (\d)/i.exec(title);
     return (role === "main" ? "主力" : "支援") + "・" + (m ? "特化構築" + m[1] : "汎用");
   }
-  // ---- 素質（巡遊者を上で切り替え、コア素質と通常素質をカードで選ぶ。右に選んだ素質の一覧）----
+  // ---- 素質（巡遊者を上で切り替え、コア素質と通常素質をカードで選ぶ）----
   // 計算は今までと同じ入力（pots2 / pots / sup）をそのまま使う。画面で選べるLvは0〜6（前の入力で7以上が入っているものは、そのまま残す）
   const POT_LV_MAX = 6, CORE_MAX = 2;
   // 1人分の素質の一覧: { name, en, core, lv, path, desc, tags, ctl, grp, bonus }
@@ -414,10 +414,6 @@
       ${cores.length ? `<div class="pz-cgrid">${cores.map(coreCard).join("")}</div>` : '<p class="muted">ありません</p>'}</section>`;
     const normSec = f === "core" ? "" : `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
       ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
-    // 右: 選んだ素質と、ダメージの要約
-    const chosen = list.filter(x => x.lv > 0).sort((a, b) => b.core - a.core).map(x => `<div class="pz-ch"><span>${esc(x.name)}</span><span class="${x.core ? "pz-tc" : "pz-tn"}">${x.core ? "コア" : `Lv${x.lv}${x.bonus ? `（+${x.bonus} → ${finalLv(x)}）` : ""}`}</span></div>`).join("");
-    const o = R.team[id], g = o && o.groups, mini = (l, v) => `<div class="pz-mrow"><span>${l}</span><b>${fmt(v)}</b></div>`;
-    const miniHtml = !g ? "" : k === "main" ? mini("通常1ローテ", g.basic.totExp) + mini("主力スキル", g.main.totExp) + mini("必殺技", g.ult.totExp) : mini(c.jp + " 支援スキル", g.support.totExp);
     const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。"
       : (id === "nazuka" || id === "eleanor") ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
       : S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。"
@@ -430,10 +426,7 @@
         ${coreSec}${normSec}
         <p class="muted">ゲーム内の画面で確認できる素質の数値は、Lv1 と Lv6 だけです。Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、直前の増え方で延長した推定値（実際にビルドを組んだ画面で確認できたものだけ、実値に置き換えています）。<br>${note}</p>
       </div>
-      <aside class="pz-side">
-        <section class="pz-box"><h3 class="pz-h">選んだ素質（${esc(c.jp)}）</h3>${chosen || '<p class="muted" style="margin:0">まだ選んでいません。</p>'}</section>
-        ${miniHtml ? `<section class="pz-dmg"><h3>ダメージ（会心の期待値）</h3>${miniHtml}<button type="button" class="pz-link" data-act="goresult">すべての結果を見る</button></section>` : ""}
-      </aside></div>`;
+      </div>`;
   }
 
   // ---- 記録レベル ----
@@ -950,7 +943,6 @@
       renderAll();
     }
     else if (a.indexOf("pfilt:") === 0) { V.potFilter = a.slice(6); renderAll(); }
-    else if (a === "goresult") { const r = $("result"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); }
     else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
