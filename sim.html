@@ -161,6 +161,12 @@
   .tab { flex: none; display: flex; flex-direction: column; align-items: center; line-height: 1.2; min-height: 44px; padding: 6px 16px; border-radius: 10px; border: 0; background: transparent; color: var(--indigo); font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; justify-content: center; }
   .tab .te { font-family: var(--font-en); font-weight: 400; font-size: 13px; letter-spacing: .1em; color: var(--muted); }
   .tab:hover { background: var(--surface-soft); }
+  .tab .tn { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-right: 4px; border-radius: 50%; background: var(--surface-soft); color: var(--indigo); font-family: var(--font-en); font-size: 13px; vertical-align: 1px; }
+  .tab[aria-selected="true"] .tn { background: #fff; }
+  .tab-sep { flex: 1; min-width: 16px; }
+  .tab-grp { flex: none; align-self: center; font-size: 11px; font-weight: 700; color: var(--muted); padding: 0 4px; }
+  .tab-sep ~ .tab { opacity: .75; font-size: 13px; }   /* 実測合わせの画面は、控えめに */
+  .tab-sep ~ .tab[aria-selected="true"] { opacity: 1; }
   .tab[aria-selected="true"] { background: var(--indigo); color: #fff; }
   .tab[aria-selected="true"] .te { color: var(--border); }
   .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }

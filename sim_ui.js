@@ -130,8 +130,10 @@
   function renderSelectors() {
     // 徽章・素質などの巡遊者ごとの画面は「巡遊者」のタブの中
     const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
-    const b = (key, label, en) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${label}</span></button>`;
-    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS") + b("direct", "直接入力", "DIRECT") + b("record", "記録レベル", "RECORD") + b("lr", "ロスレコ・音符", "LOST RECORDS") + b("gimmick", "ギミック(敵)", "ENEMY") + b("adjust", "補正", "ADJUST") + b("score", "ビルド", "BUILD");
+    const b = (key, label, en, n) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${n ? `<span class="tn">${n}</span>` : ""}${label}</span></button>`;
+    // 入力する順に番号を付けて並べる。ゲームの画面と数値を合わせるための画面（直接入力・補正）は、右端に「実測合わせ」としてまとめる
+    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS", 1) + b("lr", "記録・ロスレコ・音符", "RECORD", 2) + b("gimmick", "敵", "ENEMY", 3) + b("score", "ビルド", "BUILD", 4)
+      + `<span class="tab-sep" aria-hidden="true"></span><span class="tab-grp">実測合わせ</span>` + b("direct", "直接入力", "DIRECT") + b("adjust", "補正", "ADJUST");
   }
   // スマホ: 巡遊者を1人ずつ出すための切り替え（PCでは出さない）
   const mChar = () => `<div class="m-only mchar">${SLOTS.map(([k, l]) => `<button class="tab" aria-selected="${V.mChar === k}" data-act="mchar:${k}">${l}</button>`).join("")}</div>`;
@@ -420,14 +422,6 @@
       </div>`;
   }
 
-  // ---- 記録レベル ----
-  function renderRecord() {
-    const r = E.recordBonus(G.recordLv);
-    const opts = (RECORD_LEVELS || []).map(x => [x[0], `Lv${x[0]}（攻撃+${x[2]} / HP+${x[3]}）`]);
-    return `<div class="wide"><h3>記録レベルボーナス（戦闘中に全員の基礎攻撃力・基礎HPへ加算）</h3>
-      ${fld("記録レベル", inp("recordLv", { sel: opts }))}
-      <p class="note">現在: 攻撃力 +${fmt(r.atk)} ／ 最大HP +${fmt(r.hp)}（全員の基礎値に足してから%を掛けます）</p></div>`;
-  }
 
   // ---- ロスレコ・音符 ----
   // ロスレコの名前。Wikiから自動で入れたもの（ゲーム内では未確認）は「*」を付ける。★の数も添える
@@ -488,7 +482,11 @@
       }).join("");
       return `<div class="pot core" style="grid-column:1/-1"><div class="ph"><b>${esc(lrName(r))}</b> <span class="muted">コア効果</span>${rankSel}</div>${core}${as ? `<div class="muted" style="margin-top:6px">アシスト効果（音符のレベルで自動で解放）</div>${as}` : ""}</div>`;
     }).join("");
-    return `<div class="wide"><h3>ロスレコ・音符</h3>
+    const rb = E.recordBonus(G.recordLv);
+    const recOpts = (RECORD_LEVELS || []).map(x => [x[0], `Lv${x[0]}（攻撃+${x[2]} / HP+${x[3]}）`]);
+    return `<div class="wide"><h3>記録レベル</h3>
+      ${fld("記録レベル", inp("recordLv", { sel: recOpts }), `戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）`)}
+      <h3 style="margin-top:14px">ロスレコ・音符</h3>
       <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div>${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
       <p class="muted">ロスレコの基礎攻撃力・基礎HP・属性ダメージ%は、全員に入ります（属性が違うロスレコの属性ダメージは、その属性の巡遊者だけ）。コア効果・アシスト効果は、メインのものだけです。<br>
       名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。コア効果は「突破」で値を選べます。条件付きの効果は、既定では反映しません（チェックで反映）。</p>
@@ -769,7 +767,7 @@
     else if (a === "heart") h = renderHeart(b);
     else if (a === "pot") h = renderPot(b);
     else if (a === "add") h = renderAdd(b);
-    else if (V.panel === "record") h = renderRecord();
+    else if (V.panel === "record") h = renderLr();   // 記録レベルは「記録・ロスレコ・音符」のタブの中
     else if (V.panel === "lr") h = renderLr();
     else if (V.panel === "gimmick") h = renderGimmick();
     else if (V.panel === "adjust") h = renderAdjust();
