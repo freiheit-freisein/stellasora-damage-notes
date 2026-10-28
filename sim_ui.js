@@ -107,7 +107,7 @@
       <div class="foot"><button class="btn-add" data-act="dlg-close">閉じる</button></div>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
-    $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比べ中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "今の値で比べ直す" : "この値と比べる"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比べるのをやめる</button>` : "");
+    $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比較中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "再度比較する" : "比較"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比較を止める</button>` : "");
   }
 
   // ---- 倍率タイル（種類を問わない共通の倍率） ----

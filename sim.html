@@ -72,6 +72,7 @@
   .res-row .tile:first-child small { font-size: 10px; }
   .tile.pink { position: relative; }
   .drill-hint { position: absolute; right: 10px; bottom: 6px; font-size: 11px; font-weight: 700; color: #B05A70; }
+  .cmpbar { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin: 0 0 8px; }   /* 比較のボタンは、見出しとは別の行 */
   .cmp-on { font-size: 11px; font-weight: 900; padding: 0 8px; border-radius: 999px; background: #4B5082; color: #fff; }
   .mult-sum { font-size: 12px; font-weight: 700; color: var(--muted); margin-left: 8px; }
   .res-row .tile { min-height: 74px; }
@@ -136,8 +137,8 @@
   /* 巡遊者の画面: 列の見出しに属性の色の線、スキルLvは2列×2行、心相・徽章・素質・その他のボタンに今の状態 */
   .ch-h { padding-bottom: 6px; border-bottom: 3px solid var(--elc, var(--indigo)); }
   .stp-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
-  .stp-row { display: flex; align-items: center; gap: 10px; }
-  .stp-lab { width: 92px; flex: none; font-size: 13px; font-weight: 700; color: var(--indigo); }
+  .stp-row { display: flex; align-items: center; gap: 8px; }
+  .stp-lab { width: 112px; flex: none; font-size: 13px; font-weight: 700; color: var(--indigo); }
   .stp-note { font-size: 11px; }
   .stp { display: inline-flex; align-items: stretch; height: 38px; border: 2px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; flex: none; }
   .stp-b { width: 36px; border: 0; background: var(--surface-soft); color: var(--indigo); font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; }
@@ -326,6 +327,7 @@
     .lr-line { grid-template-columns: 52px 64px 54px minmax(0, 1fr) 72px; }
     .notes-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
     .fld { grid-template-columns: 100px minmax(0, 1fr); }
+    .stp-lab { width: 100px; }
     .res-row { gap: 6px; margin-bottom: 6px; }
     .wide > table { display: block; overflow-x: auto; }
     #drill td, #drill th { white-space: normal; overflow: visible; font-size: 11px; }
@@ -357,7 +359,7 @@
     <div class="panel"><div class="tabs" id="selectors" role="tablist"></div><div id="display"></div></div>
   </div>
   <div id="right">
-    <div class="panel"><h2><span class="en">RESULT</span>結果<span style="flex:1"></span><span id="unitbar" class="unitbar" role="group" aria-label="ダメージの表記"></span><span id="cmpbar" style="display:inline-flex;gap:6px;align-items:center"></span></h2><div id="result"></div></div>
+    <div class="panel"><h2><span class="en">RESULT</span>結果<span style="flex:1"></span><span id="unitbar" class="unitbar" role="group" aria-label="ダメージの表記"></span></h2><div id="cmpbar" class="cmpbar"></div><div id="result"></div></div>
     <div class="panel" id="drillPanel" style="display:none"><h2><span class="en">DETAIL</span><span id="drillTitle">内訳</span><span style="flex:1"></span><button type="button" class="help-btn" data-act="drillclose">閉じる</button></h2><div id="drill"></div></div>
   </div>
 </div>
