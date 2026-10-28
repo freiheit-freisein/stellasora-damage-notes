@@ -577,11 +577,17 @@
     t = t == null ? (cur > lo ? cur - 1 : cur + 1) : Math.min(hi, Math.max(lo, +t));
     return t === cur ? (cur > lo ? cur - 1 : cur + 1) : t;
   };
+  // 徽章の枠の短い名前: 素質のレベル上昇は素質名と値、ほかは項目名（かっこの補足は外す）と値（「HP　12%」「ナイトパンチ　+3」）
+  const embShort = (id, sl) => {
+    const o = optOf(sl.k); if (!o) return "";
+    const v = qVal(o, sl.q), vt = v != null ? "　" + valTxt(o, v) : "";
+    return (o.type === "potLv" && sl.t ? JA(sl.t, id) : o.label.replace(/（.*?）/g, "")) + vt;
+  };
   function calcContrib() {
     const d0 = dmgParts(G), t0 = sum3(d0), items = [];
-    const drop = (kind, label, slot, fn, cmp) => {
+    const drop = (kind, label, slot, fn, cmp, uid) => {
       const g = clone(G); fn(g); const d = dmgParts(g);
-      items.push({ kind, label, cmp, team: t0 > 0 ? 1 - sum3(d) / t0 : 0 });
+      items.push({ kind, label, cmp, uid: kind + "|" + (uid || label), team: t0 > 0 ? 1 - sum3(d) / t0 : 0 });
     };
     // 比べる値つきの項目（lo〜hi の範囲。今と同じ値は飛ばす）
     const cmpItem = (kind, label, slot, key, cur, lo, hi, unit, set) => {
@@ -606,7 +612,7 @@
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
         drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章`, k, g => { g.chars[id].embOn[i] = 0; });
-        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章 ${slotLabel(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }); });
+        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
       });
     });
     // ロスレコ（メインのものだけ効果がある）: アシスト効果はLv（0〜5。未発動も、上げたときを見られる）、コア効果は突破（1〜6）
@@ -627,7 +633,7 @@
   function getContrib() {
     const gk = JSON.stringify(G), key = gk + JSON.stringify(V.cmp || {});   // 入力が変わっていなければ、前の結果を使う
     if (contribCache.key !== key) {
-      const items = calcContrib(), id = x => x.kind + "|" + x.label;
+      const items = calcContrib(), id = x => x.uid;
       // 並び順は、ビルドの入力が変わったときだけ決め直す（◀▶で比べる値を変えても、行が動かないように）
       if (orderCache.key !== gk) orderCache = { key: gk, ids: items.map(id) };
       const pos = x => { const i = orderCache.ids.indexOf(id(x)); return i < 0 ? 1e9 : i; };
