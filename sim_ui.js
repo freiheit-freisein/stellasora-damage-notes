@@ -583,10 +583,17 @@
     items.sort((a, b) => Math.abs(b.team) - Math.abs(a.team));
     return items;
   }
-  let contribCache = { key: "", items: null };
+  let contribCache = { key: "", items: null }, orderCache = { key: "", ids: [] };
   function getContrib() {
-    const key = JSON.stringify(G) + JSON.stringify(V.cmp || {});   // 入力が変わっていなければ、前の結果を使う
-    if (contribCache.key !== key) contribCache = { key, items: calcContrib() };
+    const gk = JSON.stringify(G), key = gk + JSON.stringify(V.cmp || {});   // 入力が変わっていなければ、前の結果を使う
+    if (contribCache.key !== key) {
+      const items = calcContrib(), id = x => x.kind + "|" + x.label;
+      // 並び順は、ビルドの入力が変わったときだけ決め直す（◀▶で比べる値を変えても、行が動かないように）
+      if (orderCache.key !== gk) orderCache = { key: gk, ids: items.map(id) };
+      const pos = x => { const i = orderCache.ids.indexOf(id(x)); return i < 0 ? 1e9 : i; };
+      items.sort((a, b) => pos(a) - pos(b));
+      contribCache = { key, items };
+    }
     return contribCache.items;
   }
   // ---- ビルドカード（画像）。1人1列で3人分、下にロスレコと音符。絵は使わず、名前・属性の色・数字で描く ----
