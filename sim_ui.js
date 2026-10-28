@@ -336,7 +336,7 @@
     const m = /Build (\d)/i.exec(title);
     return (role === "main" ? "主力" : "支援") + "・" + (m ? "特化構築" + m[1] : "汎用");
   }
-  // ---- 素質（巡遊者を上で切り替え、コア素質と通常素質をカードで選ぶ）----
+  // ---- 素質（コア素質と通常素質をカードで選ぶ）----
   // 計算は今までと同じ入力（pots2 / pots / sup）をそのまま使う。画面で選べるLvは0〜6（前の入力で7以上が入っているものは、そのまま残す）
   const POT_LV_MAX = 6, CORE_MAX = 2;
   // 1人分の素質の一覧: { name, en, core, lv, path, desc, tags, ctl, grp, bonus }
@@ -377,11 +377,6 @@
     if (!SLOTS.some(s => s[0] === k)) k = "main";
     const id = G.team[k], c = chOf(id), list = potItems(k), cnt = potCount(list);
     const STAR = fill => `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="${fill}"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>`;
-    // 巡遊者の切り替え
-    const members = SLOTS.map(([k2, l]) => {
-      const id2 = G.team[k2], n = potCount(potItems(k2)), on = k2 === k;
-      return `<button type="button" role="tab" class="pz-mem${on ? " on" : ""}" aria-selected="${on}" data-act="panel:pot:${k2}" title="${l}"><b>${esc(chOf(id2).jp)}</b><span class="pz-sum">コア ${n.core}/${CORE_MAX} · 通常 ${n.normal}個</span></button>`;
-    }).join("");
     const tags = x => x.tags.length ? `<div class="pz-tags">${x.tags.join("")}</div>` : "";
     // コア素質: カード全体がボタン。1人2つまで（前の入力で3つ以上あるときは、外すことだけできる）
     const full = cnt.core >= CORE_MAX;
@@ -416,7 +411,7 @@
       : "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「その他」に手で入れられます。";
     return `<div class="pz">
       <div class="pz-main">
-        <div class="pz-mems" role="tablist" aria-label="巡遊者">${members}</div>
+        <h3 style="margin:0">${esc(c.jp)}：素質</h3>
         <div class="pz-bar">
           <p class="muted" style="margin:0;font-size:12px">ここで選べるのは Lv6 まで。徽章の「＋」は徽章画面の入力から自動で足されます（Lv7〜9 は推定値）。</p></div>
         ${coreSec}${normSec}
