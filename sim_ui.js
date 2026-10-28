@@ -3,6 +3,11 @@
   const S = window.SIM, E = S.engine;
   const $ = id => document.getElementById(id);
   const fmt = n => (n == null || !isFinite(n)) ? "—" : Math.round(n).toLocaleString("ja-JP");
+  // 結果のダメージの表記: そのまま（19,875,037）／K（19,875.0K）／M（19.88M）。このブラウザに覚える
+  let dmgUnit = "raw";
+  try { dmgUnit = localStorage.getItem("stellasora-sim-unit") || "raw"; } catch (e) { /* 無視 */ }
+  const dmgF = n => (n == null || !isFinite(n)) ? "—" : dmgUnit === "k" ? (n / 1e3).toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "K"
+    : dmgUnit === "m" ? (n / 1e6).toLocaleString("ja-JP", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "M" : fmt(n);
   const f3 = n => (n == null || !isFinite(n)) ? "—" : (Math.round(n * 1000) / 1000).toString();
   const pct = n => (Math.round(n * 1000) / 10) + "%";
   const clone = o => JSON.parse(JSON.stringify(o));
@@ -98,6 +103,7 @@
         <select id="bsel"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
         <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></div></div>
       <div class="foot"><button class="btn-add" data-act="dlg-close">閉じる</button></div>`;
+    $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
   }
 
@@ -830,7 +836,7 @@
       }
       return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>${fmt(sm.mult)}%</b>
         <small>種別ダメージ ×${f3(sm.B)}</small><small>会心率 ${pct(sm.rate)} ／ 会心ダメージ ${pct(sm.critDmg)}</small><small>会心期待値倍率 ×${f3(sm.expMult)}</small></div>
-        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} Dmg</span><b>${fmt(sm.exp)}</b><small>非会心 ${fmt(sm.non)} ／ 会心 ${fmt(sm.crit)}</small>${cmp}</div></div>`;
+        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} Dmg</span><b>${dmgF(sm.exp)}</b><small>非会心 ${dmgF(sm.non)} ／ 会心 ${dmgF(sm.crit)}</small>${cmp}</div></div>`;
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
@@ -849,10 +855,10 @@
       <tr><th>種別<br>ヒット</th><th>倍率<br>回数</th><th>非会心<br>会心</th><th>期待値<br><span class="nb">会心率</span><span class="nb">／会心ダメ</span></th></tr>
       ${sm.rows.map(r => {
         const tip = esc(`小計 ${fmt(r.total)}／属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}`);
-        return `<tr class="d1" title="${tip}"><td>${E.TYPE_NAME[r.type]}</td><td>${r1(r.mult)}%</td><td>${fmt(r.normal)}</td><td class="ex">${fmt(r.avg)}</td></tr>
-        <tr class="d2" title="${tip}"><td>${esc(r.name)}</td><td>×${r.count} hit</td><td>${fmt(r.crit)}</td><td><span class="nb">${pct(r.rate)}</span><span class="nb">／${pct(r.critDmg != null ? r.critDmg : r.crit / r.normal)}</span></td></tr>`;
+        return `<tr class="d1" title="${tip}"><td>${E.TYPE_NAME[r.type]}</td><td>${r1(r.mult)}%</td><td>${dmgF(r.normal)}</td><td class="ex">${dmgF(r.avg)}</td></tr>
+        <tr class="d2" title="${tip}"><td>${esc(r.name)}</td><td>×${r.count} hit</td><td>${dmgF(r.crit)}</td><td><span class="nb">${pct(r.rate)}</span><span class="nb">／${pct(r.critDmg != null ? r.critDmg : r.crit / r.normal)}</span></td></tr>`;
       }).join("")}
-      <tr class="sum"><td>合計</td><td>${fmt(sm.mult)}%</td><td>${big(sm.non)}<br>${big(sm.crit)}</td><td>${fmt(sm.exp)}</td></tr></table>`;
+      <tr class="sum"><td>合計</td><td>${fmt(sm.mult)}%</td><td>${dmgUnit === "raw" ? big(sm.non) : dmgF(sm.non)}<br>${dmgUnit === "raw" ? big(sm.crit) : dmgF(sm.crit)}</td><td>${dmgF(sm.exp)}</td></tr></table>`;
   }
 
   function renderAll() {
@@ -936,6 +942,7 @@
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a.indexOf("unit:") === 0) { dmgUnit = a.slice(5); try { localStorage.setItem("stellasora-sim-unit", dmgUnit); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a.indexOf("plv|") === 0) { const m = /^plv\|(\d+)\|(.+)$/.exec(a); if (m) { setPath(m[2], +m[1]); renderAll(); } }   // 素質のLv
     else if (a.indexOf("pcore|") === 0) {   // コア素質: 取得／外す（1人2つまで。外すのはいつでもできる）
       const path = a.slice(6), on = +getPath(path) > 0, k = (V.panel.split(":")[1]) || "main";
