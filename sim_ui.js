@@ -3,11 +3,11 @@
   const S = window.SIM, E = S.engine;
   const $ = id => document.getElementById(id);
   const fmt = n => (n == null || !isFinite(n)) ? "—" : Math.round(n).toLocaleString("ja-JP");
-  // 結果のダメージの表記: そのまま（19,875,037）／K（19,875.0K）／M（19.88M）。このブラウザに覚える
+  // 結果のダメージの表記: そのまま（19,875,037）／K（19,875K）／M（19.9M）。このブラウザに覚える
   let dmgUnit = "raw";
   try { dmgUnit = localStorage.getItem("stellasora-sim-unit") || "raw"; } catch (e) { /* 無視 */ }
-  const dmgF = n => (n == null || !isFinite(n)) ? "—" : dmgUnit === "k" ? (n / 1e3).toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "K"
-    : dmgUnit === "m" ? (n / 1e6).toLocaleString("ja-JP", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "M" : fmt(n);
+  const dmgF = n => (n == null || !isFinite(n)) ? "—" : dmgUnit === "k" ? (n / 1e3).toLocaleString("ja-JP", { maximumFractionDigits: 0 }) + "K"
+    : dmgUnit === "m" ? (n / 1e6).toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "M" : fmt(n);
   const f3 = n => (n == null || !isFinite(n)) ? "—" : (Math.round(n * 1000) / 1000).toString();
   const pct = n => (Math.round(n * 1000) / 10) + "%";
   const clone = o => JSON.parse(JSON.stringify(o));
