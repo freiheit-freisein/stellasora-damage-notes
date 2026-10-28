@@ -539,11 +539,65 @@
     });
     S.NOTE_KEYS.forEach(n => { const v = (full.notes || {})[n]; if (v > 0) drop("音符", `${n.replace("の音符", "")} ${v}`, g => { g.notes[n] = 0; }); });
     sc.items.sort((a, b) => b.v - a.v);
+    sc.embList = embScores(full, all);
     return sc;
   }
+  // 徽章1枚ごとのスコアとランク。スコア = その徽章を外したときに、編成の合計ダメージが何%下がるか（標準の条件）。
+  // 理想 = 同じ種類（初級・中級・上級）で、4枠すべてに一番効く項目を最高の品質で入れた徽章（同じ項目は1枚に1つまで。1枠ずつ一番伸びるものを選ぶ）。
+  // ランク = 理想に対する割合（SS 90%以上・S 75%・A 60%・B 45%・C それ未満）
+  const GRADES = [[0.9, "SS"], [0.75, "S"], [0.6, "A"], [0.45, "B"], [0, "C"]];
+  const maxQ = o => isLv(o) ? "rainbow3" : (o.tiers.rainbow != null ? "rainbow" : "gold");   // レベル上昇は虹+3（汎用素質も、セイナの徽章で+3を確認済み）
+  function embScores(full, all) {
+    const out = [];
+    SLOTS.forEach(([k]) => {
+      const id = full.team[k], cs = full.chars[id];
+      (cs.emb || []).forEach((e, i) => {
+        const off = clone(full); off.chars[id].embOn[i] = 0;
+        const dOff = teamDmg(off);
+        const user = cs.embOn[i] ? all / dOff - 1 : 0;
+        // 理想の徽章を、1枠ずつ選ぶ
+        const g = clone(full); g.chars[id].embOn[i] = 1;
+        const slots = g.chars[id].emb[i].slots;
+        slots.forEach(sl => { sl.k = ""; delete sl.t; });
+        const used = [];
+        for (let j = 0; j < slots.length; j++) {
+          let best = null;
+          EMBLEM_OPTIONS.filter(o => (!o.only || o.only === e.kind) && used.indexOf(o.key) < 0 && !/derived|def/i.test(o.key)).forEach(o => {
+            const ts = o.type === "potLv" ? potTargets(id, o.key).map(x => x.en) : [null];
+            ts.forEach(t => {
+              slots[j] = { k: o.key, q: maxQ(o), cat: catOfKey(o.key) }; if (t) slots[j].t = t;
+              const d = teamDmg(g);
+              if (!best || d > best.d) best = { d, sl: clone(slots[j]) };
+            });
+          });
+          if (!best) break;
+          slots[j] = best.sl; used.push(best.sl.k);
+        }
+        const ideal = teamDmg(g) / dOff - 1;
+        const ratio = ideal >= 0.005 ? user / ideal : null;   // 理想でも0.5%未満しか動かない徽章は、ランクを付けない（—）
+        out.push({ id, k, i, kind: e.kind, user, ideal, ratio, grade: ratio == null ? "—" : GRADES.find(x => ratio >= x[0])[1], slots: cs.emb[i].slots.filter(sl => sl.k), on: !!cs.embOn[i], idealSlots: slots.filter(sl => sl.k) });
+      });
+    });
+    return out;
+  }
+  let scoreCache = { key: "", sc: null };
   function renderScore() {
     let sc;
-    try { sc = calcScore(); } catch (e) { return `<div class="wide"><h3>スコア</h3><p class="muted">計算できませんでした（${esc(e.message)}）</p></div>`; }
+    try {
+      const key = JSON.stringify(scoreEnv(G));   // 入力が変わっていなければ、前の結果を使う（理想の徽章の計算は少し重い）
+      if (scoreCache.key !== key) scoreCache = { key, sc: calcScore() };
+      sc = scoreCache.sc;
+    } catch (e) { return `<div class="wide"><h3>スコア</h3><p class="muted">計算できませんでした（${esc(e.message)}）</p></div>`; }
+    const gradeTag = gr => `<span class="grade g-${gr}">${gr}</span>`;
+    const embBlock = SLOTS.map(([k, l]) => {
+      const list = sc.embList.filter(x => x.k === k);
+      if (!list.length) return "";
+      const id = list[0].id;
+      return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${list.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind)).map(x => `<div class="embsc">
+        <div class="embsc-h">${gradeTag(x.grade)}<b>${KIND_NAME[x.kind] || ""}徽章</b><span class="muted">スコア</span> <b>${x.on ? "+" + (Math.round(x.user * 1000) / 10).toFixed(1) + "%" : "未装備"}</b><span class="muted">／理想 +${(Math.round(x.ideal * 1000) / 10).toFixed(1)}%${x.ratio != null ? `（${Math.round(x.ratio * 100)}%）` : ""}</span></div>
+        <div class="embsc-s">${x.on && x.slots.length ? x.slots.map(sl => esc(slotLabel(id, sl))).join(" ／ ") : '<span class="muted">（枠なし）</span>'}</div>
+        <div class="embsc-i muted">理想：${x.idealSlots.map(sl => esc(slotLabel(id, sl))).join(" ／ ")}</div></div>`).join("")}</div>`;
+    }).join("");
     const p1 = x => (Math.round(x * 1000) / 10).toFixed(1);
     const card = (label, x, sub) => `<div class="tile"><span>${label}</span><b>${Math.round(x * 100)}</b><small>${x >= 1 ? "+" : ""}${p1(x - 1)}%${sub ? "／" + sub : ""}</small></div>`;
     const rows = kind => { const it = sc.items.filter(x => x.kind === kind); return it.length ? `<table class="stt"><tr><th style="text-align:left">項目</th><th>外すと</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}" style="width:auto;white-space:normal">${esc(x.label)}</td><td style="text-align:right;width:90px">${x.v > 0.0005 ? "−" + p1(x.v / (1 + x.v)) + "%" : "影響なし"}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
@@ -556,7 +610,11 @@
         <div class="box"><b>素質</b>（1つ外すと）${rows("素質")}</div>
         <div class="box"><b>徽章</b>（1枠外すと）${rows("徽章")}</div>
         <div class="box"><b>音符</b>（1種類外すと）${rows("音符")}</div>
-      </div></div>`;
+      </div>
+      <h3 style="margin:14px 0 6px;font-size:15px">徽章ごとのスコアとランク</h3>
+      <p class="muted" style="margin:0 0 6px">スコア＝その徽章を外したときに、編成の合計ダメージが何%下がるか（上と同じ標準の条件）。理想＝同じ種類で、4枠すべてに一番効く項目を最高の品質で入れた徽章（同じ項目は1枚に1つまで）。ランクは理想に対する割合で、SS 90%以上・S 75%以上・A 60%以上・B 45%以上・C それ未満です。理想でも0.5%未満しか動かない徽章（支援で、編成の合計にほとんど効かないものなど）は「—」です。<br>
+      理想は「4枠とも最高の品質」なので、ゲーム内で実際に作れる徽章より高めです。</p>
+      <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">${embBlock}</div></div>`;
   }
 
   function renderDisplay() {
