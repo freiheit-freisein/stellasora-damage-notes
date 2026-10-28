@@ -359,8 +359,8 @@
         if (!sp) it.tags.push(tg("未反映"));
         else {
           const ctl = [];
-          if (!sp.e.length) it.tags.push(tg("火力に影響なし"));
-          else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; ctl.push(`<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`); }
+          if (!sp.e.length) it.noeff = tg("火力に影響なし");   // 「反映」と同じ場所に出す
+          else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
           if (sp.off) it.tags.push(tg("既定は反映しない"));
           const seen = {};
           sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${inp(`${p}.pstk.${sk}`, { min: 0, max: e.stk, step: 1, w: 56 })}<span class="muted">/${e.stk}</span></span>`); } });
@@ -393,13 +393,13 @@
       // カードの上（名前・スイッチ・説明）が押せるボタン。「反映」などはボタンの外（カードの中の下）に置く
       return `<div class="pz-core${on ? " on" : ""}${dis ? " dis" : ""}" title="${esc(x.en)}"><button type="button" class="pz-ctog" aria-pressed="${on}" data-act="pcore|${x.path}"${dis ? " disabled" : ""}>
         <span class="pz-row">${STAR("#F4C84A")}<span class="pz-name">${esc(x.name)}</span>${x.grp ? `<span class="pz-grp">${x.grp}</span>` : ""}<span class="pz-sw${on ? " on" : ""}"><span></span></span></span>
-        <span class="pz-desc">${esc(x.desc)}</span></button>${tags(x)}${on && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}</div>`;
+        <span class="pz-desc">${esc(x.desc)}</span></button>${tags(x)}${(on && (x.onc || x.ctl)) || x.noeff ? `<div class="pz-ctl">${on ? (x.onc || "") + x.ctl : ""}${x.noeff || ""}</div>` : ""}</div>`;
     };
     // 通常素質: Lv0〜6のボタン。徽章の「＋」は、名前の行の右端（6のボタンの上）に出す
     const normCard = x => {
       const btns = Array.from({ length: POT_LV_MAX + 1 }, (_, n) => `<button type="button" class="pz-lv${x.lv === n ? " on" : ""}" aria-pressed="${x.lv === n}" data-act="plv|${n}|${x.path}">${n}</button>`).join("");
       return `<div class="pz-norm${x.lv > 0 ? " on" : ""}" title="${esc(x.en)}">
-        <div class="pz-row">${STAR("#9AA0C8")}<span class="pz-name">${esc(x.name)}</span>${x.bonus ? `<span class="pz-emb${x.lv > 0 ? " on" : ""}">徽章 +${x.bonus}</span>` : ""}</div>
+        <div class="pz-row">${STAR("#9AA0C8")}<span class="pz-name">${esc(x.name)}</span><span class="pz-lvt${x.lv ? "" : " off"}">${x.lv ? `Lv${x.lv}` : ""}${x.bonus ? `（徽章+${x.bonus}）` : ""}</span><span style="flex:1"></span>${x.lv > 0 && x.onc ? x.onc : (x.noeff || "")}</div>
         <div class="pz-row"><div class="pz-lvs" role="group" aria-label="${esc(x.name)}のLv">${btns}</div></div>
         ${x.lv > POT_LV_MAX ? `<div class="muted" style="font-size:11px">前の入力で Lv${x.lv} が入っています（ボタンを押すと Lv0〜6 に変わります）</div>` : ""}
         ${tags(x)}${x.lv > 0 && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}
