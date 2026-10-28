@@ -236,10 +236,10 @@
       <div class="grid-in">
         ${fld("基礎攻撃力 加算", inp(`${p}.atkFlat`, { w: 100 }), "掛け算の前")}${fld("基礎HP 加算", inp(`${p}.hpFlat`, { w: 100 }), "掛け算の前")}
         ${fld("攻撃力% 加算", pin("atkPct"), "%")}${fld("最大HP% 加算", pin("hpPct"), "%")}
-        ${fld(c.el + "属性ダメ 加算", pin("elem"))}${fld("通常ダメ 加算", pin("basic"))}
-        ${fld("スキルダメ 加算", pin("skill"))}${fld("必殺ダメ 加算", pin("ult"))}
-        ${fld("印ダメ 加算", pin("mark"))}${fld("会心率 加算", pin("critRate"))}
-        ${fld("会心ダメ 加算", pin("critDmg"))}${fld("貫通 加算", inp(`${p}.pen`, { w: 100 }))}
+        ${fld(c.el + "属性ダメージ 加算", pin("elem"))}${fld("通常攻撃ダメージ 加算", pin("basic"))}
+        ${fld("スキルダメージ 加算", pin("skill"))}${fld("必殺技ダメージ 加算", pin("ult"))}
+        ${fld("印ダメージ 加算", pin("mark"))}${fld("会心率 加算", pin("critRate"))}
+        ${fld("会心ダメージ 加算", pin("critDmg"))}${fld("貫通 加算", inp(`${p}.pen`, { w: 100 }))}
       </div><p class="muted">割合は「12」で 12% です。基礎攻撃力・基礎HP・貫通は、そのままの数値です。</p></div></div>`;
   }
   // ---- スキル（バフ効果の反映）----
@@ -262,7 +262,7 @@
       body += `<div class="pot core"><b>主力スキル</b><div>バブルフロッグがダメージを与えると、チームの攻撃力 +${fv}%（6秒・最大5重）</div><div class="lv">重複数 ${inp("willowFrog", { min: 0, max: 5, step: 1, w: 60 })}<span class="muted">/5（ウィロー以外の味方に反映）</span></div></div>
         <div class="pot core"><b>必殺技</b><div>チームの攻撃力 +${uv}%（20秒・最大5重）</div><div class="lv">重複数 ${inp("willowUlt", { min: 0, max: 5, step: 1, w: 60 })}<span class="muted">/5（ウィロー以外の味方に反映）</span></div></div>`;
     }
-    if (!body) body = '<span class="muted">このキャラの、火力に関わるスキルのバフ効果は、ありません（または未登録です）。</span>';
+    if (!body) body = '<span class="muted">この巡遊者の、火力に関わるスキルのバフ効果は、ありません（または未登録です）。</span>';
     return `<h3 style="margin:0 0 6px;font-size:14px">スキルのバフ効果</h3><p class="muted">スキルLv: ${lvs}（スキルLvは「巡遊者」の欄で変えます）</p>
       <div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">${body}</div>
       ${helpTxt("skillfx", "主力は主力スキル・必殺技、支援は支援スキルのバフだけ使えます。", "値はスキルLvで変わります。ここに無いバフは、下の加算に入れてください。")}`;
@@ -346,7 +346,7 @@
       const un = (cs.talent || 0) >= h.n * 10, key = "heart" + h.n, onv = (cs.pon || {})[key], on = onv == null ? !h.off : onv;
       return `<div class="pot${un ? " core" : ""}"><b>${h.n} ${esc(h.name)}</b>${un ? '<span class="tag-ok">解放済み</span>' : '<span class="tag-ng">未解放</span>'}
         <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}</div>`;
-    }).join("")}</div>` : '<p class="muted">このキャラの、心相の戦闘中の効果は、まだ登録していません。反映したい効果は「その他」に入れてください。</p>';
+    }).join("")}</div>` : '<p class="muted">この巡遊者の、心相の戦闘中の効果は、まだ登録していません。反映したい効果は「その他」に入れてください。</p>';
     return `<div class="wide"><h3>${esc(c.jp)}：心相</h3>
       ${fld("心相", `<div class="pz-lvs seg" role="group" aria-label="心相">${Array.from({ length: 50 / (rar >= 5 ? 10 : 5) + 1 }, (_, i) => i * (rar >= 5 ? 10 : 5)).map(v => `<button type="button" class="pz-lv${(+cs.talent || 0) === v ? " on" : ""}" aria-pressed="${(+cs.talent || 0) === v}" data-act="plv|${v}|${p}.talent">${rar >= 5 ? v / 10 + "凸" : v / 10}</button>`).join("")}</div>`, rar >= 5 ? "" : "星4は5段階ずつ（0.5凸きざみ）")}
       <p class="note">段階ごとのステータス: ${stat}</p>
@@ -378,12 +378,12 @@
         const sp = spec && spec[x.name], key = spec ? S.potKey(x.name) : x.name.replace(/[^A-Za-z0-9]/g, "_"), core = x.type === 1;
         const it = { name: JA(x.name, id) + (sp && (sp.st === "auto" || sp.st === "draft") ? "*" : ""), en: x.name, core, lv: +((cs.pots2 || {})[key] || 0), path: `${p}.pots2.${key}`,
           desc: sp ? sp.txt : "効果がまだ入っていません", tags: [], ctl: "", grp: bn(g), bonus: ex.pot[x.name] || 0 };
-        if (!sp) it.tags.push(tg("未反映"));
+        if (!sp) it.tags.push(tg("計算に未対応"));
         else {
           const ctl = [];
           if (!sp.e.length) it.noeff = tg("火力に影響なし");   // 「反映」と同じ場所に出す
           else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
-          if (sp.off) it.tags.push(tg("既定は反映しない"));
+          if (sp.off) it.tags.push(tg("条件付き（既定はオフ）"));
           const seen = {};
           sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${stepper(`${p}.pstk.${sk}`, 0, e.stk, e.stk, "sm")}<span class="muted">/${e.stk}</span></span>`); } });
           sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${stepper(`${p}.pcnt.${key}#${ei}`, 0, 99, e.c, "sm")}</span>`); });
@@ -427,10 +427,10 @@
       ${cores.length ? `<div class="pz-cgrid">${cores.map(coreCard).join("")}</div>` : '<p class="muted">ありません</p>'}</section>`;
     const normSec = `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
       ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
-    const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「最大スタック時」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（最大スタック）も乗ります。"
+    const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「重複数が最大のとき」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（重複数は最大）も乗ります。"
       : (id === "nazuka" || id === "eleanor") ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
       : S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。"
-      : "このキャラの素質の効果は、まだ式に入れていません。反映したい効果は「その他」に手で入れられます。";
+      : "この巡遊者の素質の効果は、まだ計算に入れていません。反映したい効果は「その他」に手で入れられます。";
     return `<div class="pz">
       <div class="pz-main">
         <h3 style="margin:0">${esc(c.jp)}：素質</h3>
@@ -481,11 +481,11 @@
     const fxHtml = (G.lrMain || []).filter(Boolean).map(id => {
       const fx = S.LR_FX[id], r = L.find(x => x.id === id);
       if (!r) return "";
-      if (!fx) return `<div class="pot"><b>${esc(lrName(r))}</b><span class="tag-ng">効果は未反映（基礎攻撃・基礎HP・属性ダメージだけ反映）</span></div>`;
+      if (!fx) return `<div class="pot"><b>${esc(lrName(r))}</b><span class="tag-ng">効果は計算に未対応（基礎攻撃力・基礎HP・属性ダメージだけ計算に入れます）</span></div>`;
       const item = (key, it, lv, mul) => {
         let txt = typeof it.txt === "function" ? it.txt(lv) : it.txt;
         if (mul && mul !== 1) txt = txt.replace(/\+([0-9.]+)%/g, (m0, n) => "+" + Math.round(+n * mul * 100) / 100 + "%");   // 手で入れたロスレコの突破
-        if (it.skip) return `<div style="margin:3px 0;color:var(--muted)">${esc(txt)} <span class="tag-ng">計算に未反映</span></div>`;
+        if (it.skip) return `<div style="margin:3px 0;color:var(--muted)">${esc(txt)} <span class="tag-ng">計算に未対応</span></div>`;
         const stk = (it.e || []).find(e => e.stk > 1);
         const isOn = (G.lrOn || {})[key] == null ? !it.off : (G.lrOn || {})[key];
         const tog = it.off ? ` 反映 <input type="checkbox" data-p="lrOn.${key}" data-t="b"${isOn ? " checked" : ""}>` : (it.need ? ` <span class="muted">条件: ${(S.LR_COUNTS.find(c => c.key === it.need[0]) || {}).label} が ${it.need[1]} 以上</span>` : (it.n ? ` <span class="muted">数: ${(S.LR_COUNTS.find(c => c.key === it.n) || {}).label}</span>` : ` <span class="tag-ok">常時</span>`));
@@ -519,7 +519,7 @@
       <div class="grid-in">
         ${fld("基礎攻撃力 合計", inp(m + ".baseAtk", { w: 100 }))}${fld("基礎HP 合計", inp(m + ".baseHp", { w: 100 }))}
         ${fld("属性ダメージ 合計", inp(m + ".elem", { w: 100 }), "0.66=66%")}${fld("その属性", inp(m + ".elemEl", { sel: [["", "全員"], ["光", "光"], ["水", "水"], ["風", "風"], ["火", "火"], ["地", "地"], ["闇", "闇"]], str: true }))}
-        ${fld("通常ダメ 合計", inp(m + ".basicDmg", { w: 100 }))}${fld("スキルダメ 合計", inp(m + ".skillDmg", { w: 100 }))}${fld("攻撃力% 合計", inp(m + ".atkPct", { w: 100 }))}
+        ${fld("通常攻撃ダメージ 合計", inp(m + ".basicDmg", { w: 100 }))}${fld("スキルダメージ 合計", inp(m + ".skillDmg", { w: 100 }))}${fld("攻撃力% 合計", inp(m + ".atkPct", { w: 100 }))}
       </div></div>`;
   }
 
@@ -742,8 +742,8 @@
         <span class="muted">${cardUrl ? "Xで共有は、短縮URL付きの投稿画面を開きます。画像は保存してから添付してください。入力を変えたら作り直してください。" : "3人分の徽章・素質・ロスレコ・音符を1枚の画像にします。"}</span></div>
         ${cardUrl ? `<img src="${cardUrl}" alt="ビルドカード" style="width:100%;margin-top:8px;border-radius:12px;border:2px solid var(--border)">` : ""}</div>`;
     // 3分間の回数（目安）の入力
-    const rotIn = (id, k, label, d) => fld(label, inp(`rot.${id}.${k}`, { min: 0, step: 1, w: 70, ph: d[k] == null ? "未設定" : String(d[k]) }),
-      k === "basic" ? `空欄=${d.basic}（1ローテ${d.basicSec}秒${d.basicMeasured ? "" : "・未測定"}）` : (d.ct[k] ? `空欄=${d[k]}（CD ${d.ct[k]}秒）` : "CDが分かりません。回数を入れてください"));
+    const rotIn = (id, k, label, d) => fld(label, stepper(`rot.${id}.${k}`, 0, 999, d[k] || 0),
+      k === "basic" ? `目安 ${d.basic}（1ローテ${d.basicSec}秒${d.basicMeasured ? "" : "・未測定"}）` : (d.ct[k] ? `目安 ${d[k]}（CD ${d.ct[k]}秒）` : "CDが分かりません。回数を入れてください"));
     const rotHtml = SLOTS.map(([k, l]) => {
       const id = G.team[k], d = rotDefault(id);
       const f = k === "main" ? rotIn(id, "basic", "通常1ローテ", d) + rotIn(id, "main", "主力スキル", d) + rotIn(id, "ult", "必殺技", d) : rotIn(id, "support", "支援スキル", d);
@@ -827,7 +827,7 @@
     const curVals = {};
     $("result").innerHTML = items.map(([key, label, sm, id]) => {
       const nm = esc(chOf(id).jp);
-      if (!sm) return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>—</b><small>${nm}にはこの項目がありません</small></div><div class="tile"><span>${esc(label)} Dmg</span><b>—</b></div></div>`;
+      if (!sm) return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>—</b><small>${nm}にはこの項目がありません</small></div><div class="tile"><span>${esc(label)} ダメージ</span><b>—</b></div></div>`;
       curVals[key] = sm.exp;
       let cmp = "";
       if (memo && memo.v && memo.v[key] != null) {
@@ -836,7 +836,7 @@
       }
       return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>${fmt(sm.mult)}%</b>
         <small>種別ダメージ ×${f3(sm.B)}</small><small>会心率 ${pct(sm.rate)} ／ 会心ダメージ ${pct(sm.critDmg)}</small><small>会心期待値倍率 ×${f3(sm.expMult)}</small></div>
-        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} Dmg</span><b>${dmgF(sm.exp)}</b><small>非会心 ${dmgF(sm.non)} ／ 会心 ${dmgF(sm.crit)}</small>${cmp}</div></div>`;
+        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} ダメージ</span><b>${dmgF(sm.exp)}</b><small>非会心 ${dmgF(sm.non)} ／ 会心 ${dmgF(sm.crit)}</small>${cmp}</div></div>`;
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
@@ -854,7 +854,7 @@
     $("drill").innerHTML = `<table><colgroup><col style="width:34%"><col style="width:18%"><col style="width:22%"><col style="width:26%"></colgroup>
       <tr><th>種別<br>ヒット</th><th>倍率<br>回数</th><th>非会心<br>会心</th><th>期待値<br><span class="nb">会心率</span><span class="nb">／会心ダメ</span></th></tr>
       ${sm.rows.map(r => {
-        const tip = esc(`小計 ${fmt(r.total)}／属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}`);
+        const tip = esc(`小計 ${fmt(r.total)}／属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメージ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}`);
         return `<tr class="d1" title="${tip}"><td>${E.TYPE_NAME[r.type]}</td><td>${r1(r.mult)}%</td><td>${dmgF(r.normal)}</td><td class="ex">${dmgF(r.avg)}</td></tr>
         <tr class="d2" title="${tip}"><td>${esc(r.name)}</td><td>×${r.count} hit</td><td>${dmgF(r.crit)}</td><td><span class="nb">${pct(r.rate)}</span><span class="nb">／${pct(r.critDmg != null ? r.critDmg : r.crit / r.normal)}</span></td></tr>`;
       }).join("")}
