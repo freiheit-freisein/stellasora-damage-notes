@@ -593,16 +593,16 @@
       const id = G.team[k], cs = G.chars[id], c = chOf(id), tk = TK(c.en), role = k === "main" ? "main" : "support";
       const core = new Set();   // コア素質（取得するかどうかだけ。Lvは0か1）
       ((tk && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { if (p.type === 1) core.add(S.potKey(p.name)); }));
-      const pot = (key, name, lv, max, set) => cmpItem("素質", `${c.jp}：${name}`, k, key, lv, 0, max, "Lv", set);
+      const pot = (key, name, lv, max, set) => cmpItem("素質", `${c.jp}：${name}`, k, key, lv, 0, Math.max(max, lv), "Lv", set);   // 取得できるのはLv6まで（前の入力で7以上のものは、その値まで）
       Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
         const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p;
-        pot(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], core.has(p) ? 1 : 9, (g, v) => { g.chars[id].pots2[p] = v; });
+        pot(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], core.has(p) ? 1 : POT_LV_MAX, (g, v) => { g.chars[id].pots2[p] = v; });
       });
       Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => {
         const x = (window.POTENTIALS || []).find(q => q.id === p) || {};
-        pot(`p:${id}:${p}`, x.jp || p, +cs.pots[p], x.core ? 1 : 9, (g, v) => { g.chars[id].pots[p] = v; });
+        pot(`p:${id}:${p}`, x.jp || p, +cs.pots[p], x.core ? 1 : POT_LV_MAX, (g, v) => { g.chars[id].pots[p] = v; });
       });
-      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, 9, (g, v) => { g.chars[id].sup[p].lv = v; }));
+      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, POT_LV_MAX, (g, v) => { g.chars[id].sup[p].lv = v; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
         drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章`, k, g => { g.chars[id].embOn[i] = 0; });
