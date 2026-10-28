@@ -580,6 +580,91 @@
     });
     return out;
   }
+  // ---- ビルドカード（画像）。1人1列で3人分、下にスコアと音符。絵は使わず、名前・属性の色・数字で描く ----
+  const EL_COLOR = { 光: "#E8B10F", 水: "#2BA6DE", 火: "#E5533D", 風: "#3FA86A", 地: "#A0703C", 闇: "#6B4FA0" };
+  const Q_COLOR = { green: "#4FB58A", blue: "#4E8FD6", gold: "#E3A93A", rainbow: "#C25FD0", rainbow2: "#C25FD0", rainbow3: "#C25FD0" };
+  const GRADE_COLOR = { SS: "#6C72A8", S: "#E3A93A", A: "#9B6FD6", B: "#4E8FD6", C: "#4FB58A", "—": "#B9BEDB" };
+  function shortSlot(id, sl) {
+    const o = optOf(sl.k); if (!o) return "";
+    const v = qVal(o, sl.q);
+    return o.label.replace(/（.*?）/g, "").replace("レベル上昇", "Lv") + (v != null ? " " + valTxt(o, v) : "") + (sl.t ? "（" + JA(sl.t, id) + "）" : "");
+  }
+  function drawCard(sc) {
+    const W = 1800, H = 1000, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const x = cv.getContext("2d"), F = "'Noto Sans JP', sans-serif", EN = "'Bebas Neue', 'Noto Sans JP', sans-serif";
+    const rr = (px, py, w, h, r, fill, stroke) => { x.beginPath(); x.roundRect(px, py, w, h, r); if (fill) { x.fillStyle = fill; x.fill(); } if (stroke) { x.strokeStyle = stroke; x.lineWidth = 2; x.stroke(); } };
+    const txt = (s, px, py, size, color, opt) => { opt = opt || {}; x.font = `${opt.w || 700} ${size}px ${opt.en ? EN : F}`; x.fillStyle = color; x.textAlign = opt.align || "left"; x.textBaseline = "alphabetic";
+      let t = String(s); if (opt.max) while (x.measureText(t).width > opt.max && t.length > 1) t = t.slice(0, -2) + "…"; x.fillText(t, px, py); return x.measureText(t).width; };
+    // 背景（素質ノートと同じ方眼）
+    x.fillStyle = "#F3F4FA"; x.fillRect(0, 0, W, H);
+    x.strokeStyle = "#E4E7F3"; x.lineWidth = 1.5; for (let i = 0; i <= W; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); } for (let j = 0; j <= H; j += 32) { x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); }
+    const team = [G.team.main, G.team.s1, G.team.s2], hasAuto = team.some(id => chOf(id).auto);
+    const colW = 576, gap = 18, top = 24;
+    SLOTS.forEach(([k, l], ci) => {
+      const id = G.team[k], c = chOf(id), cs = G.chars[id], col = EL_COLOR[c.el] || "#4B5082", X0 = 24 + ci * (colW + gap);
+      rr(X0, top, colW, 760, 18, "#FFFFFF", "#D9DCED");
+      // 見出し（属性の色の帯）
+      x.save(); x.beginPath(); x.roundRect(X0, top, colW, 96, [18, 18, 0, 0]); x.fillStyle = col; x.fill(); x.restore();
+      txt(l, X0 + 20, top + 32, 20, "rgba(255,255,255,.9)");
+      txt(c.jp + (c.auto ? "*" : ""), X0 + 20, top + 76, 38, "#FFFFFF", { w: 900, max: 330 });
+      const lv = cs.skillLv || {}, eb = emx(id).lv;
+      txt(`${c.el}属性`, X0 + colW - 20, top + 32, 20, "rgba(255,255,255,.9)", { align: "right" });
+      txt(`通常${(lv.basic || 10) + (eb.basic || 0)}・主力${(lv.main || 10) + (eb.main || 0)}・支援${(lv.support || 10) + (eb.support || 0)}・必殺${(lv.ult || 10) + (eb.ult || 0)}`, X0 + colW - 20, top + 60, 18, "#FFFFFF", { align: "right" });
+      txt(`信頼Lv${cs.trustLv || 0}・心相${cs.talent || 0}`, X0 + colW - 20, top + 84, 18, "#FFFFFF", { align: "right" });
+      // ステータス（戦闘中＝今の入力のまま）
+      const b = R.team[id], st = b.st, ef = b.ef;
+      const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
+      const stats = [["HP", fmt(st.hp)], ["攻撃力", fmt(batk)], ["会心率", pct(st.critRate)], ["会心ダメージ", pct(st.critDmg)], [c.el + "属性ダメージ", pct(1 + st.elemAdd + ef.W)], ["属性耐性貫通", fmt(Math.min(st.pen, 250))]];
+      stats.forEach(([n, v], i) => { const yy = top + 132 + i * 32; txt(n, X0 + 22, yy, 20, "#5F6492"); txt(v, X0 + colW - 22, yy, 22, "#1E2250", { align: "right", w: 900 }); });
+      // 徽章3枚（ランク・枠・スコア）
+      const list = sc.embList.filter(e => e.k === k).sort((a, b2) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b2.kind));
+      list.forEach((e, i) => {
+        const yy = top + 330 + i * 112;
+        rr(X0 + 14, yy, colW - 28, 102, 12, "#F6F7FC", "#E4E7F3");
+        rr(X0 + 24, yy + 12, 62, 40, 8, GRADE_COLOR[e.grade] || "#B9BEDB");
+        txt(e.grade, X0 + 55, yy + 44, 32, "#FFFFFF", { en: true, w: 400, align: "center" });
+        txt(`${KIND_NAME[e.kind] || ""}徽章`, X0 + 24, yy + 80, 18, "#4B5082");
+        txt(e.on ? "+" + (Math.round(e.user * 1000) / 10).toFixed(1) + "%" : "未装備", X0 + colW - 26, yy + 88, 18, "#5F6492", { align: "right" });
+        const ss = e.on ? cs.emb[e.i].slots.filter(sl => sl.k) : [];
+        ss.slice(0, 4).forEach((sl, j) => {
+          const sx = X0 + 104 + (j % 2) * 220, sy = yy + 30 + Math.floor(j / 2) * 30;
+          x.fillStyle = Q_COLOR[sl.q] || "#9AA0C8"; x.beginPath(); x.arc(sx, sy - 6, 5, 0, Math.PI * 2); x.fill();
+          txt(shortSlot(id, sl), sx + 10, sy, 17, "#1E2250", { max: 205, w: 500 });
+        });
+      });
+      // 素質（取得しているもの。コアを先に）
+      const t = TK(c.en), role = k === "main" ? "main" : "support", got = [];
+      ((t && t.potentials[role]) || []).forEach(g => g.potentials.forEach(p => { const lv2 = +((cs.pots2 || {})[S.potKey(p.name)] || 0); if (lv2 > 0) got.push({ n: JA(p.name, id), lv: lv2, core: p.type === 1 }); }));
+      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => got.push({ n: ((window.POTENTIALS || []).find(q => q.id === p) || {}).jp || p, lv: cs.pots[p], core: false }));
+      got.sort((a, b2) => (b2.core - a.core) || (b2.lv - a.lv));
+      txt("素質", X0 + 22, top + 676, 18, "#08808A", { w: 900 });
+      const pl = got.map(p => (p.core ? "◆" : "") + p.n + (p.core ? "" : " " + p.lv)).join("・") || "（なし）";
+      // 2行に折り返す
+      x.font = `500 17px ${F}`; let line = "", ly = top + 704, lines = 0;
+      for (const ch of pl) { if (x.measureText(line + ch).width > colW - 44) { txt(line, X0 + 22, ly, 17, "#1E2250", { w: 500 }); line = ""; ly += 26; if (++lines >= 2) break; } line += ch; }
+      if (lines < 2 && line) txt(line, X0 + 22, ly, 17, "#1E2250", { w: 500, max: colW - 44 });
+    });
+    // 下の帯: スコアと音符
+    const by = 800;
+    rr(24, by, W - 48, 176, 18, "#4B5082");
+    const sc4 = [["素質", sc.pot], ["徽章", sc.emb], ["音符", sc.note], ["合計", sc.total]];
+    sc4.forEach(([n, v], i) => { const bx = 60 + i * 230; txt(n + "スコア", bx, by + 46, 20, "#D9DCED"); txt(Math.round(v * 100).toLocaleString(), bx, by + 108, i === 3 ? 60 : 48, i === 3 ? "#F4C84A" : "#FFFFFF", { en: true, w: 400 }); });
+    const nt = S.NOTE_KEYS.map(n => { const v = (G.notes || {})[n] || 0; return v ? n.replace("の音符", "") + v : ""; }).filter(Boolean).join("  ") || "なし";
+    txt("音符", 990, by + 46, 20, "#D9DCED"); txt(nt, 990, by + 82, 22, "#FFFFFF", { max: W - 1040 });
+    txt("スコア＝素質・徽章・音符なしを100とした与ダメ（心相0・ロスレコなし・等倍の標準ボス）。徽章のランクは理想の徽章との比。" + (hasAuto ? "＊は未確認のデータ" : ""), 60, by + 150, 16, "#D9DCED", { w: 500, max: W - 520 });
+    txt("巡遊者の計算ノート", W - 64, by + 118, 30, "#FFFFFF", { align: "right", w: 900 });
+    txt("sim.stella-tool.com ・ α版", W - 64, by + 150, 18, "#D9DCED", { align: "right" });
+    return cv;
+  }
+  let cardUrl = "";
+  async function makeCard() {
+    try { await document.fonts.ready; } catch (e) { /* 無視 */ }
+    const key = JSON.stringify(scoreEnv(G));
+    if (scoreCache.key !== key) scoreCache = { key, sc: calcScore() };
+    cardUrl = drawCard(scoreCache.sc).toDataURL("image/png");
+    renderAll();
+  }
+
   let scoreCache = { key: "", sc: null };
   function renderScore() {
     let sc;
@@ -601,7 +686,12 @@
     const p1 = x => (Math.round(x * 1000) / 10).toFixed(1);
     const card = (label, x, sub) => `<div class="tile"><span>${label}</span><b>${Math.round(x * 100)}</b><small>${x >= 1 ? "+" : ""}${p1(x - 1)}%${sub ? "／" + sub : ""}</small></div>`;
     const rows = kind => { const it = sc.items.filter(x => x.kind === kind); return it.length ? `<table class="stt"><tr><th style="text-align:left">項目</th><th>外すと</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}" style="width:auto;white-space:normal">${esc(x.label)}</td><td style="text-align:right;width:90px">${x.v > 0.0005 ? "−" + p1(x.v / (1 + x.v)) + "%" : "影響なし"}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
-    return `<div class="wide"><h3>スコア（素質・徽章・音符の与ダメへの寄与）</h3>
+    const cardHtml = `<div class="box" style="margin:0 0 10px"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <b>ビルドカード</b><button class="btn-add pri" data-act="card-make" style="background:var(--accent);border-color:var(--accent);font-weight:900">${cardUrl ? "カードを作り直す" : "カードを作る"}</button>
+        ${cardUrl ? `<a class="btn-add" href="${cardUrl}" download="build-card.png" style="display:inline-flex;align-items:center;text-decoration:none">画像を保存</a><button class="btn-add xbtn" data-act="share-x">Xで共有</button>` : ""}
+        <span class="muted">${cardUrl ? "Xで共有は、短縮URL付きの投稿画面を開きます。画像は保存してから添付してください。入力を変えたら作り直してください。" : "3人分の徽章・素質・スコアを1枚の画像にします。"}</span></div>
+        ${cardUrl ? `<img src="${cardUrl}" alt="ビルドカード" style="width:100%;margin-top:8px;border-radius:12px;border:2px solid var(--border)">` : ""}</div>`;
+    return `<div class="wide"><h3>スコア（素質・徽章・音符の与ダメへの寄与）</h3>${cardHtml}
       <div class="tiles" style="grid-template-columns:repeat(4,minmax(0,1fr))">${card("素質スコア", sc.pot)}${card("徽章スコア", sc.emb)}${card("音符スコア", sc.note)}${card("合計スコア", sc.total, "3つ全部")}</div>
       <p class="muted" style="margin-top:8px">素質・徽章・音符をすべて外したダメージを <b>100</b> として、それぞれ1つだけ入れたときの値です（合計は3つ全部を入れたときで、掛け合わせの分も含みます）。<br>
       <b>標準の条件</b>：心相とロスレコは凸で人によって違うので外しています（心相0・ロスレコなし）。「その他」の加算と直接入力も使いません。重複数・反映のチェックは既定値、敵は等倍の標準ボス（防御0.5・全属性の耐性750）です。ダメージは編成の合計（主力の通常1ローテ＋主力スキル＋必殺技（印を含む）＋支援2人の支援スキル）です。<br>
@@ -782,6 +872,7 @@
     else if (a === "dlg-open") { DM.preset = DM.code = DM.url = null; renderTop(); $("shareDlg").showModal(); }
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
+    else if (a === "card-make") makeCard();
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
     else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta-closed", "1"); } catch (e) { /* 無視 */ } }
@@ -847,7 +938,7 @@
       const intent = "https://x.com/intent/post?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
       if (w) w.location.href = intent; else location.href = intent;
       DV.url = url; say("url", "Xの投稿画面を開きました");
-    }).catch(e => { if (w) w.close(); say("url", e.message, true); });
+    }).catch(e => { if (w) w.close(); shareMsg = e.message; say("url", e.message, true); });   // ポップアップの外（カードから押したとき）でも分かるよう、上部にも出す
   }
 
   // ---- 報告（α版の間、データや計算の誤りなどを送ってもらう）。送った内容はサーバーのデータベースに入り、あとで確認する。今の入力（共有コード）を添えると同じ状態を再現できる ----
