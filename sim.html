@@ -68,7 +68,12 @@
   .tag-ok { font-size: 11px; background: var(--tag-bg); color: var(--tag-text); border-radius: 999px; padding: 0 8px; font-weight: 700; margin-left: 4px; }
   .tag-ng { font-size: 11px; background: var(--pink-soft); color: var(--text); border-radius: 999px; padding: 0 8px; font-weight: 700; margin-left: 4px; }
   /* 結果 */
-  .res-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .res-row { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 10px; margin-bottom: 10px; }
+  .res-row .tile:first-child small { font-size: 10px; }
+  .tile.pink { position: relative; }
+  .drill-hint { position: absolute; right: 10px; bottom: 6px; font-size: 11px; font-weight: 700; color: #B05A70; }
+  .cmp-on { font-size: 11px; font-weight: 900; padding: 0 8px; border-radius: 999px; background: #4B5082; color: #fff; }
+  .mult-sum { font-size: 12px; font-weight: 700; color: var(--muted); margin-left: 8px; }
   .res-row .tile { min-height: 74px; }
   .cmp { font-size: 12px; font-weight: 700; }
   .cmp.up { color: #05626A; } .cmp.down { color: var(--danger); }
@@ -348,12 +353,12 @@
 <dialog id="reportDlg" class="dlg" aria-labelledby="reportDlgT"><div id="reportBody"></div></dialog>
 <div class="app">
   <div id="left">
-    <div class="panel"><h2><span class="en">MULTIPLIERS</span>共通の倍率<span class="muted" id="tilesFor"></span></h2><div class="tiles" id="tiles"></div></div>
+    <div class="panel"><h2><span class="en">MULTIPLIERS</span>共通の倍率<span class="muted" id="tilesFor"></span><span id="multSum" class="mult-sum"></span><button type="button" class="help-btn" data-act="multtoggle" id="multBtn"></button></h2><div class="tiles" id="tiles"></div></div>
     <div class="panel"><div class="tabs" id="selectors" role="tablist"></div><div id="display"></div></div>
   </div>
   <div id="right">
     <div class="panel"><h2><span class="en">RESULT</span>結果<span style="flex:1"></span><span id="unitbar" class="unitbar" role="group" aria-label="ダメージの表記"></span><span id="cmpbar" style="display:inline-flex;gap:6px;align-items:center"></span></h2><div id="result"></div></div>
-    <div class="panel" id="drillPanel" style="display:none"><h2><span class="en">DETAIL</span><span id="drillTitle">内訳</span></h2><div id="drill"></div></div>
+    <div class="panel" id="drillPanel" style="display:none"><h2><span class="en">DETAIL</span><span id="drillTitle">内訳</span><span style="flex:1"></span><button type="button" class="help-btn" data-act="drillclose">閉じる</button></h2><div id="drill"></div></div>
   </div>
 </div>
 <script src="data/trekkers.js"></script>

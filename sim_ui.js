@@ -106,10 +106,13 @@
         <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></div></div>
       <div class="foot"><button class="btn-add" data-act="dlg-close">閉じる</button></div>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
-    $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">現在値を記憶</button><button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">記憶を消す</button>`;
+    // 今の値を覚えて、そこからの増減をタイルに出す
+    $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比べ中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "今の値で比べ直す" : "この値と比べる"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比べるのをやめる</button>` : "");
   }
 
   // ---- 倍率タイル（種類を問わない共通の倍率） ----
+  let multOpen = false;
+  try { multOpen = localStorage.getItem("stellasora-sim-mult") === "1"; } catch (e) { /* 無視 */ }
   function renderTiles() {
     const id = G.team[V.tilesFor] || G.team.main;
     const o = R.team[id];
@@ -120,6 +123,11 @@
     const taken = o.ef.taken * (G.other.taken || 1) * (G.other.mult || 1) * dd.extra;
     $("tilesFor").innerHTML = SLOTS.map(([k, l]) => `<button class="sbtn${V.tilesFor === k ? " on" : ""}" data-act="tf:${k}" style="min-height:26px;padding:0 10px;font-size:12px">${l}</button>`).join(" ") + ` ${esc(c.jp)}`;
     const t = (label, val, sub) => `<div class="tile"><span>${label}</span><b>${val}</b><small>${sub || ""}</small></div>`;
+    // ふだんは1行にまとめる（計算を確かめたいときだけ開く）。開いたかどうかは、このブラウザに覚える
+    $("multBtn").textContent = multOpen ? "閉じる" : "開く";
+    $("multBtn").setAttribute("aria-expanded", multOpen);
+    $("multSum").innerHTML = multOpen ? "" : `基礎値 ${fmt(ref)}／属性 ×${f3(W)}／耐性 ×${f3(dd.res * dd.weak)}／防御 ${f3(dd.def)}／その他 ×${f3(taken)}`;
+    $("tiles").style.display = multOpen ? "" : "none";
     $("tiles").innerHTML =
       t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力") +
       t("属性倍率", "×" + f3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W)) +
@@ -836,7 +844,7 @@
       }
       return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>${fmt(sm.mult)}%</b>
         <small>種別ダメージ ×${f3(sm.B)}</small><small>会心率 ${pct(sm.rate)} ／ 会心ダメージ ${pct(sm.critDmg)}</small><small>会心期待値倍率 ×${f3(sm.expMult)}</small></div>
-        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} ダメージ</span><b>${dmgF(sm.exp)}</b><small>非会心 ${dmgF(sm.non)} ／ 会心 ${dmgF(sm.crit)}</small>${cmp}</div></div>`;
+        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} ダメージ</span><b>${dmgF(sm.exp)}</b><small>非会心 ${dmgF(sm.non)} ／ 会心 ${dmgF(sm.crit)}</small>${cmp}<span class="drill-hint">${V.drill === key ? "内訳を表示中" : "内訳 ›"}</span></div></div>`;
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
@@ -922,7 +930,9 @@
     if (a.indexOf("drill:") === 0) {
       const k = a.slice(6), phone = window.matchMedia("(max-width: 860px)").matches;
       if (phone) { V.drill = k; V.m = "drill"; } else V.drill = V.drill === k ? null : k;   // スマホは内訳のタブに切り替える
-      renderAll(); return;
+      renderAll();
+      if (!phone && V.drill) { const p = $("drillPanel"); if (p) p.scrollIntoView({ behavior: "smooth", block: "nearest" }); }   // 結果の欄の下に出るので、そこまで動く
+      return;
     }
     if (a.indexOf("m:") === 0) {
       V.m = a.slice(2);
@@ -943,6 +953,8 @@
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a === "multtoggle") { multOpen = !multOpen; try { localStorage.setItem("stellasora-sim-mult", multOpen ? "1" : "0"); } catch (e) { /* 無視 */ } renderAll(); }
+    else if (a === "drillclose") { V.drill = null; renderAll(); }
     else if (a.indexOf("help:") === 0) { V.help = V.help || {}; V.help[a.slice(5)] = !V.help[a.slice(5)]; renderAll(); }
     else if (a.indexOf("stp|") === 0) {   // −／＋ のボタン
       const m = /^stp\|(-?1)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);
