@@ -172,10 +172,10 @@
 
   // ---- 表示エリア: 巡遊者 ----
   // 数値を −／＋ で変える入力（クリックやタッチで押しやすく）。真ん中の欄は、直接打ち込むこともできる
-  function stepper(path, min, max, def) {
+  function stepper(path, min, max, def, size) {
     const v = getPath(path), cur = v == null || v === "" ? def : +v;
     const b = (d, ch, dis) => `<button type="button" class="stp-b" data-act="stp|${d}|${min}|${max}|${def}|${path}"${dis ? " disabled" : ""} aria-label="${d > 0 ? "1つ上げる" : "1つ下げる"}">${ch}</button>`;
-    return `<span class="stp">${b(-1, "−", cur <= min)}<input type="number" data-p="${path}" data-t="n" min="${min}" max="${max}" step="1" value="${cur}">${b(1, "＋", cur >= max)}</span>`;
+    return `<span class="stp${size ? " " + size : ""}">${b(-1, "−", cur <= min)}<input type="number" data-p="${path}" data-t="n" min="${min}" max="${max}" step="1" value="${cur}">${b(1, "＋", cur >= max)}</span>`;
   }
   // スキルLv（徽章の「＋」があるときは、横に → 最終的なLv）
   function lvRow(id, key, label, note) {
@@ -226,17 +226,19 @@
   }
   function renderAdd(k) {
     const id = G.team[k], c = chOf(id), p = `chars.${id}.add`;
+    // 割合の欄は「12」で12%と入れる（保存は 0.12 のまま。表示と入力のときだけ100倍）
+    const pin = key => { const v = getPath(`${p}.${key}`); return `<input type="number" data-p="${p}.${key}" data-t="pct" step="any" value="${v == null || v === "" ? "" : Math.round(+v * 1e6) / 1e4}" style="width:100px">`; };
     return `<div class="wide"><h3>${esc(c.jp)}：その他</h3>
       <div class="box">${skillSection(k)}</div>
       <div class="box"><h3 style="margin:0 0 6px;font-size:14px">加算（素質や心相などの効果で、この画面にまだ無いものを入れる場所）</h3>
       <div class="grid-in">
         ${fld("基礎攻撃力 加算", inp(`${p}.atkFlat`, { w: 100 }), "掛け算の前")}${fld("基礎HP 加算", inp(`${p}.hpFlat`, { w: 100 }), "掛け算の前")}
-        ${fld("攻撃力% 加算", inp(`${p}.atkPct`, { w: 100 }), "例 0.1=10%")}${fld("最大HP% 加算", inp(`${p}.hpPct`, { w: 100 }), "例 0.1=10%")}
-        ${fld(c.el + "属性ダメ 加算", inp(`${p}.elem`, { w: 100 }))}${fld("通常ダメ 加算", inp(`${p}.basic`, { w: 100 }))}
-        ${fld("スキルダメ 加算", inp(`${p}.skill`, { w: 100 }))}${fld("必殺ダメ 加算", inp(`${p}.ult`, { w: 100 }))}
-        ${fld("印ダメ 加算", inp(`${p}.mark`, { w: 100 }))}${fld("会心率 加算", inp(`${p}.critRate`, { w: 100 }))}
-        ${fld("会心ダメ 加算", inp(`${p}.critDmg`, { w: 100 }))}${fld("貫通 加算", inp(`${p}.pen`, { w: 100 }))}
-      </div><p class="muted">割合は 0.1 = 10% の形で入力します。</p></div></div>`;
+        ${fld("攻撃力% 加算", pin("atkPct"), "%")}${fld("最大HP% 加算", pin("hpPct"), "%")}
+        ${fld(c.el + "属性ダメ 加算", pin("elem"))}${fld("通常ダメ 加算", pin("basic"))}
+        ${fld("スキルダメ 加算", pin("skill"))}${fld("必殺ダメ 加算", pin("ult"))}
+        ${fld("印ダメ 加算", pin("mark"))}${fld("会心率 加算", pin("critRate"))}
+        ${fld("会心ダメ 加算", pin("critDmg"))}${fld("貫通 加算", inp(`${p}.pen`, { w: 100 }))}
+      </div><p class="muted">割合は「12」で 12% です。基礎攻撃力・基礎HP・貫通は、そのままの数値です。</p></div></div>`;
   }
   // ---- スキル（バフ効果の反映）----
   function skillSection(k) {
@@ -344,7 +346,7 @@
         <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}</div>`;
     }).join("")}</div>` : '<p class="muted">このキャラの、心相の戦闘中の効果は、まだ登録していません。反映したい効果は「その他」に入れてください。</p>';
     return `<div class="wide"><h3>${esc(c.jp)}：心相</h3>
-      ${fld("心相（段階）", inp(`${p}.talent`, { min: 0, max: 50, step: rar >= 5 ? 10 : 5, w: 70 }), `0〜50／${Math.floor((cs.talent || 0) / 10)}凸（星${rar}は${rar >= 5 ? 10 : 5}段階ずつ）`)}
+      ${fld("心相", `<div class="pz-lvs seg" role="group" aria-label="心相">${Array.from({ length: 50 / (rar >= 5 ? 10 : 5) + 1 }, (_, i) => i * (rar >= 5 ? 10 : 5)).map(v => `<button type="button" class="pz-lv${(+cs.talent || 0) === v ? " on" : ""}" aria-pressed="${(+cs.talent || 0) === v}" data-act="plv|${v}|${p}.talent">${rar >= 5 ? v / 10 + "凸" : v / 10}</button>`).join("")}</div>`, rar >= 5 ? "" : "星4は5段階ずつ（0.5凸きざみ）")}
       <p class="note">段階ごとのステータス: ${stat}</p>
       <h3 style="margin:10px 0 6px;font-size:14px">凸の戦闘中の効果（10段階 = 1凸）</h3>${list}</div>`;
   }
@@ -381,8 +383,8 @@
           else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
           if (sp.off) it.tags.push(tg("既定は反映しない"));
           const seen = {};
-          sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${inp(`${p}.pstk.${sk}`, { min: 0, max: e.stk, step: 1, w: 56 })}<span class="muted">/${e.stk}</span></span>`); } });
-          sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${inp(`${p}.pcnt.${key}#${ei}`, { min: 0, step: 1, w: 56, ph: e.c })}</span>`); });
+          sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${stepper(`${p}.pstk.${sk}`, 0, e.stk, e.stk, "sm")}<span class="muted">/${e.stk}</span></span>`); } });
+          sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${stepper(`${p}.pcnt.${key}#${ei}`, 0, 99, e.c, "sm")}</span>`); });
           it.ctl = ctl.join("");
         }
         out.push(it);
@@ -469,10 +471,10 @@
     const noteIn = S.NOTE_KEYS.map(n => {
       const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, own = (G.notes || {})[n] || 0;
       const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメージ") : "";
-      return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>${inp(`notes.${esc(n)}`, { min: 0, max: 99, step: 1 })}
+      return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>${stepper(`notes.${n}`, 0, 99, 0, "sm")}
         <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div><div class="note-per">1Lvで +${d ? Math.round(d.perLv * 10000) / 100 : 0}%${t !== own ? `<br>サブの初期 +${t - own}` : ""}</div></div>`;
     }).join("");
-    const counts = S.LR_COUNTS.map(c => fld(c.label, inp(`lrN.${c.key}`, { min: 0, max: c.max, step: 1, w: 70 }), `最大 ${c.max}`)).join("");
+    const counts = S.LR_COUNTS.map(c => fld(c.label, stepper(`lrN.${c.key}`, 0, c.max, 0), `最大 ${c.max}`)).join("");
     // メインのロスレコの効果
     const fxHtml = (G.lrMain || []).filter(Boolean).map(id => {
       const fx = S.LR_FX[id], r = L.find(x => x.id === id);
@@ -524,7 +526,7 @@
   function renderGimmick() {
     const en = G.enemyObj;
     const tr = S.DEFAULT_ENEMY_TRAITS[G.enemy] || [];
-    return `<div class="wide"><h3>ギミック（敵・指名手配）</h3>
+    return `<div class="wide"><h3>敵</h3>
       ${fld("敵", inp("enemy", { sel: S.ENEMIES.map(e => [e.id, e.name]), str: true }))}
       <p class="note">弱点: ${en.weak.join("・") || "なし"}（弱点補正 ×${en.weakMult}）／防御倍率 ${en.def}／印の別枠 ×${en.markX}／主力の最大HP +${pct(en.hpBonus)}${en.teamHp ? `／全員のHP +${pct(en.teamHp)}・攻撃 +${pct(en.teamAtk)}・会心率 +${pct(en.teamCrit)}` : ""}</p>
       <p class="muted">${esc(en.note)}</p>
@@ -889,6 +891,7 @@
     if (ty === "b") v = t.checked;
     else if (ty === "b01") v = t.checked ? 1 : 0;
     else if (ty === "s") v = t.value;
+    else if (ty === "pct") v = t.value === "" ? null : +t.value / 100;   // 「12」→ 0.12
     else v = t.value === "" ? null : +t.value;
     setPath(p, v);
     // 徽章の枠: 区分を変えたら項目を空に、項目を選んだら値を有効なものに直す
