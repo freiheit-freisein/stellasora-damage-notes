@@ -159,36 +159,46 @@
     const d = RD.team[id].st;
     const b = R.team[id], st = b.st, ef = b.ef, ag = ef.ag || {};
     const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
-    const row = (k, a, m, z) => `<tr><td>${k}</td><td style="text-align:right">${a}</td><td class="bt" style="text-align:right">${m}</td><td style="text-align:right">${z}</td></tr>`;
-    return `<div class="box"><table class="stt"><tr><th></th><th title="ステータス画面の値">画面</th><th class="bt" title="今の敵で、効果をすべて足した値">戦闘中</th><th title="防衛戦に入った直後の値">防衛戦直後</th></tr>
+    const row = (k, a, m) => `<tr><td>${k}</td><td style="text-align:right">${a}</td><td class="bt" style="text-align:right">${m}</td></tr>`;
+    return `<div class="box"><table class="stt"><tr><th></th><th title="ゲームのステータス画面の値">ステ画面</th><th class="bt" title="今の敵で、素質・スキル・ロスレコの効果を足した値">戦闘中</th></tr>
       ${row("最大HP", fmt(o.hp), fmt(st.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(batk), fmt(d.atk))}
       ${row("会心率", pct(o.critRate), pct(st.critRate), pct(d.critRate))}${row("会心ダメージ", pct(o.critDmg), pct(st.critDmg), pct(d.critDmg))}
       ${row(c.el + "属性ダメージ", pct(1 + o.elemAdd), pct(1 + st.elemAdd + ef.W), pct(1 + d.elemAdd))}
       ${row("通常攻撃ダメージ", "—", pct(st.basicAdd + ef.Bb), pct(d.basicAdd))}${row("スキルダメージ", "—", pct(st.skillAdd + ef.Bs), pct(d.skillAdd))}
       ${row("必殺技ダメージ", "—", pct(st.ultAdd + ef.Bu), pct(d.ultAdd))}${row("印ダメージ", "—", pct(st.markAdd + (ag.markAdd || 0)), pct(d.markAdd))}
-      ${row("属性耐性貫通", fmt(o.pen), fmt(st.pen), fmt(d.pen))}${row("敵の被ダメージ", "—", "×" + f3(ef.taken), "—")}</table>
-      <div class="muted" style="font-size:11px;line-height:1.4;margin-top:4px">画面＝ステータス画面／戦闘中＝今の敵（ギミック）で、素質・スキル・ロスレコの効果を足した値／防衛戦直後＝防衛戦に入った直後</div></div>`;
+      ${row("属性耐性貫通", fmt(o.pen), fmt(st.pen), fmt(d.pen))}${row("敵の被ダメージ", "—", "×" + f3(ef.taken), "—")}</table></div>`;
   }
 
+
   // ---- 表示エリア: 巡遊者 ----
-  function lvFld(id, key, label, note) {
+  // スキルLvは2列×2行にまとめる（徽章の「＋」があるときは、欄の横に → 最終的なLv）
+  function lvCell(id, key, label, note) {
     const bonus = emx(id).lv[key];
-    return fld(label, inp(`chars.${id}.skillLv.${key}`, { min: 1, max: 13, step: 1, w: 70 }), (bonus ? `徽章 +${bonus} → Lv${(G.chars[id].skillLv[key] || 10) + bonus}` : "") + (note || ""));
+    const extra = (bonus ? `+${bonus} → Lv${(G.chars[id].skillLv[key] || 10) + bonus}` : "") + (note ? (bonus ? "／" : "") + note : "");
+    return `<label class="sk-cell"><span class="sk-lab">${label}</span><span class="sk-in">${inp(`chars.${id}.skillLv.${key}`, { min: 1, max: 13, step: 1, w: 56 })}${extra ? `<span class="muted">${extra}</span>` : ""}</span></label>`;
+  }
+  // 心相・徽章・素質・その他のボタンに出す、今の状態
+  function charSummary(k) {
+    const id = G.team[k], cs = G.chars[id];
+    const emb = (cs.emb || []).filter((e, i) => cs.embOn[i] && e.slots.some(sl => sl.k)).length;
+    const pc = potCount(potItems(k));
+    const add = Object.keys(cs.add || {}).filter(x => +cs.add[x]).length;
+    return { heart: `${Math.floor((cs.talent || 0) / 10)}凸`, emb: emb ? `${emb}枚` : "なし", pot: pc.core || pc.normal ? `コア${pc.core}・通常${pc.normal}` : "なし", add: add ? `加算 ${add}件` : "なし" };
   }
   function renderOverview() {
     const col = ([k, l]) => {
-      const id = G.team[k], c = chOf(id), p = `chars.${id}`;
-      return `<div class="chcol${mHide(k)}"><h3>${l}</h3>
+      const id = G.team[k], c = chOf(id), p = `chars.${id}`, sm = charSummary(k);
+      const nb = (pn, label, v) => `<button class="obtn ch-btn" data-act="panel:${pn}:${k}"><b>${label}</b><span>${v}</span></button>`;
+      return `<div class="chcol${mHide(k)}" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="ch-h">${l}：${esc(c.jp)}${c.auto ? "*" : ""}</h3>
         ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp + (x.auto ? "*" : "")]), str: true }))}
-        ${fld("キャラレベル", `<span class="muted">90（固定）</span>`)}
-        ${lvFld(id, "basic", "通常攻撃Lv")}${lvFld(id, "main", "主力スキルLv")}${lvFld(id, "support", "支援スキルLv")}${lvFld(id, "ult", "必殺技Lv", "11〜は推定")}
+        <div class="sk-grid">${lvCell(id, "basic", "通常攻撃Lv")}${lvCell(id, "main", "主力スキルLv")}${lvCell(id, "support", "支援スキルLv")}${lvCell(id, "ult", "必殺技Lv", "11〜は推定")}</div>
         ${fld("信頼ボーナスLv", inp(`${p}.trustLv`, { min: 0, max: 99, step: 1, w: 70 }))}
-        <div class="box"><div class="sel-row" style="margin:0"><button class="obtn" data-act="panel:heart:${k}" style="width:auto">心相</button><button class="obtn" data-act="panel:emb:${k}" style="width:auto">徽章</button><button class="obtn" data-act="panel:pot:${k}" style="width:auto">素質</button><button class="obtn" data-act="panel:add:${k}" style="width:auto">その他</button></div></div>
+        <div class="ch-btns">${nb("heart", "心相", sm.heart)}${nb("emb", "徽章", sm.emb)}${nb("pot", "素質", sm.pot)}${nb("add", "その他", sm.add)}</div>
         ${cardsHtml(id)}
       </div>`;
     };
     return `${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div>
-      <p class="muted">名前の後ろの「*」は未確認（技のヒットや素質を、Wikiの説明文から自動で作ったもの）です。各巡遊者の「心相・徽章・素質・その他」で、この中が切り替わります。ステータスが画面と合わないときは、「巡遊者（直接入力）」のタブに画面の値を入れてください（入力した欄だけ上書きして計算します）。</p>`;
+      <p class="muted">キャラレベルは90で計算します。名前の後ろの「*」は未確認（技のヒットや素質を、Wikiの説明文から自動で作ったもの）です。ステータスがゲームの画面と合わないときは、「実測合わせ：直接入力」に画面の値を入れると、その欄だけ上書きして計算します。</p>`;
   }
   // ---- 巡遊者（直接入力）----
   function renderDirect() {

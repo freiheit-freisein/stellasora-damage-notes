@@ -128,6 +128,16 @@
   .pz-norm .pz-row > .tag-ng { flex: none; white-space: nowrap; margin-left: 0; }
   .pz-ctl input[type=number] { min-height: 28px; padding: 0 6px; border-radius: 6px; }
   @media (max-width: 900px) { .pz-ngrid, .pz-cgrid { grid-template-columns: minmax(0, 1fr); } }
+  /* 巡遊者の画面: 列の見出しに属性の色の線、スキルLvは2列×2行、心相・徽章・素質・その他のボタンに今の状態 */
+  .ch-h { padding-bottom: 6px; border-bottom: 3px solid var(--elc, var(--indigo)); }
+  .sk-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 6px 0; }
+  .sk-cell { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+  .sk-lab { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .sk-in { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .sk-in input[type=number] { min-height: 32px; padding: 0 8px; border-radius: 8px; }
+  .ch-btns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 8px 0; }
+  .ch-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 4px 2px; line-height: 1.25; min-height: 46px; }
+  .ch-btn span { font-size: 11px; font-weight: 700; color: var(--muted); }
   .pgrid { display: grid; gap: 8px; margin: 4px 0 10px; }
   .phead { font-size: 14px; font-weight: 900; color: var(--indigo); margin: 10px 0 4px; }
   .pcat { margin-bottom: 6px; }
