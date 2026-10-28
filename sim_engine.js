@@ -103,7 +103,7 @@
     const tl = clamp(cs.trustLv || 0, 0, 99), tu = clamp((cs.talent || 0) / 5, 0, 10);   // 心相は段階(0〜50)で持つ。表は5段階ごと
     const baseHp0 = wst ? last(wst.hp) : c.manual.baseHp, baseAtk0 = wst ? last(wst.atk) : c.manual.baseAtk;
     const trustHp = tab.trust.hp[tl], trustAtk = tab.trust.atk[tl];
-    const trustPct = wst ? tab.trust.atkPct[tl] : tab.trust.atkPct[tl] * 0.5;   // 手入力キャラは推定（セイナ: 信頼HP+6%）
+    const trustPct = wst ? tab.trust.atkPct[tl] : tab.trust.atkPct[tl] * 0.5;   // 手入力キャラは、借りた表の%を半分に（セイナ: 信頼Lv21で 基礎HP5,671・基礎攻撃612・HP8%、Lv22で+334・+36 と画面で確認済み）
     const talHp = wst ? (wst.talent.hp[tu] || 0) : tu * c.manual.talent.hp;
     const talAtk = wst ? (wst.talent.atk[tu] || 0) : tu * c.manual.talent.atk;
     const talPct = wst ? (wst.talent.atkPct[tu] || 0) : 0;
