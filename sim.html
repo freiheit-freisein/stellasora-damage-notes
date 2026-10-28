@@ -168,11 +168,25 @@
   .pot .tag-ok, .pot .tag-ng { margin-left: 0; }
   .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
   /* ロスレコの枠（徽章と同じ形） */
-  .lr-line { display: grid; grid-template-columns: 64px 80px 64px 260px 84px; gap: 6px; align-items: center; margin: 5px 0; }
+  .lr-line { display: grid; grid-template-columns: 52px 64px 60px minmax(160px, 1fr) 84px; gap: 6px; align-items: center; margin: 5px 0; }
   .lr-line select { width: 100%; min-height: 34px; padding: 0 6px; border-radius: 8px; font-size: 13px; }
   .lr-line .lab { font-size: 12px; font-weight: 700; color: var(--muted); }
+  /* ビルド検証の表: 項目・上下・与ダメ寄与率 */
+  .decG { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 10px; }   /* 狭いときは2列・1列に折り返す */
+  .decT td { white-space: normal; }
+  .decT th:first-child { width: auto; }
+  .decT th:nth-child(2) { width: 112px; text-align: center; }
+  .decT th:nth-child(3) { width: 84px; }
+  .decT td.c { text-align: center; }
+  .decT td.v { text-align: right; }
+  .decin { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .decin .obtn { width: 24px; min-height: 24px; padding: 0; font-size: 11px; border-radius: 6px; }
+  .decin .obtn:disabled { opacity: .35; cursor: default; }
+  .decin b { min-width: 46px; text-align: center; font-size: 12px; }
   .lr-line .obtn { padding: 0 4px; white-space: nowrap; font-size: 13px; }
-  .lr-cols { display: grid; grid-template-columns: repeat(2, max-content); gap: 0 32px; }
+  .lr-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 0 24px; }   /* 狭いときはメインの下にサブ */
+  .cnt-grid { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .cnt-grid .fld { grid-template-columns: 210px 1fr; }
   /* 音符（ゲームと同じく、色と名前の下に数、その下に効果） */
   .notes-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; }
   .note-cell { text-align: center; padding: 8px 4px; border-radius: 14px; background: #fff; border: 2px solid var(--border); border-top: 4px solid var(--nc); }
@@ -220,6 +234,7 @@
     .pot .pd { -webkit-line-clamp: 2; }
     .emb-line { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr); }
     .lr-cols { grid-template-columns: minmax(0, 1fr); }
+    .cnt-grid .fld { grid-template-columns: 150px minmax(0, 1fr); }
     .lr-line { grid-template-columns: 52px 64px 54px minmax(0, 1fr) 72px; }
     .notes-row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
     .fld { grid-template-columns: 100px minmax(0, 1fr); }
