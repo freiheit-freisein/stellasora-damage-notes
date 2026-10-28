@@ -7,7 +7,8 @@
   const TK = en => TREKKERS.find(x => x.en === en);
   const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 
-  // 耐性（コミュニティの式 + 実測）。E = 耐性 − 貫通。
+  // 耐性（コミュニティの式 + 実測）。E = 耐性 − 貫通。貫通は 250 まで（ゲーム内の説明「効果の適用上限は250」）
+  const PEN_CAP = 250;
   function resMult(E) {
     if (E <= 0) return 1;
     if (E <= 250) return 1 - 0.25 * Math.pow(E / 250, 2);
@@ -17,7 +18,7 @@
   function enemyD(en, el, pen, G) {
     const res = en.res[el] != null ? en.res[el] : (en.resDefault != null ? en.resDefault : 250);   // 書いていない属性は resDefault（ボスは等倍＝750）
     const weak = en.weak.indexOf(el) >= 0;
-    const parts = { def: en.def, weak: weak ? en.weakMult : 1, res: resMult(res - pen), extra: (en.extra && en.extra[el]) || 1 };
+    const parts = { def: en.def, weak: weak ? en.weakMult : 1, res: resMult(res - Math.min(pen || 0, PEN_CAP)), extra: (en.extra && en.extra[el]) || 1 };
     parts.D = parts.def * parts.weak * parts.res * parts.extra;
     return parts;
   }
