@@ -125,7 +125,7 @@
     // 徽章・素質などの巡遊者ごとの画面は「巡遊者」のタブの中
     const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
     const b = (key, label, en) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${label}</span></button>`;
-    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS") + b("direct", "直接入力", "DIRECT") + b("record", "記録レベル", "RECORD") + b("lr", "ロスレコ・音符", "LOST RECORDS") + b("gimmick", "ギミック(敵)", "ENEMY") + b("adjust", "補正", "ADJUST");
+    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS") + b("direct", "直接入力", "DIRECT") + b("record", "記録レベル", "RECORD") + b("lr", "ロスレコ・音符", "LOST RECORDS") + b("gimmick", "ギミック(敵)", "ENEMY") + b("adjust", "補正", "ADJUST") + b("score", "スコア", "SCORE");
   }
   // スマホ: 巡遊者を1人ずつ出すための切り替え（PCでは出さない）
   const mChar = () => `<div class="m-only mchar">${SLOTS.map(([k, l]) => `<button class="tab" aria-selected="${V.mChar === k}" data-act="mchar:${k}">${l}</button>`).join("")}</div>`;
@@ -496,6 +496,69 @@
       ${els.map(e => `<tr><td>${e}${en.weak.indexOf(e) >= 0 ? "（弱点）" : ""}</td><td>${inp(`enemyOv.res.${e}`, { w: 90 })}<span class="muted"> 既定 ${en.res[e] != null ? en.res[e] : (en.resDefault != null ? en.resDefault : 250)}</span></td><td>${inp(`enemyOv.extra.${e}`, { w: 90 })}<span class="muted"> 既定 ${(en.extra && en.extra[e]) || 1}</span></td></tr>`).join("")}</table>
       <p class="muted">耐性の式は、有効耐性 = 耐性 − 貫通 のとき 倍率 = 1 − 0.25×(E/250)²（実測と一致）。「その他」は、原因が分かっていない差を合わせるための倍率です。</p></div>`;
   }
+  // ---- スコア（素質・徽章・音符の与ダメへの寄与）----
+  // 心相とロスレコは凸で人によって違うので、外した「標準の条件」で計算する: 心相0・ロスレコなし・その他の加算なし・直接入力なし・
+  // 重複数や反映のチェックは既定・敵は等倍の標準ボス（防御0.5・全属性の耐性750）。
+  // ダメージ = 編成の合計（主力の通常1ローテ＋主力スキル＋必殺技（印を含む）＋支援2人の支援スキル）。
+  // スコア = 素質・徽章・音符をすべて外したダメージを100として、1つだけ入れたとき（合計は3つ全部入れたとき）の値
+  const ELS6 = ["水", "火", "風", "地", "光", "闇"];
+  function scoreEnv(g0) {
+    const g = clone(g0), team = [g.team.main, g.team.s1, g.team.s2];
+    team.forEach(id => { const cs = g.chars[id]; cs.talent = 0; cs.add = {}; cs.manual = {}; cs.pon = {}; cs.pstk = {}; cs.pcnt = {}; });
+    g.lrMain = []; g.lrSub = []; g.lrOn = {}; g.lrN = {}; g.lrManual = { baseAtk: 0, baseHp: 0, elem: 0, elemEl: "", basicDmg: 0, skillDmg: 0, atkPct: 0 };
+    g.directPriority = false; g.skOn = {}; g.traits = {}; g.other = { mult: 1, taken: 1 }; g.heartCrit = false;
+    g.enemy = "stomp"; g.enemyOv = { def: 0.5, weakMult: 1, markX: 1, res: {}, extra: {} }; ELS6.forEach(e => { g.enemyOv.res[e] = 750; });
+    return g;
+  }
+  const potOff = g => [g.team.main, g.team.s1, g.team.s2].forEach(id => { const cs = g.chars[id]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
+  const embOff = g => [g.team.main, g.team.s1, g.team.s2].forEach(id => { g.chars[id].embOn = [0, 0, 0]; });
+  const noteOff = g => { Object.keys(g.notes || {}).forEach(k => { g.notes[k] = 0; }); };
+  function teamDmg(g) {
+    const r = E.calcTeam(clone(g)), m = r.team[g.team.main];
+    return m.groups.basic.totExp + m.groups.main.totExp + m.groups.ult.totExp + r.team[g.team.s1].groups.support.totExp + r.team[g.team.s2].groups.support.totExp;
+  }
+  function calcScore() {
+    const full = scoreEnv(G);
+    const only = keep => { const g = clone(full); if (keep !== "pot") potOff(g); if (keep !== "emb") embOff(g); if (keep !== "note") noteOff(g); return teamDmg(g); };
+    const base = only(null), all = teamDmg(full);
+    const sc = { base, all, pot: only("pot") / base, emb: only("emb") / base, note: only("note") / base, total: all / base, items: [] };
+    // 項目ごとの寄与: 全部入れた状態から1つ外して、何%下がるか
+    const drop = (kind, label, fn) => { const g = clone(full); fn(g); const d = teamDmg(g); sc.items.push({ kind, label, v: all / d - 1 }); };
+    SLOTS.forEach(([k, l]) => {
+      const id = full.team[k], cs = full.chars[id], c = chOf(id);
+      Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
+        const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p;
+        drop("素質", `${c.jp}：${JA(en, id)} Lv${cs.pots2[p]}`, g => { g.chars[id].pots2[p] = 0; });
+      });
+      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => drop("素質", `${c.jp}：${((window.POTENTIALS || []).find(x => x.id === p) || {}).jp || p} Lv${cs.pots[p]}`, g => { g.chars[id].pots[p] = 0; }));
+      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => drop("素質", `${c.jp}：${((window.SUP_POTS || {})[id] || []).find(x => x.id === p)?.jp || p} Lv${cs.sup[p].lv}`, g => { g.chars[id].sup[p].lv = 0; }));
+      (cs.emb || []).forEach((e, i) => {
+        if (!cs.embOn[i]) return;
+        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}徽章 ${slotLabel(id, sl)}`, g => { g.chars[id].emb[i].slots[j].k = ""; }); });
+      });
+    });
+    S.NOTE_KEYS.forEach(n => { const v = (full.notes || {})[n]; if (v > 0) drop("音符", `${n.replace("の音符", "")} ${v}`, g => { g.notes[n] = 0; }); });
+    sc.items.sort((a, b) => b.v - a.v);
+    return sc;
+  }
+  function renderScore() {
+    let sc;
+    try { sc = calcScore(); } catch (e) { return `<div class="wide"><h3>スコア</h3><p class="muted">計算できませんでした（${esc(e.message)}）</p></div>`; }
+    const p1 = x => (Math.round(x * 1000) / 10).toFixed(1);
+    const card = (label, x, sub) => `<div class="tile"><span>${label}</span><b>${Math.round(x * 100)}</b><small>${x >= 1 ? "+" : ""}${p1(x - 1)}%${sub ? "／" + sub : ""}</small></div>`;
+    const rows = kind => { const it = sc.items.filter(x => x.kind === kind); return it.length ? `<table class="stt"><tr><th style="text-align:left">項目</th><th>外すと</th></tr>${it.map(x => `<tr><td title="${esc(x.label)}" style="width:auto;white-space:normal">${esc(x.label)}</td><td style="text-align:right;width:90px">${x.v > 0.0005 ? "−" + p1(x.v / (1 + x.v)) + "%" : "影響なし"}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
+    return `<div class="wide"><h3>スコア（素質・徽章・音符の与ダメへの寄与）</h3>
+      <div class="tiles" style="grid-template-columns:repeat(4,minmax(0,1fr))">${card("素質スコア", sc.pot)}${card("徽章スコア", sc.emb)}${card("音符スコア", sc.note)}${card("合計スコア", sc.total, "3つ全部")}</div>
+      <p class="muted" style="margin-top:8px">素質・徽章・音符をすべて外したダメージを <b>100</b> として、それぞれ1つだけ入れたときの値です（合計は3つ全部を入れたときで、掛け合わせの分も含みます）。<br>
+      <b>標準の条件</b>：心相とロスレコは凸で人によって違うので外しています（心相0・ロスレコなし）。「その他」の加算と直接入力も使いません。重複数・反映のチェックは既定値、敵は等倍の標準ボス（防御0.5・全属性の耐性750）です。ダメージは編成の合計（主力の通常1ローテ＋主力スキル＋必殺技（印を含む）＋支援2人の支援スキル）です。<br>
+      「*」の付いた巡遊者・素質（自動の下書き）を含む場合は、スコアもずれることがあります。</p>
+      <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
+        <div class="box"><b>素質</b>（1つ外すと）${rows("素質")}</div>
+        <div class="box"><b>徽章</b>（1枠外すと）${rows("徽章")}</div>
+        <div class="box"><b>音符</b>（1種類外すと）${rows("音符")}</div>
+      </div></div>`;
+  }
+
   function renderDisplay() {
     const [a, b] = V.panel.split(":");
     let h;
@@ -509,6 +572,7 @@
     else if (V.panel === "lr") h = renderLr();
     else if (V.panel === "gimmick") h = renderGimmick();
     else if (V.panel === "adjust") h = renderAdjust();
+    else if (V.panel === "score") h = renderScore();
     else h = renderOverview();
     // 巡遊者ごとの画面（心相・徽章・素質・その他）では、戻るボタンと、同じ巡遊者のほかの画面へのボタンを出す
     let nav = "";
