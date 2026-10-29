@@ -89,7 +89,7 @@
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
     $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <button class="btn-add pri" data-act="go-share">共有・読み込み</button><button class="btn-add" data-act="rp-open">報告</button>`;   // 共有・読み込みは「⑥ 共有・保存」のタブを開く
+      <button class="btn-add" data-act="rp-open">報告</button>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
     $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比較中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "再度比較する" : "比較"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比較を止める</button>` : "");
@@ -763,7 +763,7 @@
     const full = SLOTS.every(([k]) => p[k]);
     const ls = dlg.querySelector(".pk-list"), keep = ls ? ls.scrollTop : 0, keepD = dlg.scrollTop;   // 描き直しても、一覧のスクロールの位置を保つ
     $("pickBody").innerHTML = `<h2 id="pickDlgT"><span class="en">NEW</span>巡遊者を選んで作る</h2>
-      ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「この3人で作る」を押してください。今の入力は、すべて初期値に戻ります。")}
+      ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「この3人で作る」を押してください。入力中のデータは、すべて初期値に戻ります。")}
       <div class="pk-bar">${chosen}<button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して作る" : "この3人で作る"}</button></div>${msgOf("pick")}
       <div class="pk-list">${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}</div>
       <div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button></div>`;
@@ -773,7 +773,7 @@
     const names = Object.keys(savedBuilds());
     return `<div class="wide">
       <h3>新しく作る</h3>
-      <div class="ld-line" style="grid-template-columns:auto 1fr"><button type="button" class="btn-add pri" data-act="pick-open">巡遊者を選んで作る</button><span class="muted">一覧から3人を選びます。今の入力は、すべて初期値に戻ります。</span></div>
+      <div class="ld-line" style="grid-template-columns:auto 1fr"><button type="button" class="btn-add pri" data-act="pick-open">巡遊者を選んで作る</button><span class="muted">一覧から3人を選びます。入力中のデータは、すべて初期値に戻ります。</span></div>
       <h3 style="margin-top:18px">プリセットコードから作る</h3>
       <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" placeholder="ゲームの素質プリセットのコード" spellcheck="false"><button class="btn-add" data-act="dv:preset:in">読み込む</button></div>
       ${msgOf("preset")}<div class="muted help">編成と素質Lvが変わります（ゲーム・素質ノートと同じコード）。</div>
@@ -811,7 +811,6 @@
     const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
     const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
     return `<div class="wide">
-      <div class="muted help" style="margin-top:0">読み込むときは「① 読込」のタブからどうぞ。</div>
       <h3>共有URL・共有コード</h3>
       <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button><span></span></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
@@ -1006,7 +1005,6 @@
     const t = ev.target.closest("[data-act]");
     if (!t) return;
     const a = t.getAttribute("data-act");
-    if (a === "go-share") { V.panel = "share"; V.pick = null; V.lrPick = null; V.m = "in"; renderAll(); const t = $("selectors"); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); return; }   // 右上のボタン
     if (a.indexOf("panel:") === 0) { V.panel = a.slice(6); V.pick = null; V.lrPick = null; renderAll(); return; }
     if (a.indexOf("tf:") === 0) { V.tilesFor = a.slice(3); renderAll(); return; }
     if (a.indexOf("drill:") === 0) {
@@ -1040,7 +1038,7 @@
     else if (a === "pick-make") {
       const p = V.pick3 || {};
       if (!SLOTS.every(([k]) => p[k])) return;
-      if (!V.pickSure) { V.pickSure = true; return say("pick", "今の入力は、すべて初期値に戻ります。よければ、もう一度「この3人で作る」を押してください"); }
+      if (!V.pickSure) { V.pickSure = true; return say("pick", "入力中のデータは、すべて初期値に戻ります。よければ、もう一度「この3人で作る」を押してください"); }
       V.pickSure = false; DM.pick = null; $("pickDlg").close();
       G = defState(); G.team = { main: p.main, s1: p.s1, s2: p.s2 }; V.pick3 = null; shareMsg = "新しく作りました"; V.panel = "overview"; renderAll();
     }
