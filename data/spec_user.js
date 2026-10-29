@@ -945,5 +945,328 @@ window.SPEC_USER = {
    "note": "中間のLvは直線補間（未確認）",
    "txt": "中間のLvは直線補間（未確認）"
   }
+ },
+ "Gerie": {
+  "Beyond All Control": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bb",
+     "raw": 0.47
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Avalanche of Stone": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "main",
+     "name": "地を砕く円匙",
+     "t": "basic",
+     "c": 1,
+     "edit": true,
+     "m": 67
+    }
+   ],
+   "txt": ""
+  },
+  "Agony Cascade": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "raw": 0.5
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Deeper into Sin": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "重ね続けた罪",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 120
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Curtain Call": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "終わらぬ余興",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 40
+    }
+   ],
+   "txt": ""
+  },
+  "Sin-Bound Echo": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "魂の解放",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "m": 28
+    }
+   ],
+   "txt": ""
+  },
+  "Earthshaker": {
+   "done": true,
+   "e": [],
+   "note": "振動波の与えるスキルダメージが32%増加し、とあるのでダメージには影響しているかと。",
+   "txt": "振動波の与えるスキルダメージが32%増加し、とあるのでダメージには影響しているかと。"
+  },
+  "Hexacalamity: Hallowed Chains": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "六罪：強制殉教",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Hexacalamity: Grief's Toll": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Hexacalamity: Tyrant's March": {
+   "done": true,
+   "e": [],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Hexacalamity: Famine": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "六罪：苦痛渇望",
+     "t": "skill",
+     "c": 1,
+     "edit": true,
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Hexacalamity: Erosion": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Hexacalamity: Death": {
+   "done": true,
+   "e": [],
+   "note": "スキルダメージが上がるけど、火力に影響しない？",
+   "txt": "スキルダメージが上がるけど、火力に影響しない？"
+  },
+  "Anima Resonance": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "to": "lux"
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Twilight's Verdict": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 0,
+     "stk": 4
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Twilight's Hunt": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 2
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Emberwing's Proclamation": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bu",
+     "n": 0
+    },
+    {
+     "k": "extra",
+     "group": "ult",
+     "name": "恩恵：焔の終焉",
+     "t": "ult",
+     "c": 1,
+     "edit": true,
+     "n": 1
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Quadrifrons' Lore": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bu",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Samsara's Judgment": {
+   "done": true,
+   "e": [],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Piercing Sorrow": {
+   "done": true,
+   "e": [],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Slanderous Strike": {
+   "done": true,
+   "e": [],
+   "off": true,
+   "txt": ""
+  },
+  "Everyone's Invited": {
+   "done": true,
+   "e": [],
+   "txt": ""
+  },
+  "Shared Sensation": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "to": "lux"
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Shadow Law": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "stk": 2
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Hunt is On": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "No Safeword": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bb",
+     "n": 0
+    }
+   ],
+   "note": "ブレイク中のみの効果は別で適用できるようにしておくほうがよい",
+   "txt": "ブレイク中のみの効果は別で適用できるようにしておくほうがよい"
+  },
+  "Delight in Ruin": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0,
+     "stk": 6
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Lingering Hunger": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bb",
+     "n": 0
+    }
+   ],
+   "txt": "",
+   "verified": "確認済み"
+  },
+  "Endless Throes": {
+   "done": true,
+   "e": [],
+   "off": true,
+   "note": "追撃が発動、値は155%",
+   "txt": "追撃が発動、値は155%"
+  }
  }
 };
