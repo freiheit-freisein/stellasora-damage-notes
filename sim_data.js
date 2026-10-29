@@ -97,6 +97,13 @@ window.SIM = window.SIM || {};
 
   S.NOTE_KEYS = ["強撃の音符", "幸運の音符", "爆発の音符", "体力の音符", "集中の音符", "器用の音符", "必殺の音符", "水の音符", "風の音符", "光の音符"];
   if (window.NOTES) window.NOTES["光の音符"] = { stat: "elemDmg:光", perLv: 0.003, text: "1レベルごとに光属性ダメージが0.3%増加する" };
+  // 火・地・闇の音符（1Lvあたりの値は、水・風・光と同じ0.3%として入れている。ゲーム画面では未確認）
+  ["火", "地", "闇"].forEach(e => { if (window.NOTES) window.NOTES[e + "の音符"] = { stat: "elemDmg:" + e, perLv: 0.003, text: `1レベルごとに${e}属性ダメージが0.3%増加する` }; });
+  // 画面に出す音符。NOTE_KEYS は共有コードの辞書に使っているので変えない（変えると、それまでの共有コードが読めなくなる）。
+  // 足した火・地・闇は辞書に入らず、文字のまま書き出される
+  S.NOTE_BASE = S.NOTE_KEYS.slice(0, 7);
+  S.NOTE_ELEM = ["水", "火", "風", "地", "光", "闇"].map(e => e + "の音符");
+  S.NOTE_ALL = S.NOTE_BASE.concat(S.NOTE_ELEM);
 
   // 既定の徽章（分かっている合計に合わせた仮の配置。違えば画面で選び直す）
   S.EMB_DEFAULT = {

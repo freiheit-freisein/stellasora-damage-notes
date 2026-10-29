@@ -471,12 +471,15 @@
     const STN = { atkPct: "攻撃力", critRate: "会心率", critDmg: "会心ダメージ", hpPct: "最大HP", basicDmg: "通常攻撃ダメージ", skillDmg: "スキルダメージ", ultDmg: "必殺技ダメージ" };
     const tot = S.notesTotal(G);
     const r1 = x => (Math.round(x * 1000) / 10).toFixed(1);
-    const noteIn = S.NOTE_KEYS.map(n => {
+    const noteCell = n => {
       const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, own = (G.notes || {})[n] || 0;
       const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメージ") : "";
       return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>${stepper(`notes.${n}`, 0, 99, 0, "sm")}
         <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div><div class="note-per">1Lvで +${d ? Math.round(d.perLv * 10000) / 100 : 0}%${t !== own ? `<br>サブの初期 +${t - own}` : ""}</div></div>`;
-    }).join("");
+    };
+    // 1段目: ステータスの音符、2段目: 属性の音符（6属性）
+    const noteIn = `<div class="notes-row">${S.NOTE_BASE.map(noteCell).join("")}</div>
+      <div class="notes-row" style="margin-top:8px">${S.NOTE_ELEM.map(noteCell).join("")}</div>`;
     const counts = S.LR_COUNTS.map(c => fld(c.label, stepper(`lrN.${c.key}`, 0, c.max, 0), `最大 ${c.max}`)).join("");
     // メインのロスレコの効果
     const fxHtml = (G.lrMain || []).filter(Boolean).map(id => {
@@ -511,7 +514,7 @@
       <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div>${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
       ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。コア効果は「突破」で値を選べます。条件付きの効果は、既定では反映しません（チェックで反映）。")}
       <h3 style="margin-top:12px;font-size:14px">音符効果（探索で獲得した数を入力。サブのロスレコの初期音符は自動で足します）</h3>
-      <div class="notes-row">${noteIn}</div>
+      ${noteIn}
       <h3 style="margin-top:12px;font-size:14px">効果の数（暁光・星願など。戦闘中のある時点を想定して入力）</h3>
       <div class="grid-in cnt-grid">${counts}</div>
       <h3 style="margin-top:12px;font-size:14px">メインのロスレコの効果</h3>
@@ -718,9 +721,11 @@
       txt(n, 56, yy, 19, "#D9DCED", { w: 500 });
       [0, 1, 2].forEach(j => txt(lrn((arr || [])[j]), 140 + j * 250, yy, 20, "#FFFFFF", { max: 236 }));
     });
-    const total = S.NOTE_KEYS.reduce((a, n) => a + (+(G.notes || {})[n] || 0), 0);
+    const total = S.NOTE_ALL.reduce((a, n) => a + (+(G.notes || {})[n] || 0), 0);
     txt(`音符（合計 ${total}）`, 930, by + 42, 18, "#D9DCED");
-    S.NOTE_KEYS.forEach((n, i) => {
+    const nv = n => +(G.notes || {})[n] || 0;
+    const elShow = S.NOTE_ELEM.filter(n => nv(n) > 0).sort((a, b) => nv(b) - nv(a)).slice(0, 3);
+    S.NOTE_BASE.concat(elShow).forEach((n, i) => {
       const nx = 930 + (i % 5) * 162, ny = by + 80 + Math.floor(i / 5) * 34, v = (G.notes || {})[n] || 0;
       txt(n.replace("の音符", ""), nx, ny, 19, "#D9DCED", { w: 500 });
       txt(String(v), nx + 128, ny, 22, v ? "#FFFFFF" : "#8A90BE", { align: "right", w: 900 });
@@ -822,7 +827,7 @@
     if (!names.length) return '<p class="muted">まだありません。</p>';
     return `<table class="stt bl-t">${names.map((n, i) => V.renaming === n
       ? `<tr><td colspan="2"><div class="ld-line" style="margin:0"><input type="text" id="bren" value="${esc(n)}"><button class="btn-add pri" data-act="brn-ok">決定</button><button class="btn-add" data-act="brn-no">やめる</button></div></td></tr>`
-      : `<tr><td title="${esc(n)}">${esc(n)}</td><td class="bl-b"><button class="btn-add" data-act="brn:${i}">名前を変更</button><button class="btn-add" data-act="bcp:${i}">コピー</button><button class="btn-add" data-act="bdl:${i}">${V.delSure === n ? "もう一度押して削除" : "削除"}</button></td></tr>`).join("")}</table>`;
+      : `<tr><td title="${esc(n)}">${esc(n)}</td><td class="bl-b"><button class="btn-add" data-act="bov:${i}">${V.ovSure === n ? "もう一度押して上書き" : "上書き"}</button><button class="btn-add" data-act="brn:${i}">名前を変更</button><button class="btn-add" data-act="bcp:${i}">コピー</button><button class="btn-add" data-act="bdl:${i}">${V.delSure === n ? "もう一度押して削除" : "削除"}</button></td></tr>`).join("")}</table>`;
   }
   function renderShareTab() {
     const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
@@ -1053,10 +1058,16 @@
     else if (a === "card-make") makeCard();
     else if (a === "potall") { V.potAll = !V.potAll; renderAll(); }
     else if (/^xtag:\d$/.test(a)) { const i = +a.slice(5); xTags[i] = !xTags[i]; try { localStorage.setItem("stellasora-sim-xtags2", JSON.stringify(xTags)); } catch (e) { /* 無視 */ } renderAll(); }
-    else if (/^(brn|bcp|bdl):\d+$/.test(a) || a === "brn-ok" || a === "brn-no") {
+    else if (/^(brn|bcp|bdl|bov):\d+$/.test(a) || a === "brn-ok" || a === "brn-no") {
       const builds = savedBuilds(), names = Object.keys(builds), [op, i] = a.split(":"), n = names[+i];
       const put = () => { try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } };
-      if (op === "brn") { V.renaming = n; V.delSure = null; DM.build = null; renderAll(); const el = $("bren"); if (el) { el.focus(); el.select(); } }
+      if (op !== "bov") V.ovSure = null;
+      if (op !== "bdl") V.delSure = null;
+      if (op === "bov" && n) {   // 今の入力で、保存したビルドを上書きする（2回押しで確定）
+        if (V.ovSure !== n) { V.ovSure = n; return say("build", `「${n}」を今の入力で上書きします。よければ、もう一度押してください`); }
+        V.ovSure = null; builds[n] = clone(G); put(); say("build", `「${n}」を上書きしました`);
+      }
+      else if (op === "brn") { V.renaming = n; V.delSure = null; DM.build = null; renderAll(); const el = $("bren"); if (el) { el.focus(); el.select(); } }
       else if (a === "brn-no") { V.renaming = null; renderAll(); }
       else if (a === "brn-ok") {
         const old = V.renaming, el = $("bren"), nn = el ? el.value.trim() : "";
