@@ -650,11 +650,6 @@
   // ---- ビルドカード（画像）。1人1列で3人分、下にロスレコと音符。絵は使わず、名前・属性の色・数字で描く ----
   const EL_COLOR = { 光: "#E8B10F", 水: "#2BA6DE", 火: "#E5533D", 風: "#3FA86A", 地: "#A0703C", 闇: "#6B4FA0" };
   const Q_COLOR = { green: "#4FB58A", blue: "#4E8FD6", gold: "#E3A93A", rainbow: "#C25FD0", rainbow2: "#C25FD0", rainbow3: "#C25FD0" };
-  function shortSlot(id, sl) {
-    const o = optOf(sl.k); if (!o) return "";
-    const v = qVal(o, sl.q);
-    return o.label.replace(/（.*?）/g, "").replace("レベル上昇", "Lv") + (v != null ? " " + valTxt(o, v) : "") + (sl.t ? "（" + JA(sl.t, id) + "）" : "");
-  }
   function drawCard() {
     const W = 1800, H = 1000, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
     const x = cv.getContext("2d"), F = "'Noto Sans JP', sans-serif";
@@ -677,11 +672,14 @@
       txt(`通常${L2("basic")}・主力${L2("main")}`, X0 + colW - 20, top + 32, 18, "#FFFFFF", { align: "right" });
       txt(`支援${L2("support")}・必殺${L2("ult")}`, X0 + colW - 20, top + 58, 18, "#FFFFFF", { align: "right" });
       txt(`信頼Lv${cs.trustLv || 0}・心相${cs.talent || 0}`, X0 + colW - 20, top + 84, 18, "rgba(255,255,255,.92)", { align: "right" });
-      // ステータス（戦闘中＝今の入力のまま）
-      const b = R.team[id], st = b.st, ef = b.ef;
+      // ステータス: ステ画面（ゲームのステータス画面）と戦闘中（素質・スキル・ロスレコの効果も足した値）を並べる
+      const b = R.team[id], st = b.st, ef = b.ef, o = E.outsideStats(c, cs);
       const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
-      const stats = [["HP", fmt(st.hp)], ["攻撃力", fmt(batk)], ["会心率", pct(st.critRate)], ["会心ダメージ", pct(st.critDmg)], [c.el + "属性ダメージ", pct(1 + st.elemAdd + ef.W)], ["属性耐性貫通", fmt(Math.min(st.pen, 250))]];
-      stats.forEach(([n, v], i) => { const yy = top + 136 + i * 32; txt(n, X0 + 22, yy, 20, "#5F6492"); txt(v, X0 + colW - 22, yy, 22, "#1E2250", { align: "right", w: 900 }); });
+      const stats = [["HP", fmt(o.hp), fmt(st.hp)], ["攻撃力", fmt(o.atk), fmt(batk)], ["会心率", pct(o.critRate), pct(st.critRate)], ["会心ダメージ", pct(o.critDmg), pct(st.critDmg)],
+        [c.el + "属性ダメージ", pct(1 + o.elemAdd), pct(1 + st.elemAdd + ef.W)], ["属性耐性貫通", fmt(o.pen), fmt(Math.min(st.pen, 250))]];
+      const xs = X0 + colW - 190, xb = X0 + colW - 22;
+      txt("ステ画面", xs, top + 122, 14, "#9AA0C8", { align: "right" }); txt("戦闘中", xb, top + 122, 14, "#08808A", { align: "right" });
+      stats.forEach(([n, a, v], i) => { const yy = top + 148 + i * 30; txt(n, X0 + 22, yy, 19, "#5F6492"); txt(a, xs, yy, 19, "#5F6492", { align: "right", w: 500 }); txt(v, xb, yy, 22, "#1E2250", { align: "right", w: 900 }); });
       // 徽章3枚（4枠を2列×2行）
       (cs.emb || []).map((e, i) => ({ e, i })).sort((a, b2) => KIND_ORDER.indexOf(a.e.kind) - KIND_ORDER.indexOf(b2.e.kind)).forEach(({ e, i }, n) => {
         const yy = top + 330 + n * 112;
@@ -692,7 +690,7 @@
         ss.slice(0, 4).forEach((sl, j) => {
           const sx = X0 + 34 + (j % 2) * 264, sy = yy + 62 + Math.floor(j / 2) * 30;
           x.fillStyle = Q_COLOR[sl.q] || "#9AA0C8"; x.beginPath(); x.arc(sx, sy - 6, 5, 0, Math.PI * 2); x.fill();
-          txt(shortSlot(id, sl), sx + 10, sy, 17, "#1E2250", { max: 244, w: 500 });
+          txt(embShort(id, sl), sx + 10, sy, 17, "#1E2250", { max: 244, w: 500 });   // 素質のレベル上昇は「素質名 +3」
         });
       });
       // 素質（取得しているもの。コアを先に）
