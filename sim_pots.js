@@ -323,4 +323,39 @@ window.SIM = window.SIM || {};
   };
   S.collectPots = collect;
   S.potNums = numsOf;
+  // 計算に使っている中身を、そのLvの値つきの短い文にする（素質カードの「計算: …」）
+  const KJ = { W: el => el + "属性ダメージ", Bs: "スキルダメージ", Bb: "通常攻撃ダメージ", Bu: "必殺技ダメージ", mark: "印ダメージ", markMult: "印ダメージ（別枠の掛け算）",
+    atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ",
+    taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）" };
+  const TAGJ = { wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃" };
+  const TOJ = { all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー" };
+  const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
+  const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
+  S.potCalcText = (cid, name, lv) => {
+    const sp = (S.POT_SPEC[cid] || {})[name];
+    if (!sp || !sp.e || !sp.e.length) return "";
+    const c = S.CH.find(x => x.id === cid), info = numsOf(c, name), ext = sp.ext || info.ext;
+    const r1 = x => Math.round(x * 10) / 10;
+    return sp.e.map(e => {
+      let v = 0;
+      if (e.raw != null) v = e.raw;
+      else if (e.arr) v = lvVal(e.arr, lv, e.over, e.ext || ext) / (e.k === "extra" ? 1 : 100);
+      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || ext) / (e.flat || e.k === "extra" ? 1 : 100);
+      if (e.k === "extra") return `追加ヒット ${r1(e.m != null ? e.m : v)}%（${HTJ[e.t] || ""}）×${e.c || 1}`;
+      if (e.k === "count") return `ヒット回数 +${e.add}`;
+      if (e.k === "drop") return "";
+      const kn = typeof KJ[e.k] === "function" ? KJ[e.k](e.el || c.el) : (KJ[e.k] || e.k);
+      const flat = e.flat || e.k === "hpFlat" || e.k === "atkFlat" || e.k === "pen";
+      const tg = e.tags && e.tags.length ? e.tags.map(t => TAGJ[t] || t).join("・") + "の" : "";
+      const notes = [];
+      if (e.k === "taken" && !e.to) notes.push("自分の攻撃だけ");
+      else if (e.to && e.to !== "enemy") notes.push(TOJ[e.to] || e.to);
+      else if (!e.to && !/^taken/.test(e.k)) notes.push("自分");
+      if (e.perLux) notes.push("同じ属性の人数ぶん");
+      if (e.stk > 1) notes.push(`最大${e.stk}重`);
+      if (e.ht) notes.push(`${HTJ[e.ht] || e.ht}だけ`);
+      if (e.cond) notes.push(CONDJ[e.cond] || e.cond);
+      return `${tg}${kn} +${flat ? r1(v) : r1(v * 100) + "%"}${notes.length ? "（" + notes.join("・") + "）" : ""}`;
+    }).filter(Boolean).join("、");
+  };
 })(window.SIM);
