@@ -956,7 +956,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Avalanche of Stone": {
    "done": true,
@@ -971,7 +972,10 @@ window.SPEC_USER = {
      "m": 67
     }
    ],
-   "txt": ""
+   "txt": "通常攻撃でダメージを与えたとき、追加 67%（通常攻撃）",
+   "note": "ゲームの画面は 67%（Wikiは33.7%）を確認（2026-10-30）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Agony Cascade": {
    "done": true,
@@ -982,7 +986,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Deeper into Sin": {
    "done": true,
@@ -1008,7 +1013,9 @@ window.SPEC_USER = {
     }
    ],
    "txt": "チェーンシャベルのダメージ +11%、追加のチェーンシャベル 120%×2本（スキル）",
-   "note": "ゲームの画面は 120%（Wikiは131%）を確認（2026-10-30）。「追加で2本」なので2回にした。+11%はヒットの倍率として計算（未実測）"
+   "note": "ゲームの画面は 120%（Wikiは131%）を確認（2026-10-30）。「追加で2本」なので2回にした。+11%はヒットの倍率として計算（未実測）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Curtain Call": {
    "done": true,
@@ -1034,7 +1041,9 @@ window.SPEC_USER = {
     }
    ],
    "txt": "チェーンシャベルのダメージ +11%、回収時のチェーンシャベル 40%（スキル）",
-   "note": "ゲームの画面は 40%（Wikiは43.8%）を確認（2026-10-30）。+11%はヒットの倍率として計算（未実測）。回収時の本数は仮に1"
+   "note": "ゲームの画面は 40%（Wikiは43.8%）を確認（2026-10-30）。+11%はヒットの倍率として計算（未実測）。回収時の本数は仮に1",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Sin-Bound Echo": {
    "done": true,
@@ -1053,7 +1062,9 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "note": "ゲームの画面は 28%（Wikiは30.7%）を確認（2026-10-30）"
+   "note": "ゲームの画面は 28%（Wikiは30.7%）を確認（2026-10-30）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Earthshaker": {
    "done": true,
@@ -1067,7 +1078,9 @@ window.SPEC_USER = {
     }
    ],
    "txt": "震動波（支援スキルの攻撃・魂の解放）のダメージ +32%（ヒットの倍率として計算。足し算か別枠かは未実測）",
-   "note": "ゲームの画面で 32% を確認（2026-10-30）。範囲+40%は火力に影響しない"
+   "note": "ゲームの画面で 32% を確認（2026-10-30）。範囲+40%は火力に影響しない",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Hexacalamity: Hallowed Chains": {
    "done": true,
@@ -1083,7 +1096,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Hexacalamity: Grief's Toll": {
    "done": true,
@@ -1094,13 +1108,23 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Hexacalamity: Tyrant's March": {
    "done": true,
-   "e": [],
-   "txt": "",
-   "verified": "確認済み"
+   "e": [
+    {
+     "k": "mult",
+     "n": 0,
+     "tags": [
+      "shovel"
+     ]
+    }
+   ],
+   "txt": "HP70%未満の敵へのチェーンシャベルのダメージ +（ヒットの倍率として計算。足し算か別枠かは未実測）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Hexacalamity: Famine": {
    "done": true,
@@ -1116,7 +1140,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Hexacalamity: Erosion": {
    "done": true,
@@ -1127,13 +1152,23 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Hexacalamity: Death": {
    "done": true,
-   "e": [],
-   "note": "スキルダメージが上がるけど、火力に影響しない？",
-   "txt": "スキルダメージが上がるけど、火力に影響しない？"
+   "e": [
+    {
+     "k": "mult",
+     "n": 0,
+     "tags": [
+      "wave"
+     ]
+    }
+   ],
+   "txt": "震動波のダメージ +（ヒットの倍率として計算。足し算か別枠かは未実測）。ブレイク値は火力に影響しない",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Anima Resonance": {
    "done": true,
@@ -1145,7 +1180,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "地属性の味方1体につき、グレイの攻撃力 +（画面の文で確認）",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Twilight's Verdict": {
    "done": true,
@@ -1157,7 +1193,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Twilight's Hunt": {
    "done": true,
@@ -1169,7 +1206,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Emberwing's Proclamation": {
    "done": true,
@@ -1183,13 +1221,14 @@ window.SPEC_USER = {
      "group": "ult",
      "name": "恩恵：焔の終焉",
      "t": "ult",
-     "c": 1,
+     "c": 2,
      "edit": true,
      "n": 1
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "必殺技ダメージ +、巨大チェーンシャベル ×2本（必殺技）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Quadrifrons' Lore": {
    "done": true,
@@ -1197,33 +1236,72 @@ window.SPEC_USER = {
     {
      "k": "Bu",
      "n": 0
+    },
+    {
+     "k": "Bu",
+     "n": 1
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "必殺技ダメージ +、地の印の発動から15秒はさらに +（その敵へ）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Samsara's Judgment": {
    "done": true,
-   "e": [],
-   "txt": "",
-   "verified": "確認済み"
+   "e": [
+    {
+     "k": "taken",
+     "n": 0
+    }
+   ],
+   "off": true,
+   "txt": "必殺技の発動から15秒、敵のグレイからの被ダメージ +（被ダメージの足し算。必殺後なので既定はオフ）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Piercing Sorrow": {
    "done": true,
-   "e": [],
-   "txt": "",
-   "verified": "確認済み"
+   "e": [
+    {
+     "k": "mult",
+     "n": 0,
+     "tags": [
+      "cage"
+     ]
+    }
+   ],
+   "txt": "鉄の牢獄のダメージ +（ヒットの倍率として計算。足し算か別枠かは未実測）",
+   "note": "持続時間+50%（ヒット回数）は未反映",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Slanderous Strike": {
    "done": true,
-   "e": [],
+   "e": [
+    {
+     "k": "mult",
+     "n": 0
+    }
+   ],
    "off": true,
-   "txt": ""
+   "txt": "移動速度が下がった敵（鉄の牢獄で繋がれた敵）へのダメージ +（ヒットの倍率として計算。足し算か別枠かは未実測）。条件付き（既定はオフ）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Everyone's Invited": {
    "done": true,
-   "e": [],
-   "txt": ""
+   "e": [
+    {
+     "k": "mult",
+     "n": 0,
+     "tags": [
+      "cage"
+     ]
+    }
+   ],
+   "txt": "鉄の牢獄のダメージ +（ヒットの倍率として計算。足し算か別枠かは未実測）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Shared Sensation": {
    "done": true,
@@ -1231,11 +1309,12 @@ window.SPEC_USER = {
     {
      "k": "atkPct",
      "n": 0,
-     "to": "lux"
+     "perLux": true
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "地属性の味方1体につき、グレイの攻撃力 +（画面の文で確認）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Shadow Law": {
    "done": true,
@@ -1247,7 +1326,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Hunt is On": {
    "done": true,
@@ -1258,7 +1338,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "No Safeword": {
    "done": true,
@@ -1269,7 +1350,9 @@ window.SPEC_USER = {
     }
    ],
    "note": "ブレイク中のみの効果は別で適用できるようにしておくほうがよい",
-   "txt": "ブレイク中のみの効果は別で適用できるようにしておくほうがよい"
+   "txt": "ブレイク中のみの効果は別で適用できるようにしておくほうがよい",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Delight in Ruin": {
    "done": true,
@@ -1281,7 +1364,8 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Lingering Hunger": {
    "done": true,
@@ -1292,14 +1376,17 @@ window.SPEC_USER = {
     }
    ],
    "txt": "",
-   "verified": "確認済み"
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   },
   "Endless Throes": {
    "done": true,
    "e": [],
    "off": true,
-   "note": "追撃が発動、値は155%",
-   "txt": "追撃が発動、値は155%"
+   "txt": "鉄の牢獄で繋がれたほかの敵に 155%（スキル）。敵が1体では発動しない",
+   "note": "ゲームの画面は 155%（Wikiは127%）を確認（2026-10-30）",
+   "verified": "確認済み",
+   "checked": "2026-10-30 ゲームの画面と数字を確認"
   }
  }
 };

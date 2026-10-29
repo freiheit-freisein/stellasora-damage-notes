@@ -69,6 +69,8 @@ window.SIM = window.SIM || {};
     c.hits.support.push({ s: -1, fixed: 125, c: 1, t: "mark", name: "印ダメージ（岩錐）", tags: [] });
     // 支援スキルの2ヒットは「震動波」（鳴動する重罪の +32% の対象）
     c.hits.support.forEach(h => { if (h.t === "skill") h.tags = (h.tags || []).concat("wave"); });
+    // 主力スキルの3つ目（毎秒のヒット）は「鉄の牢獄」（肉を喰む鎖・緋色の私刑の対象）
+    if (c.hits.main[2]) c.hits.main[2].tags = (c.hits.main[2].tags || []).concat("cage");
   });
 
   // 敵。def=防御倍率、res=属性ごとの耐性（書いていない属性は resDefault、無ければ250）、weak=弱点（表示用）、weakMult=弱点補正。
