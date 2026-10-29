@@ -1108,10 +1108,10 @@ window.SPEC_USER = {
     {
      "k": "atkPct",
      "n": 0,
-     "to": "lux"
+     "perLux": true
     }
    ],
-   "txt": "",
+   "txt": "地属性の味方1体につき、グレイの攻撃力 +（画面の文で確認）",
    "verified": "確認済み"
   },
   "Twilight's Verdict": {
