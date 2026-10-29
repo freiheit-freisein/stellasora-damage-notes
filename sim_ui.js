@@ -615,6 +615,9 @@
         pot(`p:${id}:${p}`, x.jp || p, +cs.pots[p], x.core ? 1 : POT_LV_MAX, (g, v) => { g.chars[id].pots[p] = v; });
       });
       Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, POT_LV_MAX, (g, v) => { g.chars[id].sup[p].lv = v; }));
+      // 未取得の素質（Lv0）は、チェックしたときだけ出す（特化構築の違うものまで出ると、見分けにくいため）。計算に入らないものは出さない
+      if (V.potAll) potItems(k).filter(x => !x.lv && !x.noeff && !x.tags.some(t => t.indexOf("計算に未対応") >= 0)).forEach(x =>
+        pot(`pa:${x.path}`, x.name + (x.grp ? `（${x.grp}）` : ""), 0, x.core ? 1 : POT_LV_MAX, (g, v) => { const ks = x.path.split("."); let o = g; ks.slice(0, -1).forEach(q => { o[q] = o[q] || {}; o = o[q]; }); o[ks[ks.length - 1]] = v; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
         e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}\n${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
@@ -636,7 +639,7 @@
   }
   let contribCache = { key: "", items: null }, orderCache = { key: "", ids: [] };
   function getContrib() {
-    const gk = JSON.stringify(G), key = gk + JSON.stringify(V.cmp || {});   // 入力が変わっていなければ、前の結果を使う
+    const gk = JSON.stringify(G) + (V.potAll ? "|all" : ""), key = gk + JSON.stringify(V.cmp || {});   // 入力が変わっていなければ、前の結果を使う
     if (contribCache.key !== key) {
       const items = calcContrib(), id = x => x.uid;
       // 並び順は、ビルドの入力が変わったときだけ決め直す（◀▶で比べる値を変えても、行が動かないように）
@@ -872,7 +875,7 @@
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
       ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 6px")}
       <div class="grid-in decG">
-        <div class="box"><b>素質</b>${rows("素質")}</div>
+        <div class="box"><div class="bx-h"><b>素質</b><label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="potall"${V.potAll ? " checked" : ""}>未取得の素質も表示</label></div>${rows("素質")}</div>
         <div class="box"><b>徽章</b>${rows("徽章")}</div>
         <div class="box"><b>ロスレコ</b>${rows("ロスレコ")}</div>
       </div></div>`;
@@ -1048,6 +1051,7 @@
     else if (a === "memodel") { memo = null; try { localStorage.removeItem(KEY_M); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a === "potall") { V.potAll = !V.potAll; renderAll(); }
     else if (/^xtag:\d$/.test(a)) { const i = +a.slice(5); xTags[i] = !xTags[i]; try { localStorage.setItem("stellasora-sim-xtags2", JSON.stringify(xTags)); } catch (e) { /* 無視 */ } renderAll(); }
     else if (/^(brn|bcp|bdl):\d+$/.test(a) || a === "brn-ok" || a === "brn-no") {
       const builds = savedBuilds(), names = Object.keys(builds), [op, i] = a.split(":"), n = names[+i];
