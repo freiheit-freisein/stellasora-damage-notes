@@ -486,7 +486,10 @@
     // 1段目: ステータスの音符、2段目: 属性の音符（6属性）
     const noteIn = `<div class="notes-row">${S.NOTE_BASE.map(noteCell).join("")}</div>
       <div class="notes-row" style="margin-top:8px">${S.NOTE_ELEM.map(noteCell).join("")}</div>`;
-    const counts = S.LR_COUNTS.map(c => fld(c.label, stepper(`lrN.${c.key}`, 0, c.max, 0), `最大 ${c.max}`)).join("");
+    // 効果の数は、選んでいるメインのロスレコの効果が使うものだけ出す
+    const usedN = new Set();
+    (G.lrMain || []).filter(Boolean).forEach(id => { const fx = S.LR_FX[id]; if (!fx) return; fx.core.concat(...fx.assists.map(a => a.items)).forEach(it => { if (it.n) usedN.add(it.n); if (it.need) usedN.add(it.need[0]); }); });
+    const counts = S.LR_COUNTS.filter(c => usedN.has(c.key)).map(c => fld(c.label, stepper(`lrN.${c.key}`, 0, c.max, 0), `最大 ${c.max}`)).join("");
     // メインのロスレコの効果
     const fxHtml = (G.lrMain || []).filter(Boolean).map(id => {
       const fx = S.LR_FX[id], r = L.find(x => x.id === id);
@@ -522,7 +525,7 @@
       <h3 style="margin-top:12px;font-size:14px">音符効果（探索で獲得した数を入力。サブのロスレコの初期音符は自動で足します）</h3>
       ${noteIn}
       <h3 style="margin-top:12px;font-size:14px">効果の数（暁光・星願など。戦闘中のある時点を想定して入力）</h3>
-      <div class="grid-in cnt-grid">${counts}</div>
+      ${counts ? `<div class="grid-in cnt-grid">${counts}</div>` : '<p class="muted">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}
       <h3 style="margin-top:12px;font-size:14px">メインのロスレコの効果</h3>
       <div class="grid-in" style="grid-template-columns:1fr">${fxHtml || '<span class="muted">メインのロスレコを選ぶと、効果が出ます</span>'}</div>
       <h3 style="margin-top:12px;font-size:14px">一覧にないロスレコ・サブの合計（手入力）</h3>
