@@ -832,7 +832,7 @@
       <div class="sh-line"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
         <span class="xtag"><span class="muted">タグを追加</span>${X_TAGS.map((t, i) => `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtag:${i}"${xTags[i] ? " checked" : ""}>${t}</label>`).join("")}</span></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
-      ${msgOf("url")}<div class="muted help">作成したビルドを他の人に共有できます。コードの場合は①読込に入力してください。</div>
+      ${msgOf("url")}<div class="muted help">作成したビルドを他の人に共有できます。コードの場合は「①読込」から入力してください。</div>
       <h3 style="margin-top:18px">ビルドカード</h3>${cardBlock()}
       <h3 style="margin-top:18px">プリセットコード（ゲーム内で入力できます）</h3>
       <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:preset:out">作る</button><button class="btn-add" data-act="dv:preset:copy">コピー</button></div>
