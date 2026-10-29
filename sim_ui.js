@@ -779,12 +779,12 @@
       <div class="ld-line" style="grid-template-columns:auto 1fr"><button type="button" class="btn-add pri" data-act="pick-open">巡遊者を選んで作る</button><span class="muted">一覧から3人を選びます。入力中のデータは、すべて初期値に戻ります。</span></div>
       <h3 style="margin-top:18px">プリセットコードから作る</h3>
       <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" placeholder="ゲームの素質プリセットのコード" spellcheck="false"><button class="btn-add" data-act="dv:preset:in">読み込む</button></div>
-      ${msgOf("preset")}<div class="muted help">編成と素質Lvが変わります（ゲーム・素質ノートと同じコード）。</div>
+      ${msgOf("preset")}<div class="muted help">編成と素質Lvが自動的に反映されます（ゲーム内で使われているコードです）。</div>
       <h3 style="margin-top:18px">共有コード・共有URLを読み込む</h3>
       <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
-      ${msgOf("load")}<div class="muted help">短い共有コード・共有URL・前の長い共有コードの、どれでも読み込めます。</div>
+      ${msgOf("load")}<div class="muted help">共有URL・共有コード、どちらでも読み込めます。</div>
       <h3 style="margin-top:18px">このブラウザに保存したビルド</h3>
-      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」でできます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
+      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」で行えます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
       ${msgOf("build")}</div>`;
   }
   // 短い共有コード（短縮URLのID）・共有URL・長い共有コードの、どれでも読み込む
@@ -807,7 +807,7 @@
     return `<div class="box" style="margin:0 0 10px"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
         <button class="btn-add pri" data-act="card-make" style="background:var(--accent);border-color:var(--accent);font-weight:900">${cardUrl ? "カードを作り直す" : "カードを作る"}</button>
         ${cardUrl ? `<a class="btn-add" href="${cardUrl}" download="build-card.png" style="display:inline-flex;align-items:center;text-decoration:none">画像を保存</a>` : ""}
-        <span class="muted">${cardUrl ? "入力を変えたら作り直してください。Xに載せるときは、画像を保存してから添付してください。" : "3人分の徽章・素質・ロスレコ・音符を1枚の画像にします。"}</span></div>
+        <span class="muted">${cardUrl ? "入力を変えたら作り直してください。Xに載せるときは、画像を保存してから添付してください。" : "（試作版）3人分の徽章・素質・ロスレコ・音符を1枚の画像にします。"}</span></div>
         ${cardUrl ? `<img src="${cardUrl}" alt="ビルドカード" style="width:100%;margin-top:8px;border-radius:12px;border:2px solid var(--border)">` : ""}</div>`;
   }
   // 手元（localhost・ファイル）で動かしているか。短縮URLのサーバーがないので、長い共有コードの欄も出す
@@ -832,14 +832,14 @@
       <div class="sh-line"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
         <span class="xtag"><span class="muted">タグを追加</span>${X_TAGS.map((t, i) => `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtag:${i}"${xTags[i] ? " checked" : ""}>${t}</label>`).join("")}</span></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
-      ${msgOf("url")}${helpTxt("share", "開くだけ・入れるだけで、このビルドを読み込めます（「① 読込」に共有コードを入れても読み込めます）。", "Xで共有は、共有URLを作ってXの投稿画面を開きます（本文は編成の3人の名前とURLだけ）。")}
+      ${msgOf("url")}<div class="muted help">作成したビルドを他の人に共有できます。コードの場合は①読込に入力してください。</div>
       <h3 style="margin-top:18px">ビルドカード</h3>${cardBlock()}
-      <h3 style="margin-top:18px">プリセットコード（ゲームに入れる）</h3>
+      <h3 style="margin-top:18px">プリセットコード（ゲーム内で入力できます）</h3>
       <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:preset:out">作る</button><button class="btn-add" data-act="dv:preset:copy">コピー</button></div>
-      ${msgOf("preset")}<div class="muted help">編成と素質Lvだけのコードです。ゲームの素質プリセットや素質ノートで読み込めます。</div>
+      ${msgOf("preset")}<div class="muted help">編成と素質Lvを記録したコードです。ゲーム内のプリセット登録で読み込むことができます。</div>
       <h3 style="margin-top:18px">このブラウザに保存</h3>
       <div class="ld-line"><input type="text" id="bname" placeholder="名前を付けて保存"><button class="btn-add" data-act="bsave">保存</button></div>
-      ${msgOf("build")}<div class="muted help">保存したビルドは「① 読込」から読み込めます。このブラウザの中だけに残ります。</div>
+      ${msgOf("build")}<div class="muted help">ビルドをブラウザ（ローカルストレージ）に保存します。「① 読込」から読み込むことができます。ご利用中のブラウザだけに残ります。他のPCへ共有するときはURLかコードでお願いします。</div>
       <h4 class="bl-h">保存したビルド</h4>${buildsHtml()}
       ${IS_LOCAL ? `<h3 style="margin-top:18px">長い共有コード</h3>
       <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
