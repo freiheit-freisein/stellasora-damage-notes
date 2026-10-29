@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>素質の効果の入力 - 巡遊者の計算ノート</title>
+<title>素質の確認 - 巡遊者の計算ノート</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="common.css">
@@ -32,21 +32,31 @@
   table.lv { border-collapse: collapse; font-size: 12px; margin: 4px 0; } table.lv td, table.lv th { border: 1px solid var(--border); padding: 2px 6px; }
   textarea { width: 100%; min-height: 140px; font-family: monospace; font-size: 12px; border-radius: 10px; border: 2px solid var(--border); padding: 8px; }
   #side { position: sticky; top: 8px; max-height: calc(100vh - 16px); overflow-y: auto; }
+  .ck { border: 2px solid var(--accent); border-radius: 12px; padding: 10px; margin: 8px 0; background: #FFFBEF; }
+  .ck-h { font-weight: 900; color: var(--indigo); margin-bottom: 4px; }
+  .ck-t input { width: 90px; min-height: 30px; padding: 0 6px; border-radius: 8px; border: 2px solid var(--border); }
+  .ck-b { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .ck-b .pri { background: var(--indigo); color: #fff; }
+  .ck-ok { background: #CFF3E8; } .ck-diff { background: #FFD6D6; } .ck-unk { background: #FFE3B0; }
+  .steps { margin: 6px 12px 0; padding: 8px 12px; border-radius: 12px; background: var(--surface-soft); font-size: 13px; }
 </style>
 </head>
 <body>
 <header class="site-header"><div class="wrap">
-  <span class="logo-ja">素質の効果の入力</span><span class="logo-en">EFFECT EDITOR</span>
+  <span class="logo-ja">素質の確認</span><span class="logo-en">POTENTIAL CHECK</span>
   <span style="flex:1"></span>
   <a class="btn-add" href="sim.html" style="display:inline-flex;align-items:center;text-decoration:none">計算ページへ</a>
 </div></header>
 <div class="bar" id="bar"></div>
+<div class="steps"><b>手順</b>　① 巡遊者を選ぶ　② 素質をクリック　③ ゲームの素質の画面と比べて「合ってる／数字が違う／わからない」を押す　④ 終わったら右下の「確認の結果を書き出す」→「コピー」→ Claude に貼り付ける</div>
 <div class="app">
-  <div id="left"><div class="panel"><h2>素質の一覧（クリックで右に効果を入力）</h2><div id="list"></div></div></div>
+  <div id="left"><div class="panel"><h2>素質の一覧（クリックすると右に出ます）</h2><div id="list"></div></div></div>
   <div id="side">
-    <div class="panel" id="editor"><h2>効果の入力</h2><p class="muted">左の素質を選んでください。</p></div>
-    <div class="panel"><h2>書き出し・読み込み</h2>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button class="btn-add" data-act="export">書き出す（全員分）</button><button class="btn-add" data-act="copy">コピー</button><button class="btn-add" data-act="import">貼り付けた内容を読み込む</button><button class="btn-add" data-act="clear">この巡遊者の入力を消す</button></div>
+    <div class="panel" id="editor"><h2>素質の確認</h2><p class="muted">左の素質を選んでください。</p></div>
+    <div class="panel"><h2>書き出し</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button class="btn-add" data-act="ckexport" style="background:var(--indigo);color:#fff">確認の結果を書き出す</button><button class="btn-add" data-act="copy">コピー</button></div>
+      <details style="margin-bottom:6px"><summary class="muted">詳しい入力の書き出し・読み込み（通常は使いません）</summary>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button class="btn-add" data-act="export">効果の入力を書き出す（全員分）</button><button class="btn-add" data-act="import">貼り付けた内容を読み込む</button><button class="btn-add" data-act="clear">この巡遊者の入力を消す</button></div></details>
       <textarea id="io" placeholder="書き出した内容がここに出ます。読み込むときは、ここに貼り付けてください。"></textarea>
       <p class="muted" id="iomsg"></p>
     </div>

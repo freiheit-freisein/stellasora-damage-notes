@@ -1,5 +1,6 @@
-// 素質の効果の入力ページ。原文（英語）と Lv の値を見ながら、効果の種類・値・対象を選んで入力する。
-// 入力はブラウザに保存され、書き出すと data/spec_user.js の内容になる（sim.html が優先して使う）。
+// 素質の確認ページ。人がするのは「ゲームの画面と合っているか」の確認だけ（合ってる／数字が違う＝Lv1とLv6の数字／わからない）。
+// 確認の結果はブラウザに保存し、書き出したものを貼ってもらって、効果の形にするのは Claude がする（2026-10-30 ユーザー）。
+// 前の「効果の入力」欄（data/spec_user.js になる）は、「詳しい入力」を開いたときだけ出す。
 (function () {
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -31,6 +32,13 @@
   };
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(user)); } catch (e) { /* 無視 */ } };
   load();
+  // 確認の結果: chk[巡遊者][素質] = { st: "ok"|"diff"|"unk", g: { 番号: { 1: "Lv1の値", 6: "Lv6の値" } }, memo }
+  const CKEY = "stellasora-pot-check-v1";
+  let chk = {};
+  try { chk = JSON.parse(localStorage.getItem(CKEY)) || {}; } catch (e) { chk = {}; }
+  const saveChk = () => { try { localStorage.setItem(CKEY, JSON.stringify(chk)); } catch (e) { /* 無視 */ } };
+  const chkOf = (en, pot) => (chk[en] || {})[pot] || null;
+  const CK_NAME = { ok: "合ってる", diff: "数字が違う", unk: "わからない" };
 
   const trekkers = TREKKERS.slice().sort((a, b) => (b.rarity - a.rarity) || a.en.localeCompare(b.en));
   const S = { t: (JSON.parse(localStorage.getItem("stellasora-edit-t") || "null") || "Tilia"), role: "main", sel: null };
@@ -104,7 +112,8 @@
     const t = TREKKERS.find(x => x.en === S.t), [d, n, dr] = done(S.t, t);
     $("bar").innerHTML = `<b>巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
       <button class="sbtn${S.role === "main" ? " on" : ""}" data-act="role:main">主力の素質</button><button class="sbtn${S.role === "support" ? " on" : ""}" data-act="role:support">支援の素質</button>
-      <span class="muted">${esc(TJ(S.t))}：確認済み ${d} 件・自動の下書き ${dr} 件・全 ${n} 件</span>`;
+      <span class="muted">${esc(TJ(S.t))}：ゲームの画面と確認した素質 ${Object.keys(chk[S.t] || {}).length} ／ 全 ${n} 件</span>
+      <label class="muted" style="margin-left:auto"><input type="checkbox" data-act="adv"${S.adv ? " checked" : ""}> 詳しい入力を出す（通常は使いません）</label>`;
   };
   function renderList() {
     const t = TREKKERS.find(x => x.en === S.t);
@@ -112,7 +121,9 @@
     const card = p => {
       const u = specOf(S.t, p.name), b = builtIn(S.t, p.name), dr = draftOf(S.t, S.role, p.name);
       const tag = (!u && !b && dr) ? `<span class="tag t-draft">下書き（自動）${dr.review ? "・要確認" : ""}</span>` : u ? (u.draft ? `<span class="tag t-draft">下書き（未確認）</span>` : `<span class="tag t-user">入力済み${u.e && u.e.length ? "" : "（影響なし）"}</span>`) : b ? `<span class="tag t-built">組み込み（検証済み）</span>` : `<span class="tag t-none">未入力</span>`;
-      return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${tag}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || "").slice(0, 70))}</span></div>`;
+      const ck = chkOf(S.t, p.name);
+      const ckTag = ck ? `<span class="tag ck-${ck.st}">${CK_NAME[ck.st]}</span>` : '<span class="tag t-none">未確認</span>';
+      return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${ckTag}${S.adv ? tag : ""}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || "").slice(0, 70))}</span></div>`;
     };
     const builds = groups.filter(g => !/Generic/i.test(g.title)), gen = groups.find(g => /Generic/i.test(g.title));
     const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
@@ -141,11 +152,35 @@
     const head = [1, 2, 3, 4, 5, 6].map(i => `<th style="${i === 1 || i === 6 ? "" : "color:var(--muted);font-weight:400"}">Lv${i}${i === 1 || i === 6 ? "" : "（未確認）"}</th>`).join("") + [7, 8, 9].map(i => `<th style="color:var(--muted);font-weight:400;background:#f3efe4">Lv${i}（推定）</th>`).join("");
     return `<table class="lv"><tr><th>番号</th>${head}</tr>${n.map((a, i) => `<tr><td>${i}</td>${[0, 1, 2, 3, 4, 5].map(j => `<td>${a[j] != null ? a[j] : (a.length === 1 && j === 0 ? a[0] : "")}</td>`).join("")}${[7, 8, 9].map(lv => `<td style="background:#f3efe4;color:var(--muted)">${est(n[i], lv, i) == null ? "" : est(n[i], lv, i)}</td>`).join("")}</tr>`).join("")}</table>`;
   }
+  // 確認の欄（Lv1とLv6だけ）。数字が違うときは、ゲームの数字を入れて保存する
+  function checkHtml(p) {
+    const ck = chkOf(S.t, p.name) || {}, g = ck.g || {};
+    // 日本語Wikiの文に出てくる数字（「27～107%」なら Lv1=27%・Lv6=107%）。無ければ、英語データの表
+    const jn = (jpOf(S.t, S.role, p.name) || {}).nums;
+    const nums = jn && jn.length ? jn.map(x => { const m = String(x).split(/[～~〜]/); const u = /%|％/.test(x) ? "%" : ""; return m.length > 1 ? [m[0].replace(/[%％]/g, "") + u, m[1].replace(/[%％]/g, "") + u] : [String(x)]; }) : (p.nums || []);
+    const lv6 = a => a.length > 1 ? a[a.length - 1] : null;
+    const rowsH = nums.map((a, i) => `<tr><td>${i + 1}つ目</td><td>${a[0]}</td><td>${lv6(a) == null ? "—" : lv6(a)}</td>
+      <td><input type="text" data-ck="${i}:1" value="${esc((g[i] || {})[1] || "")}" placeholder="違うときだけ"></td>
+      <td>${lv6(a) == null ? "—" : `<input type="text" data-ck="${i}:6" value="${esc((g[i] || {})[6] || "")}" placeholder="違うときだけ">`}</td></tr>`).join("");
+    return `<div class="ck">
+      <div class="ck-h">ゲームの素質の画面と比べてください</div>
+      <div class="muted">上の文は日本語Wikiの文です。ゲームの画面（素質の説明、初期Lv＝Lv1、最大＝Lv6）と、文と数字が合っているかを見てください。</div>
+      ${nums.length ? `<table class="lv ck-t"><tr><th>文の中の数字</th><th>Wiki Lv1</th><th>Wiki Lv6</th><th>ゲーム Lv1</th><th>ゲーム Lv6</th></tr>${rowsH}</table>` : '<div class="muted">文の中に数字はありません。</div>'}
+      <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・何に効くかわからない など）"></div>
+      <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button>${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>
+      <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}</div>
+    </div>`;
+  }
   function renderEditor() {
     const t = TREKKERS.find(x => x.en === S.t);
     let p = null;
     ["main", "support"].forEach(r => (t.potentials[r] || []).forEach(g => g.potentials.forEach(x => { if (x.name === S.sel && r === S.role) p = x; })));
-    if (!p) { $("editor").innerHTML = "<h2>効果の入力</h2><p class=\"muted\">左の素質を選んでください。</p>"; return; }
+    if (!p) { $("editor").innerHTML = "<h2>素質の確認</h2><p class=\"muted\">左の素質を選んでください。</p>"; return; }
+    if (!S.adv) {
+      $("editor").innerHTML = `<h2>${esc(PJ(S.t, p.name))} <span class="muted">${esc(p.name)}</span></h2>
+        <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>${checkHtml(p)}`;
+      return;
+    }
     const nOpts = (p.nums || []).map((a, i) => [i, `番号${i}（Lv1=${a[0]}${a.length > 1 ? " … Lv6=" + a[a.length - 1] : ""}）`]);
     const row = (r, i) => {
       const kd = KIND[r.k], flat = !!(kd[2] && kd[2].flat);
@@ -163,7 +198,7 @@
       return `<div class="eff"><div class="fld"><label>効果${i + 1}</label><div>${sel("k", KINDS.map(k => [k[0], k[1]]), r.k).replace("data-f=", `data-i="${i}" data-f=`)} <button class="btn-add" data-act="del:${i}" style="min-height:28px">削除</button></div></div>${valHtml}${capHtml}${overHtml}${extraHtml}${common}${tags}</div>`;
     };
     $("editor").innerHTML = `<h2>${esc(PJ(S.t, p.name))} <span class="muted">${esc(p.name)}</span></h2>
-      <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>
+      <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>${checkHtml(p)}
       ${((jpOf(S.t, S.role, p.name) || {}).terms || []).map(x => `<div class="muted" style="margin:2px 0">用語「${esc(x.term)}」：${esc(x.text)}</div>`).join("")}
       ${(jpOf(S.t, S.role, p.name) || {}).text ? '<div class="muted">↑ 日本語Wikiの文章。ゲーム内の文章と数値が違うことがあります（例：テレサ「絶流・波紋」はWiki 77%・ゲーム 60%）。' + (meta.fromDraft ? "下の効果は、この文章から自動で作った下書きです。" : "") + '</div>' : ""}
       ${meta.fromDraft ? `<div class="eff" style="border-color:#E3B27A"><b>下書きの内容</b><br>${rows.length ? rows.map(r => "・" + esc(describe(toEngine(r), p))).join("<br>") : "（効果なし／火力に影響しない、と判断）"}${meta.unk ? `<br><span style="color:var(--danger)">自動で分類できなかった文：</span>${meta.unk.map(esc).join(" ／ ")}` : ""}<div style="margin-top:6px"><button class="btn-add" data-act="ok" style="background:var(--indigo);color:#fff">この内容でOK（確認済みにする）</button></div></div>` : ""}
@@ -179,8 +214,11 @@
   }
 
   // ---- イベント ----
+  const ckBuf = {};   // 確認の欄の入力中の値（保存ボタンで確定）
+  document.addEventListener("input", ev => { const c = ev.target.getAttribute && ev.target.getAttribute("data-ck"); if (c) ckBuf[c] = ev.target.value; });
   document.addEventListener("change", ev => {
     const t = ev.target;
+    if (t.getAttribute && t.getAttribute("data-ck")) { ckBuf[t.getAttribute("data-ck")] = t.value; return; }
     if (t.id === "selT") { S.t = t.value; S.sel = null; try { localStorage.setItem("stellasora-edit-t", JSON.stringify(S.t)); } catch (e) { /* 無視 */ } bar(); renderList(); renderEditor(); return; }
     const f = t.getAttribute && t.getAttribute("data-f");
     if (!f) return;
@@ -200,8 +238,30 @@
     const el = ev.target.closest("[data-act]");
     if (!el) return;
     const a = el.getAttribute("data-act");
+    if (a === "adv") { S.adv = el.checked; bar(); renderList(); renderEditor(); return; }
+    if (/^ck:/.test(a)) {
+      const st = a.slice(3), name = S.sel;
+      chk[S.t] = chk[S.t] || {};
+      if (st === "del") { delete chk[S.t][name]; }
+      else {
+        // 今の欄の値を集める（打ったものは ckBuf、触っていない欄は画面の値）
+        const vals = {};
+        document.querySelectorAll("[data-ck]").forEach(x => { const k = x.getAttribute("data-ck"); vals[k] = ckBuf[k] != null ? ckBuf[k] : x.value; });
+        const g = {};
+        Object.keys(vals).filter(k => k !== "memo").forEach(k => { const [i, lv] = k.split(":"); const v = String(vals[k]).trim(); if (v) { g[i] = g[i] || {}; g[i][lv] = v; } });
+        if (st === "diff" && !Object.keys(g).length) { const m = $("ckmsg"); if (m) m.textContent = "ゲームの数字を、違うところだけ入れてから押してください"; return; }
+        const o = { st, at: new Date().toISOString().slice(0, 10) };
+        if (st === "diff") o.g = g;
+        if (vals.memo && String(vals.memo).trim()) o.memo = String(vals.memo).trim();
+        chk[S.t][name] = o;
+      }
+      Object.keys(ckBuf).forEach(k => delete ckBuf[k]);
+      saveChk(); bar(); renderList(); renderEditor();
+      return;
+    }
+    if (a === "ckexport") { $("io").value = "// 素質の確認（edit.html で作成）。ゲームの画面と比べた結果\nwindow.POT_CHECK = " + JSON.stringify(chk, null, 1) + ";\n"; $("iomsg").textContent = "書き出しました。「コピー」を押して、Claude に貼り付けてください。"; return; }
     if (a.indexOf("role:") === 0) { S.role = a.slice(5); S.sel = null; bar(); renderList(); renderEditor(); return; }
-    if (a.indexOf("pick:") === 0) { openPot(a.slice(5)); renderList(); return; }
+    if (a.indexOf("pick:") === 0) { Object.keys(ckBuf).forEach(k => delete ckBuf[k]); openPot(a.slice(5)); renderList(); return; }
     if (a === "ok") { const e = meta.none ? [] : rows.map(toEngine); user[S.t] = user[S.t] || {}; const o = { done: true, e, txt: meta.txt || "", verified: "確認済み" }; if (meta.off) o.off = true; if (meta.ext) o.ext = meta.ext; if (meta.note) o.note = meta.note; user[S.t][S.sel] = o; save(); meta.fromDraft = false; meta.unk = null; bar(); renderList(); renderEditor(); return; }
     if (a === "addrow") { rows.push(newRow()); renderEditor(); return; }
     if (a.indexOf("del:") === 0) { rows.splice(+a.slice(4), 1); renderEditor(); return; }
