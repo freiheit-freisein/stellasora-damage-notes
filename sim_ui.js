@@ -380,6 +380,7 @@
           desc: sp ? sp.txt : "効果がまだ入っていません", tags: [], ctl: "", grp: bn(g), bonus: ex.pot[x.name] || 0 };
         if (sp && it.lv > 0 && S.potCalcText) {   // 計算に使っている中身（そのLvの値）。「反映」を外しているときは、そう書く
           it.calc = S.potCalcText(id, x.name, it.lv + it.bonus);
+          it.calcLv = core ? "" : `Lv${it.lv + it.bonus}${it.bonus ? `・徽章+${it.bonus}込み` : ""}${it.lv + it.bonus > POT_LV_MAX ? "・推定" : ""}`;
           const onv = (cs.pon || {})[key];
           if (it.calc && !(onv == null ? !sp.off : onv)) it.calc += "　※反映を外しているので、今は計算に入っていません";
         }
@@ -412,7 +413,7 @@
       // カードの上（名前・スイッチ・説明）が押せるボタン。「反映」などはボタンの外（カードの中の下）に置く
       return `<div class="pz-core${on ? " on" : ""}${dis ? " dis" : ""}" title="${esc(x.en)}"><button type="button" class="pz-ctog" aria-pressed="${on}" data-act="pcore|${x.path}"${dis ? " disabled" : ""}>
         <span class="pz-row">${STAR("#F4C84A")}<span class="pz-name">${esc(x.name)}</span>${x.grp ? `<span class="pz-grp">${x.grp}</span>` : ""}<span class="pz-sw${on ? " on" : ""}"><span></span></span></span>
-        <span class="pz-desc">${esc(x.desc)}${x.calc ? `<span class="pz-calc">計算: ${esc(x.calc)}</span>` : ""}</span></button>${tags(x)}${(on && (x.onc || x.ctl)) || x.noeff ? `<div class="pz-ctl">${on ? (x.onc || "") + x.ctl : ""}${x.noeff || ""}</div>` : ""}</div>`;
+        <span class="pz-desc">${esc(x.desc)}${x.calc ? `<span class="pz-calc">計算${x.calcLv ? `（${x.calcLv}）` : ""}: ${esc(x.calc)}</span>` : ""}</span></button>${tags(x)}${(on && (x.onc || x.ctl)) || x.noeff ? `<div class="pz-ctl">${on ? (x.onc || "") + x.ctl : ""}${x.noeff || ""}</div>` : ""}</div>`;
     };
     // 通常素質: Lv0〜6のボタン。徽章の「＋」は、名前の行の右端（6のボタンの上）に出す
     const normCard = x => {
@@ -422,7 +423,7 @@
         <div class="pz-row"><div class="pz-lvs" role="group" aria-label="${esc(x.name)}のLv">${btns}</div></div>
         ${x.lv > POT_LV_MAX ? `<div class="muted" style="font-size:11px">前の入力で Lv${x.lv} が入っています（ボタンを押すと Lv0〜6 に変わります）</div>` : ""}
         ${tags(x)}${x.lv > 0 && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}
-        <div class="pz-desc">${esc(x.desc)}${x.calc ? `<span class="pz-calc">計算: ${esc(x.calc)}</span>` : ""}</div></div>`;
+        <div class="pz-desc">${esc(x.desc)}${x.calc ? `<span class="pz-calc">計算${x.calcLv ? `（${x.calcLv}）` : ""}: ${esc(x.calc)}</span>` : ""}</div></div>`;
     };
     const cores = list.filter(x => x.core), norms = list.filter(x => !x.core);
     // 通常素質は、特化構築ごと・汎用ごとに見出しを付ける（見出しは同じグリッドの1行）
