@@ -239,6 +239,9 @@
   /* 共有・読み込みのポップアップ */
   .dlg { width: min(760px, calc(100vw - 24px)); border: 2px solid var(--border); border-radius: 18px; padding: 18px; color: var(--text); box-shadow: 0 16px 48px rgba(30,34,80,.25); }
   .dlg::backdrop { background: rgba(30,34,80,.35); }
+  .pick-dlg { width: min(1200px, calc(100vw - 24px)); max-height: calc(100vh - 24px); }   /* 巡遊者の一覧は広め */
+  .pick-dlg .pk-list { max-height: calc(100vh - 260px); overflow-y: auto; padding: 8px 2px 0; }
+  .pick-dlg .foot { margin-top: 10px; text-align: right; }
   .dlg h2 { margin: 0 0 4px; font-size: 18px; color: var(--indigo); display: flex; align-items: center; gap: 8px; }
   .dlg h2 .en { font-family: var(--font-en); font-weight: 400; font-size: 15px; letter-spacing: .14em; color: var(--link); }
   .dlg .row { margin: 12px 0 0; }
@@ -370,7 +373,7 @@
 <div class="mstrip" id="mstrip"></div>
 <div class="betabar" id="betabar" hidden>こちらは<b>β版</b>です。データや計算が間違っている可能性があります。もし気づいたことがあれば『<button type="button" class="linkbtn" data-act="rp-open">報告</button>』から教えてもらえると嬉しいですm( _ _ )m<button type="button" class="closebtn" data-act="beta-close" aria-label="お知らせを閉じる">×</button></div>
 <nav class="mbar" id="mbar" aria-label="表示の切り替え"></nav>
-<dialog id="shareDlg" class="dlg" aria-labelledby="shareDlgT"><div id="shareBody"></div></dialog>
+<dialog id="pickDlg" class="dlg pick-dlg" aria-labelledby="pickDlgT"><div id="pickBody"></div></dialog>
 <dialog id="reportDlg" class="dlg" aria-labelledby="reportDlgT"><div id="reportBody"></div></dialog>
 <div class="app">
   <div id="left">
