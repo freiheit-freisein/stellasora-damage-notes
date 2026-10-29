@@ -75,6 +75,10 @@ window.SIM = window.SIM || {};
       "Sanctuary of Light": { txt: "盾（火力には影響しない）", e: [] },
       "Cosmic Brilliance": { txt: "光属性の全員の攻撃力%", e: [{ k: "atkPct", n: 0, to: "lux" }] },
     },
+    nazuna: {
+      // 実測（印テスト3・深層ノ主）: Lv4 +290% は、徽章の印ダメージ+107%と足し算にならず 2.07×3.90 で効く（115,690 が一致）
+      "Touch of Nature": { txt: "（みんな寝転んで）地属性の全員の印ダメージ＋（別枠の掛け算）。眩い正義などと重なったときの形は未確認（掛け算で計算）", e: [{ k: "markMult", n: 0, to: "lux" }] },
+    },
     tilia: {
       "Shield Counter": { txt: "主力スキル：反撃の追加 245%（スキル）", e: [X("main", "反撃（Shield Counter）", { m: 245, tags: ["counter"] })] },
       "Perfect Triangle Formation": { txt: "防御の効果（火力には影響しない）", e: [] },
@@ -179,6 +183,21 @@ window.SIM = window.SIM || {};
       { n: 5, name: "正義とともに", txt: "光属性が3人のとき、チーム全体のスキルダメージ +13%", e: [{ k: "Bs", raw: 0.13, to: "all", cond: "allLux" }] },
     ],
   };
+  // グレイ・ナズナ（2026-10-29 画面で確認。印テスト1〜3で、乗るタイミングも実測と一致）
+  HEART.gerie = [
+    { n: 1, name: "ワタシの原罪", txt: "グレイのスキルダメージの後5秒、攻撃力 +2.5%（1秒に1回・最大8重）", e: [{ k: "atkPct", raw: 0.025, stk: 8 }] },
+    { n: 2, name: "白き御座の仰ぎ", txt: "グレイが地の印を発動した後4秒、地属性ダメージ +2.5%（最大8重）", e: [{ k: "W", raw: 0.025, stk: 8 }] },
+    { n: 3, name: "サマエルの祝福", txt: "グレイの必殺技の後20秒、スキルダメージ +8.3%（最大7重。必殺後なので既定は反映しない）", off: true, e: [{ k: "Bs", raw: 0.083, stk: 7 }] },
+    { n: 4, name: "黄昏の呪縛", txt: "味方が地の印を付与した後5秒、グレイの攻撃力 +20%", e: [{ k: "atkPct", raw: 0.20 }] },
+    { n: 5, name: "シュワキマセリ", txt: "エリート以上の敵に、地属性ダメージ +24%", e: [{ k: "W", raw: 0.24 }] },
+  ];
+  HEART.nazuna = [
+    { n: 1, name: "二度寝の誘惑", txt: "地の印を発動した後8秒、チーム全体の地属性ダメージ +14%", e: [{ k: "W", raw: 0.14, to: "lux" }] },
+    { n: 2, name: "次から本気出す", txt: "ナズナの必殺技の後20秒、主力のその敵への地属性ダメージ +40%（必殺後なので既定は反映しない）", off: true, e: [{ k: "W", raw: 0.40, to: "main" }] },
+    { n: 3, name: "ボディが甘い！", txt: "ナズナが地の印を付与した後8秒、敵の地属性被ダメージ +14%（被ダメージは足し算）", e: [{ k: "taken", raw: 0.14, to: "enemy" }] },
+    { n: 4, name: "あいつは任せた", txt: "ナズナのスキルダメージの後5秒、主力の攻撃力 +20%", e: [{ k: "atkPct", raw: 0.20, to: "main" }] },
+    { n: 5, name: "芝生に寝転んで", txt: "地属性が3人のとき、チーム全体の地属性ダメージ +14%（出撃していない支援も数える）", e: [{ k: "W", raw: 0.14, to: "lux", cond: "allLux" }] },
+  ];
   S.HEART_SPEC = HEART;
 
   // チーム全体の効果の集計。返り値: id → 集計
@@ -196,7 +215,7 @@ window.SIM = window.SIM || {};
     const elOf = oid => chs[team.indexOf(oid)].el;
     const sameN = oid => chs.filter(c => c.el === elOf(oid)).length;
     const out = {};
-    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
+    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, markMult: 1, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
     const cond = (k, oid) => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? sameN(oid) === chs.length : k === "mainSame" ? chs[0].el === elOf(oid) : true);
     const recvOf = (to, oid, e) => {
       const el = elOf(oid);
@@ -232,6 +251,7 @@ window.SIM = window.SIM || {};
         }
         if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; return; }
         if (e.k === "takenMark") { if (G.markDebuff !== false) a.takenMark *= 1 + v; return; }
+        if (e.k === "markMult") { a.markMult *= 1 + v; return; }   // 印ダメージの別枠（印ダメージ+の足し算とは別に掛ける）
         if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
         if (e.k === "takenBasic") { a.takenBasic = (a.takenBasic || 1) * (1 + v); return; }
         if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || (e.tags && (e.k === "Bs" || e.k === "Bb"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, cond: e.cond || null }); return; }

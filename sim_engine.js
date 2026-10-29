@@ -71,7 +71,8 @@
     });
     return t;
   }
-  function lrSum(G, el) {
+  // charMain = この巡遊者が主力か。メインのロスレコのコア効果のうち、対象が主力のもの（朝靄など）は主力にだけ乗る（2026-10-29 実測）
+  function lrSum(G, el, charMain) {
     const t = { baseAtk: 0, baseHp: 0, elem: 0, basicDmg: 0, skillDmg: 0, ultDmg: 0, atkPct: 0 };
     const add = (id, isMain) => {
       const r = (window.LOSTRECORDS || []).find(x => x.id === id);
@@ -80,7 +81,7 @@
       t.baseAtk += s.baseAtk || 0; t.baseHp += s.baseHp || 0;
       if (m) t.elem += s.elemDmg || 0;
       t.basicDmg += s.basicDmg || 0; t.skillDmg += s.skillDmg || 0; t.ultDmg += s.ultDmg || 0;
-      const a = isMain && r.core && r.core.always;
+      const a = isMain && r.core && r.core.always && (r.core.always.target !== "main" || charMain) && r.core.always;
       if (a) { if (m) t.elem += a.elemDmg || 0; t.atkPct += a.atkPct || 0; }
     };
     (G.lrMain || []).forEach(id => add(id, true));
@@ -97,7 +98,7 @@
     const el = c.el;
     const em = emblemSum(cs.emb, cs.embOn);
     const nt = noteSum(S.notesTotal ? S.notesTotal(G) : G.notes, el);
-    const lr = lrSum(G, el);
+    const lr = lrSum(G, el, isMain);
     const rec = recordBonus(G.recordLv || 0);
     const w = TK(c.en), wst = w && w.stats;
     const tab = (wst || TK(c.manual.tables).stats);
@@ -258,13 +259,13 @@
       else if (type === "ult") B = 1 + st.ultAdd + ef.Bu;
       else B = 1 + st.markAdd + ag.markAdd;
       let taken = ef.taken * (mh.taken || 1) * (other.taken || 1);
-      if (type === "mark") taken *= ag.takenMark;
+      if (type === "mark") taken *= ag.takenMark * (ag.markMult || 1);
       if (type === "skill") taken *= ag.takenSkill;
       if (type === "basic") taken *= ag.takenBasic || 1;
       if (traits.crack && type === "skill") taken *= 1.15;
       if (traits.chase && (type === "skill" || type === "basic")) taken *= 1.24;
       const dd = enemyD(en, c.el, st.pen, G);
-      const markX = type === "mark" ? (en.markX || 1) : 1;
+      const markX = type === "mark" && c.id === "noya" ? (en.markX || 1) : 1;   // セイナ(原点)の印だけの別枠。ほかの印にはかからない（グレイの地の印で実測）
       const mult = m / 100 * (1 + (mh.mult || 0)) * (1 + mAdd);
       const normal = refVal * mult * W * B * taken * dd.D * markX * (other.mult || 1);
       let cd = st.critDmg + (mh.critDmg || 0) + cdAdd;

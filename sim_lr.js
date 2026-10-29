@@ -187,6 +187,10 @@
     noya: [
       { id: "ult", skill: "ult", idx: 3, n: 4, k: "critRate", to: "main", off: true, txt: v => `必殺技の発動時、自身の会心率 +${v}%（30秒）` },
     ],
+    // ナズナの主力スキル: ペンギンのダメージから5秒、敵の地属性被ダメージ（Lv10 +129%）。被ダメージは素質・心相と足し算（実測）
+    nazuna: [
+      { id: "main", skill: "main", idx: 1, n: 1, k: "taken", to: "lux", nodict: true, txt: v => `ぬいぐるみペンギンがダメージを与えてから5秒、敵の地属性被ダメージ +${v}%` },
+    ],
     tilia: [
       { id: "main", skill: "main", idx: 1, n: 1, k: "atkPct", to: "all", off: true, txt: v => `防御姿勢が終わったときの反撃のあと、チーム全員の攻撃力 +${v}%（10秒）` },
       { id: "support", skill: "support", idx: 2, n: 1, k: "atkPct", to: "all", off: true, txt: v => `盾がダメージを与えると、チーム全員の攻撃力 +${v}%（10秒）` },
@@ -200,7 +204,7 @@
       if (!list) return;
       const c = chs[i], cs = G.chars[id], isMain = i === 0;
       const lvB = S.emblemExtra(cs.emb, cs.embOn).lv;
-      const luxIds = team.filter((x, j) => chs[j].el === "光");
+      const luxIds = team.filter((x, j) => chs[j].el === c.el);   // 「同じ属性の全員」
       list.forEach(fx => {
         const usable = isMain ? (fx.skill === "main" || fx.skill === "ult") : fx.skill === "support";
         if (!usable) return;
@@ -214,6 +218,7 @@
           const a = out[rid];
           if (!a) return;
           if (fx.k === "critRate") a.mods.push({ k: "critRate", v, tags: null, ht: null, cond: null });
+          else if (fx.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; }
           else if (a[fx.k] != null) a[fx.k] += v;
         });
       });

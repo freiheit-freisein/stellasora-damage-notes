@@ -936,9 +936,11 @@
       ["mark", "印", groupSummary(main, "main", true) || groupSummary(main, "ult", true), main],
       ["sup1", chOf(s1).jp + " 支援スキル", groupSummary(s1, "support"), s1],
       ["supu1", chOf(s1).jp + " 必殺技", groupSummary(s1, "ult"), s1],
+      ["supm1", chOf(s1).jp + " 印", groupSummary(s1, "support", true), s1],
       ["sup2", chOf(s2).jp + " 支援スキル", groupSummary(s2, "support"), s2],
       ["supu2", chOf(s2).jp + " 必殺技", groupSummary(s2, "ult"), s2],
-    ];
+      ["supm2", chOf(s2).jp + " 印", groupSummary(s2, "support", true), s2],
+    ].filter(x => !/^supm/.test(x[0]) || x[2]);   // 支援の印は、印を発動できる支援（グレイなど）だけ出す
     window.__items = items;
     const curVals = {};
     $("result").innerHTML = items.map(([key, label, sm, id]) => {

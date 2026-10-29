@@ -61,6 +61,13 @@ window.SIM = window.SIM || {};
   ];
   // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
   (window.SIM_CHARS_AUTO || []).forEach(c => { if (!S.CH.some(x => x.en === c.en)) S.CH.push(c); });
+  // 自動データの巡遊者に、画面・実測で確かめた値を足す（2026-10-29）
+  const patchCh = (id, f) => { const c = S.CH.find(x => x.id === id); if (c) f(c); };
+  patchCh("gerie", c => {
+    c.talentBonus = { skill: 0.021 };   // 心相ステータスボーナス: スキルダメージ +21%（心相50）
+    // 支援スキルで地の印を発動: 攻撃力の125%（スキルLvで変わらない）。スキル1撃目 → 印 → スキル2撃目の順（実測）
+    c.hits.support.push({ s: -1, fixed: 125, c: 1, t: "mark", name: "印ダメージ（岩錐）", tags: [] });
+  });
 
   // 敵。def=防御倍率、res=属性ごとの耐性（書いていない属性は resDefault、無ければ250）、weak=弱点（表示用）、weakMult=弱点補正。
   // extra は、実測に合わせるために入れた原因不明の倍率（「その他倍率」）。
@@ -71,8 +78,8 @@ window.SIM = window.SIM || {};
   const BOSS = { def: 0.5, resDefault: 750, weakMult: 1, extra: {} };
   const RES_WEAK = 250, RES_RESIST = 2000;   // 耐性の属性: 翠煌ノ刃(光)で 徽章なし808・両方（光ダメ122%・貫通145）2,763 が耐性2000の式と一致（gistの第3段の上限）
   S.ENEMIES = [
-    Object.assign({ id: "stomp", name: "暴走のストンプクラブ（指名手配・水火弱点）", res: { 水: RES_WEAK, 火: RES_WEAK }, weak: ["水", "火"], markX: 1.68, hpBonus: 0,
-      note: "ボス（防御0.5・弱点の水と火は耐性250・ほかは等倍の750）。テスト3（信頼Lv21）のセイナ(原点)の通常1撃目 77,865（光は等倍）、光貫通35で 86,380（×1.0846＝耐性750の式）。耐性の属性は未確認。印の倍率は セイナ(光)の実測 ≒1.65〜1.68。" }, BOSS),
+    Object.assign({ id: "stomp", name: "暴走のストンプクラブ（指名手配・水火弱点）", res: { 水: RES_WEAK, 火: RES_WEAK, 地: RES_RESIST }, weak: ["水", "火"], markX: 1.68, hpBonus: 0,
+      note: "ボス（防御0.5・弱点の水と火は耐性250・ほかは等倍の750）。テスト3（信頼Lv21）のセイナ(原点)の通常1撃目 77,865（光は等倍）、光貫通35で 86,380（×1.0846＝耐性750の式）。地属性は耐性あり（2026-10-29: ナズナの初段19・グレイの印297。値は耐性2000として計算）。印の倍率は セイナ(光)の実測 ≒1.65〜1.68。" }, BOSS),
     { id: "defense", name: "骸魔防衛戦の雑魚（初段のみ）", def: 1, res: { 光: 250, 水: 250, 風: 250 }, weak: [], weakMult: 1,
       extra: {}, markX: 1, hpBonus: 0, teamHp: 0.15, teamAtk: 0.15, teamCrit: 0.10,
       note: "耐性250・防御1.00（徽章なしのセイナ初段 323,158 が式と完全一致）。全員に 最大HP+15%・攻撃+15%・会心率+10%。雑魚は1撃で倒れるので初段だけ測れる。印の倍率は未確認（1とした）。" },

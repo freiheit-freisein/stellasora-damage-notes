@@ -32,7 +32,8 @@
     (S.NOTE_KEYS || []).forEach(n => set.add(n));
     Object.keys(S.LR_FX || {}).filter(id => !S.LR_FX[id].auto).forEach(id => { const fx = S.LR_FX[id]; fx.core.forEach(it => set.add(id + ":c:" + it.id)); fx.assists.forEach(a => a.items.forEach(it => set.add(id + ":" + a.id + ":" + it.id))); });
     (S.LR_COUNTS || []).forEach(c => set.add(c.key));
-    Object.keys(S.SKILL_FX || {}).forEach(id => S.SKILL_FX[id].forEach(fx => set.add(id + ":" + fx.id)));
+    // あとから足したスキルのバフ（nodict）は辞書に入れない（文字のまま書き出す）。辞書が変わると、それまでの共有コードが読めなくなるため
+    Object.keys(S.SKILL_FX || {}).forEach(id => S.SKILL_FX[id].forEach(fx => { if (!fx.nodict) set.add(id + ":" + fx.id); }));
     ["光", "水", "風", "火", "地", "闇"].forEach(x => set.add(x));
     // 並び順: 1バイトで済む位置に、よく出るものを置く（値は先頭16個、キーはその後）
     const VALS = ["noya", "firefly", "tilia", "willow", "nazuka", "eleanor", "stomp", "defense", "deep", "mirai", "negai", "yuuzu", "anaaki", "kakegae", "nitamono", "光"];
