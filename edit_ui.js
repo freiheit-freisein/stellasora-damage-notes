@@ -10,10 +10,10 @@
 
   // 効果の種類（k=計算での名前、flat=割合でなく実数、to=既定の対象）
   const KINDS = [
-    ["W", "属性ダメージ（加算）"], ["Bs", "スキルダメージ（加算）"], ["Bb", "通常攻撃ダメージ（加算）"], ["Bu", "必殺技ダメージ（加算）"], ["mark", "印ダメージ（加算）"],
+    ["W", "属性ダメージ（加算）"], ["Bs", "スキルダメージ（加算）"], ["Bb", "通常攻撃ダメージ（加算）"], ["Bu", "必殺技ダメージ（加算）"], ["mark", "印ダメージ（加算）"], ["markMult", "印ダメージ（別枠の乗算）"],
     ["atkPct", "攻撃力%"], ["hpPct", "最大HP%"], ["hpFlat", "基礎HP（加算・実数）", { flat: true }], ["atkFlat", "基礎攻撃力（加算・実数）", { flat: true }], ["pen", "属性耐性貫通（実数）", { flat: true }],
     ["critRate", "会心率"], ["critDmg", "会心ダメージ"],
-    ["taken", "敵の被ダメージ（属性の別枠の乗算）", { to: "enemy" }], ["takenSkill", "敵のスキル被ダメージ", { to: "enemy" }], ["takenBasic", "敵の通常攻撃被ダメージ", { to: "enemy" }], ["takenMark", "敵の印被ダメージ", { to: "enemy" }],
+    ["taken", "敵の被ダメージ（属性の別枠の乗算）", { to: "enemy" }], ["takenSkill", "敵のスキル被ダメージ", { to: "enemy" }], ["takenBasic", "敵の通常攻撃被ダメージ", { to: "enemy" }], ["takenMark", "敵の印被ダメージ（別枠の乗算）", { to: "enemy" }],
     ["mult", "ヒットの倍率 ×(1+x)（対象のタグで絞る）"], ["count", "ヒット回数の加算（ヒットの番号を指定）", { flat: true }], ["extra", "追加ヒット（ダメージが増える）"],
   ];
   const KIND = Object.fromEntries(KINDS.map(k => [k[0], k]));
