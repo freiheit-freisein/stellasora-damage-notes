@@ -761,11 +761,13 @@
     };
     const chosen = SLOTS.map(([k, l]) => `<span class="pk-ch${p[k] ? " on" : ""}">${l}：${p[k] ? esc(chOf(p[k]).jp) : "（空き）"}</span>`).join("");
     const full = SLOTS.every(([k]) => p[k]);
+    const ls = dlg.querySelector(".pk-list"), keep = ls ? ls.scrollTop : 0, keepD = dlg.scrollTop;   // 描き直しても、一覧のスクロールの位置を保つ
     $("pickBody").innerHTML = `<h2 id="pickDlgT"><span class="en">NEW</span>巡遊者を選んで作る</h2>
       ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「この3人で作る」を押してください。今の入力は、すべて初期値に戻ります。")}
       <div class="pk-bar">${chosen}<button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して作る" : "この3人で作る"}</button></div>${msgOf("pick")}
       <div class="pk-list">${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}</div>
       <div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button></div>`;
+    const ls2 = dlg.querySelector(".pk-list"); if (ls2) ls2.scrollTop = keep; dlg.scrollTop = keepD;
   }
   function renderLoad() {
     const names = Object.keys(savedBuilds());
