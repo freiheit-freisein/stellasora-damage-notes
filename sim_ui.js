@@ -40,14 +40,15 @@
   const HC_PATCH ={"team":{"main":"noya","s1":"tilia","s2":"firefly"},"recordLv":34,"notes":{"強撃の音符":0,"幸運の音符":51,"爆発の音符":15,"体力の音符":35,"集中の音符":15,"器用の音符":30,"必殺の音符":15,"水の音符":0,"風の音符":0,"光の音符":38},"lrMain":{"0":"mirai","1":"negai","2":"yuuzu"},"lrSub":{"0":"anaaki","1":"kakegae","2":"nitamono"},"lrOn":{"mirai:c:taken":false},"lrManual":{"baseAtk":null,"baseHp":null,"elem":null,"elemEl":"光"},"chars":{"noya":{"skillLv":{"basic":9},"trustLv":20,"emb":{"0":{"slots":{"0":{"k":"elemDmg","cat":"ダメージ・貫通"},"1":{"k":"derivedCritRate","q":"gold","cat":"従者・派生"},"2":{"k":"critRate","q":"rainbow","cat":"会心"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"hpPct","cat":"ステータス"},"1":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"2":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"spMain","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Argent Mirage: Legion's End"},"1":{"k":"baseAtk","cat":"ステータス"},"2":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"},"3":{"k":"hpPct","q":"rainbow","cat":"ステータス"}}}},"add":{"basic":0.12,"skill":0.12,"hpPct":0.15},"pots2":{"Lucent_Blitz":1,"Dawnflare":1,"Prism_Warp":6,"Resolve__Blitz":6,"Astral_Brilliance":6,"Argent_Mirage__Legion_s_End":6,"Veteran_s_Grit":6,"Lucent_Tide":6,"Guiding_Star":6,"Empyrean_Starfall__Devil_s_End":0}},"firefly":{"skillLv":{"basic":1,"main":3,"support":8,"ult":9},"trustLv":10,"emb":{"0":{"slots":{"0":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"},"1":{"k":"spSupport","cat":"その他"},"2":{"k":"atkPct","cat":"ステータス"},"3":{"k":"resPen","q":"rainbow","cat":"ダメージ・貫通"}}},"1":{"slots":{"0":{"k":"lvMain","q":"rainbow3","cat":"スキル・素質"},"1":{"k":"hpPct","q":"rainbow","cat":"ステータス"},"2":{"k":"spSupport","cat":"その他"},"3":{"k":"ultDmg","q":"rainbow","cat":"ダメージ・貫通"}}},"2":{"slots":{"0":{"k":"potSupport","q":"rainbow2","cat":"スキル・素質","t":"Stellar Crash"},"1":{"k":"potCommon","q":"rainbow3","cat":"スキル・素質","t":"Persistent Warmth"},"2":{"k":"servantDmg","q":"rainbow","cat":"従者・派生"},"3":{"k":"elemDmg","q":"rainbow","cat":"ダメージ・貫通"}}}},"pots2":{"Domain_of_Purity":6,"Stellar_Crash":6,"Radiance_Blade__Twin_Shadow":1,"Radiance_Blade__Firefly":1,"Lightforged_Blade":2,"Persistent_Warmth":4,"Sanctuary_of_Light":1},"pstk":{"Stellar_Crash":0}},"tilia":{"skillLv":{"basic":2,"main":4,"support":9,"ult":3},"emb":{"0":{"slots":{"0":{"k":"spSupport","q":"gold","cat":"その他"}}},"1":{"slots":{"0":{"k":"spSupport","q":"rainbow","cat":"その他"}}},"2":{"slots":{"0":{"k":"potSupport","q":"gold","cat":"スキル・素質","t":"Blinding Beam"}}}},"pots2":{"Holy_Inscription":1,"Renewed_Spectrum":1,"Enemy_Counter":6,"Blinding_Beam":6,"Revealed_Flaw":6,"Knight_s_Seal":1,"Banner_of_Glory":2,"Trick_Boost":0},"pon":{"Revealed_Flaw":false,"Holy_Inscription":false}}},"skOn":{"noya:ult":true}};
   S.presetHC = () => S.applyDiff(defState(), clone(HC_PATCH));
   let G = defState();
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team) G = merge(defState(), s); } catch (e) { /* 保存なしでも動く */ }
+  let firstVisit = true;
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team) { G = merge(defState(), s); firstVisit = false; } } catch (e) { /* 保存なしでも動く */ }
   function merge(a, b) {
     Object.keys(b).forEach(k => { if (b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) && a[k] && typeof a[k] === "object" && !Array.isArray(a[k])) merge(a[k], b[k]); else a[k] = b[k]; });
     return a;
   }
   let shareMsg = "";
   const DV = { preset: "", code: "", url: "" }, DM = {};   // ポップアップの各欄の値とメッセージ（{t, ng}）
-  const V = { panel: "overview", tilesFor: "main", drill: null, pick: null, lrPick: null, lrEl: {}, mChar: "main", m: "in" };
+  const V = { panel: firstVisit ? "load" : "overview", tilesFor: "main", drill: null, pick: null, lrPick: null, lrEl: {}, mChar: "main", m: "in" };
   let memo = null;
   try { memo = JSON.parse(localStorage.getItem(KEY_M)); } catch (e) { memo = null; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(G)); } catch (e) { /* 無視 */ } };
@@ -88,23 +89,7 @@
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
     $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <button class="btn-add pri" data-act="dlg-open">共有・読み込み</button><button class="btn-add" data-act="rp-open">報告</button><button class="btn-add" data-act="reset">全初期化</button>`;
-    // 共有・読み込みのポップアップ（プリセットコード・共有コード・共有URL それぞれ 読込・作成・コピー、ブラウザへの保存）
-    const row = (key, label, note, ph) => `<div class="row"><label for="dv-${key}">${label} <span class="muted" style="font-weight:400">${note}</span></label>
-      <div class="line"><input type="text" id="dv-${key}" value="${esc(DV[key])}" placeholder="${ph}" spellcheck="false">
-      <button class="btn-add" data-act="dv:${key}:in">読込</button><button class="btn-add" data-act="dv:${key}:out">作成</button><button class="btn-add" data-act="dv:${key}:copy">コピー</button></div>
-      <div class="msg${DM[key] && DM[key].ng ? " ng" : DM[key] ? " ok" : ""}">${esc((DM[key] || {}).t || "")}</div></div>`;
-    $("shareBody").innerHTML = `<h2 id="shareDlgT"><span class="en">SHARE</span>共有・読み込み</h2>
-      ${row("preset", "プリセットコード", "（ゲーム・プリセット共有サイトと同じ。編成と素質Lvだけ）", "ゲームの素質プリセットのコード")}
-      ${row("code", "共有コード", "（この計算ページの入力すべて）", "共有コードを貼り付け")}
-      ${row("url", "共有URL", "（共有コードの短縮URL。開くだけで読み込まれます）", "https://sim.stella-tool.com/s/…")}
-      <div class="row"><button class="btn-add xbtn" data-act="share-x">Xで共有</button> <span class="muted">短縮URLを作って、Xの投稿画面を開きます（本文は編成の3人の名前とURLだけ）</span></div>
-      <div class="row sub"><label for="bname">このブラウザに保存 <span class="muted" style="font-weight:400">（名前を付けて保存・読み込み）</span></label>
-      <div class="line" style="grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto auto">
-        <input type="text" id="bname" placeholder="名前"><button class="btn-add" data-act="bsave">保存</button>
-        <select id="bsel"><option value="">（保存したビルド）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select>
-        <button class="btn-add" data-act="bload">読み込み</button><button class="btn-add" data-act="bdel">削除</button></div></div>
-      <div class="foot"><button class="btn-add" data-act="dlg-close">閉じる</button></div>`;
+      <button class="btn-add" data-act="rp-open">報告</button>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
     $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比較中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "再度比較する" : "比較"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比較を止める</button>` : "");
@@ -142,7 +127,7 @@
     const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
     const b = (key, label, en, n) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${n ? `<span class="tn">${n}</span>` : ""}${label}</span></button>`;
     // 入力する順に番号を付けて並べる。ゲームの画面と数値を合わせるための画面（直接入力・補正）は、右端に「実測合わせ」としてまとめる
-    $("selectors").innerHTML = b("overview", "巡遊者", "TREKKERS", 1) + b("lr", "記録・ロスレコ・音符", "RECORD", 2) + b("gimmick", "敵", "ENEMY", 3) + b("score", "ビルド", "BUILD", 4)
+    $("selectors").innerHTML = b("load", "読込", "LOAD", 1) + b("overview", "巡遊者", "TREKKERS", 2) + b("lr", "記録・ロスレコ", "RECORD", 3) + b("gimmick", "エネミー", "ENEMY", 4) + b("score", "ビルド確認", "CHECK", 5) + b("share", "共有・保存", "SHARE", 6)
       + `<span class="tab-sep" aria-hidden="true"></span><span class="tab-grp">実測合わせ</span>` + b("direct", "直接入力", "DIRECT") + b("adjust", "補正", "ADJUST");
     // スマホ: タブの列は横にスクロールするので、選んだタブを真ん中より少し左に寄せる（右に続きのタブが見えるように）
     const row = $("selectors"), on = row.querySelector('[aria-selected="true"]');
@@ -359,7 +344,8 @@
     const list = hs ? `<div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${hs.map(h => {
       const un = (cs.talent || 0) >= h.n * 10, key = "heart" + h.n, onv = (cs.pon || {})[key], on = onv == null ? !h.off : onv;
       return `<div class="pot${un ? " core" : ""}"><b>${h.n} ${esc(h.name)}</b>${un ? '<span class="tag-ok">解放済み</span>' : '<span class="tag-ng">未解放</span>'}
-        <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}</div>`;
+        <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}
+        ${un && id === "noya" && h.n === 1 ? `<label class="check" style="font-weight:400;margin-top:4px"><input type="checkbox" data-p="heartCrit" data-t="b"${G.heartCrit ? " checked" : ""}>「閃星」中（印の会心ダメージ +12%）</label>` : ""}</div>`;
     }).join("")}</div>` : '<p class="muted">この巡遊者の、心相の戦闘中の効果は、まだ登録していません。反映したい効果は「その他」に入れてください。</p>';
     return `<div class="wide"><h3>${esc(c.jp)}：心相</h3>
       ${fld("心相", `<div class="pz-lvs seg" role="group" aria-label="心相">${Array.from({ length: 50 / (rar >= 5 ? 10 : 5) + 1 }, (_, i) => i * (rar >= 5 ? 10 : 5)).map(v => `<button type="button" class="pz-lv${(+cs.talent || 0) === v ? " on" : ""}" aria-pressed="${(+cs.talent || 0) === v}" data-act="plv|${v}|${p}.talent">${rar >= 5 ? v / 10 + "凸" : v / 10}</button>`).join("")}</div>`, rar >= 5 ? "" : "星4は5段階ずつ（0.5凸きざみ）")}
@@ -443,11 +429,12 @@
       ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
     const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「重複数が最大のとき」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（重複数は最大）も乗ります。"
       : (id === "nazuka" || id === "eleanor") ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
-      : S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「ギミック(敵)」で切り替えます。"
+      : S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「エネミー」で切り替えます。"
       : "この巡遊者の素質の効果は、まだ計算に入れていません。反映したい効果は「その他」に手で入れられます。";
     return `<div class="pz">
       <div class="pz-main">
         <h3 style="margin:0">${esc(c.jp)}：素質</h3>
+        ${id === "tilia" ? `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-p="markDebuff" data-t="b"${G.markDebuff !== false ? " checked" : ""}>印被ダメージ増加（眩い正義など）が敵に付いている</label>` : ""}
         <div class="pz-bar">
           <p class="muted" style="margin:0;font-size:12px">ここで選べるのは Lv6 まで。徽章の「＋」は徽章画面の入力から自動で足されます（Lv7〜9 は推定値）。</p></div>
         ${coreSec}${normSec}
@@ -541,14 +528,12 @@
   function renderGimmick() {
     const en = G.enemyObj;
     const tr = S.DEFAULT_ENEMY_TRAITS[G.enemy] || [];
-    return `<div class="wide"><h3>敵</h3>
+    return `<div class="wide"><h3>エネミー</h3>
       ${fld("敵", inp("enemy", { sel: S.ENEMIES.map(e => [e.id, e.name]), str: true }))}
       <p class="note">弱点: ${en.weak.join("・") || "なし"}（弱点補正 ×${en.weakMult}）／防御倍率 ${en.def}／印の別枠 ×${en.markX}／主力の最大HP +${pct(en.hpBonus)}${en.teamHp ? `／全員のHP +${pct(en.teamHp)}・攻撃 +${pct(en.teamAtk)}・会心率 +${pct(en.teamCrit)}` : ""}</p>
       <p class="muted">${esc(en.note)}</p>
       ${tr.map(t => `<label class="check" style="font-weight:400"><input type="checkbox" data-p="traits.${t.id}" data-t="b"${G.traits[t.id] ? " checked" : ""}>${esc(t.name)}</label>`).join("")}
-      <label class="check" style="font-weight:400"><input type="checkbox" data-p="glimmer" data-t="b"${G.glimmer !== false ? " checked" : ""}>敵に「残光」が付いている（光チームの素質の条件）</label>
-      <label class="check" style="font-weight:400"><input type="checkbox" data-p="markDebuff" data-t="b"${G.markDebuff !== false ? " checked" : ""}>ティリアの印被ダメージ増加（眩い正義など）が敵に付いている</label>
-      <label class="check" style="font-weight:400"><input type="checkbox" data-p="heartCrit" data-t="b"${G.heartCrit ? " checked" : ""}>セイナ(原点)の心相1「閃星」中（印の会心ダメージ +12%）</label></div>`;
+      <label class="check" style="font-weight:400"><input type="checkbox" data-p="glimmer" data-t="b"${G.glimmer !== false ? " checked" : ""}>敵に「残光」が付いている（光チームの素質の条件）</label></div>`;
   }
   function renderAdjust() {
     const en = G.enemyObj;
@@ -749,12 +734,93 @@
     renderAll();
   }
 
-  function renderScore() {
-    const cardHtml = `<div class="box" style="margin:0 0 10px"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        <b>ビルドカード</b><button class="btn-add pri" data-act="card-make" style="background:var(--accent);border-color:var(--accent);font-weight:900">${cardUrl ? "カードを作り直す" : "カードを作る"}</button>
-        ${cardUrl ? `<a class="btn-add" href="${cardUrl}" download="build-card.png" style="display:inline-flex;align-items:center;text-decoration:none">画像を保存</a><button class="btn-add xbtn" data-act="share-x">Xで共有</button>` : ""}
-        <span class="muted">${cardUrl ? "Xで共有は、短縮URL付きの投稿画面を開きます。画像は保存してから添付してください。入力を変えたら作り直してください。" : "3人分の徽章・素質・ロスレコ・音符を1枚の画像にします。"}</span></div>
+  // ---- ① 読込: 新しく作る（巡遊者を一覧から3人）・プリセットコード・共有コード・保存したビルド ----
+  // 巡遊者の一覧は、素質ノートと同じ並び（属性ごと、その中は ★5 → ★4、それぞれ実装の新しい順）
+  const EL_ORDER = ["水", "火", "風", "地", "光", "闇"];
+  function pickList() {
+    const info = c => { const t = TK(c.en) || {}; return { c, rar: t.rarity || 0, rel: t.release || "" }; };
+    return EL_ORDER.map(el => ({ el, list: S.CH.filter(c => c.el === el).map(info).sort((a, b) => (b.rar - a.rar) || String(b.rel).localeCompare(String(a.rel))).map(x => x.c) })).filter(g => g.list.length);
+  }
+  // 押すと、空いている枠の一番前（主力 → 支援1 → 支援2）に入る。選んである人を押すと、その枠が空く
+  function pickToggle(id) {
+    const p = V.pick3 = V.pick3 || { main: null, s1: null, s2: null };
+    const has = SLOTS.find(([k]) => p[k] === id);
+    if (has) { p[has[0]] = null; return; }
+    const free = SLOTS.find(([k]) => !p[k]);
+    if (free) p[free[0]] = id;
+  }
+  function savedBuilds() { try { return JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { return {}; } }
+  const msgOf = key => DM[key] ? `<div class="msg${DM[key].ng ? " ng" : " ok"}">${esc(DM[key].t)}</div>` : "";
+  function renderLoad() {
+    const p = V.pick3 = V.pick3 || { main: null, s1: null, s2: null };
+    const slotOf = id => SLOTS.find(([k]) => p[k] === id);
+    const card = c => {
+      const s = slotOf(c.id), rar = (TK(c.en) || {}).rarity || 0;
+      return `<button type="button" class="pk${s ? " on" : ""}" aria-pressed="${!!s}" data-act="pick:${c.id}" style="--elc:${EL_COLOR[c.el] || "#4B5082"}">
+        <span class="pk-ic" aria-hidden="true">${esc([...c.jp][0])}</span><span class="pk-nm">${esc(c.jp)}${c.auto ? "*" : ""}</span><span class="pk-rar">★${rar}</span>${s ? `<span class="pk-slot">${s[1]}</span>` : ""}</button>`;
+    };
+    const chosen = SLOTS.map(([k, l]) => `<span class="pk-ch${p[k] ? " on" : ""}">${l}：${p[k] ? esc(chOf(p[k]).jp) : "（空き）"}</span>`).join("");
+    const full = SLOTS.every(([k]) => p[k]);
+    const names = Object.keys(savedBuilds());
+    return `<div class="wide">
+      <h3>新しく作る</h3>
+      ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「この3人で作る」を押してください。今の入力は、すべて初期値に戻ります。")}
+      <div class="pk-bar">${chosen}<button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>この3人で作る</button></div>
+      ${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}
+      <h3 style="margin-top:18px">プリセットコードから作る</h3>
+      <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" placeholder="ゲームの素質プリセットのコード" spellcheck="false"><button class="btn-add" data-act="dv:preset:in">読み込む</button></div>
+      ${msgOf("preset")}<div class="muted help">編成と素質Lvが変わります（ゲーム・素質ノートと同じコード）。</div>
+      <h3 style="margin-top:18px">共有コード・共有URLを読み込む</h3>
+      <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
+      ${msgOf("load")}<div class="muted help">短い共有コード・共有URL・前の長い共有コードの、どれでも読み込めます。</div>
+      <h3 style="margin-top:18px">このブラウザに保存したビルド</h3>
+      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button><button class="btn-add" data-act="bdel">削除</button></div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
+      ${msgOf("build")}</div>`;
+  }
+  // 短い共有コード（短縮URLのID）・共有URL・長い共有コードの、どれでも読み込む
+  function loadAny(v) {
+    v = (v || "").trim();
+    if (!v) return say("load", "共有コードか共有URLを入れてください", true);
+    const m = /\/s\/([A-Za-z0-9]{4,16})/.exec(v) || /^([A-Za-z0-9]{4,16})$/.exec(v);
+    if (m) {
+      say("load", "読み込んでいます…");
+      return fetch("/api/short?id=" + m[1]).then(r => r.json()).then(j => j.code ? loadCode(j.code, "load", "共有コードのビルド") : say("load", j.error || "見つかりませんでした", true))
+        .catch(() => say("load", "読み込めませんでした（公開しているページで使えます）", true));
+    }
+    if (v.indexOf("#c=") >= 0) return loadCode(decodeURIComponent(v.slice(v.indexOf("#c=") + 3)), "load", "共有URLのビルド");
+    if (v.indexOf("#p=") >= 0) return loadPreset(decodeURIComponent(v.slice(v.indexOf("#p=") + 3)), "load");
+    return loadCode(v, "load", "共有コードのビルド");
+  }
+
+  // ---- ⑥ 共有・保存: ビルドカード・共有URL/共有コード（短縮）・プリセットコード・ブラウザに保存 ----
+  function cardBlock() {
+    return `<div class="box" style="margin:0 0 10px"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <button class="btn-add pri" data-act="card-make" style="background:var(--accent);border-color:var(--accent);font-weight:900">${cardUrl ? "カードを作り直す" : "カードを作る"}</button>
+        ${cardUrl ? `<a class="btn-add" href="${cardUrl}" download="build-card.png" style="display:inline-flex;align-items:center;text-decoration:none">画像を保存</a>` : ""}
+        <span class="muted">${cardUrl ? "入力を変えたら作り直してください。Xに載せるときは、画像を保存してから添付してください。" : "3人分の徽章・素質・ロスレコ・音符を1枚の画像にします。"}</span></div>
         ${cardUrl ? `<img src="${cardUrl}" alt="ビルドカード" style="width:100%;margin-top:8px;border-radius:12px;border:2px solid var(--border)">` : ""}</div>`;
+  }
+  function renderShareTab() {
+    const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
+    const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
+    return `<div class="wide">
+      <h3>共有URL・共有コード</h3>
+      <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button><span></span></div>
+      ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
+      ${msgOf("url")}${helpTxt("share", "開くだけ・入れるだけで、このビルドを読み込めます（「① 読込」に共有コードを入れても読み込めます）。", "Xで共有は、共有URLを作ってXの投稿画面を開きます（本文は編成の3人の名前とURLだけ）。共有URLはサーバーに保存するので、作るのにネットが必要です。ネットがないときは、下の「長い共有コード」を使ってください。")}
+      <h3 style="margin-top:18px">ビルドカード</h3>${cardBlock()}
+      <h3 style="margin-top:18px">プリセットコード（ゲームに入れる）</h3>
+      <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:preset:out">作る</button><button class="btn-add" data-act="dv:preset:copy">コピー</button></div>
+      ${msgOf("preset")}<div class="muted help">編成と素質Lvだけのコードです。ゲームの素質プリセットや素質ノートで読み込めます。</div>
+      <h3 style="margin-top:18px">このブラウザに保存</h3>
+      <div class="ld-line"><input type="text" id="bname" placeholder="名前を付けて保存"><button class="btn-add" data-act="bsave">保存</button></div>
+      ${msgOf("build")}<div class="muted help">保存したビルドは「① 読込」から読み込めます。このブラウザの中だけに残ります。</div>
+      <h3 style="margin-top:18px">長い共有コード</h3>
+      <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
+      ${msgOf("code")}<div class="muted help">ネットがなくても作れる、長い形の共有コードです。</div></div>`;
+  }
+
+  function renderScore() {
     // 3分間の回数（目安）の入力
     const rotIn = (id, k, label, d) => fld(label, stepper(`rot.${id}.${k}`, 0, 999, d[k] || 0),
       k === "basic" ? `目安 ${d.basic}（1ローテ${d.basicSec}秒${d.basicMeasured ? "" : "・未測定"}）` : (d.ct[k] ? `目安 ${d[k]}（CD ${d.ct[k]}秒）` : "CDが分かりません。回数を入れてください"));
@@ -764,7 +830,7 @@
       return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${f}</div>`;
     }).join("");
     let items;
-    try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}<h3>ビルド検証</h3><p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
+    try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルド確認</h3><p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
     const pc = v => v == null ? "" : v > 0.0005 ? "−" + (Math.round(v * 1000) / 10).toFixed(1) + "%" : v < -0.0005 ? "+" + (Math.round(-v * 1000) / 10).toFixed(1) + "%" : "影響なし";
     // 今の値 → 比べる値。◀▶で比べる値を変える（今と同じ値は飛ばす。0まで下げると、まるごと外したときと同じ）。徽章は外したときだけ
     const decIn = d => {
@@ -774,8 +840,7 @@
       return `<span class="decin"><span class="muted">${d.unit}${d.cur} →</span>${btn(-1, "◀")}<b class="${d.t > d.cur ? "up" : ""}">${d.unit}${d.t}</b>${btn(1, "▶")}</span>`;
     };
     const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label.replace("\n", " "))}">${x.label.split("\n").map(esc).join('<br><span class="ind">') + (x.label.indexOf("\n") >= 0 ? "</span>" : "")}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
-    return `<div class="wide"><h3>ビルドカード</h3>${cardHtml}
-      <h3 style="margin:18px 0 6px">ビルド検証（与ダメへの寄与率）</h3>
+    return `<div class="wide"><h3 style="margin:0 0 6px">ビルド確認（与ダメへの寄与率）</h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
         ${helpTxt("rot", "自分の戦い方に合わせて、下の回数を書き換えてください。", `指名手配の3分間で、スキルと必殺技をCDが明けたらすぐ使い、残りは通常攻撃をし続けた、という想定です。実際の戦闘の回数とは違います。<br>
         ・CDは日本語Wikiの値です（セイナ(原点)はゲーム内の表示）。SPが足りずに必殺技が撃てない場合や、CDが戻る効果（ホタルの必殺技など）は入っていません。<br>
@@ -804,6 +869,8 @@
     else if (V.panel === "gimmick") h = renderGimmick();
     else if (V.panel === "adjust") h = renderAdjust();
     else if (V.panel === "score") h = renderScore();
+    else if (V.panel === "load") h = renderLoad();
+    else if (V.panel === "share") h = renderShareTab();
     else h = renderOverview();
     // 巡遊者ごとの画面（心相・徽章・素質・その他）では、戻るボタンと、同じ巡遊者のほかの画面へのボタンを出す
     let nav = "";
@@ -950,15 +1017,28 @@
     if (a.indexOf("lrclear:") === 0) { const p = a.slice(8), [arr, i] = p.split("."); G[arr] = G[arr] || []; G[arr][+i] = ""; delete V.lrEl[p]; renderAll(); return; }
     let builds = {};
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
-    if (a === "bsave") { const n = $("bname").value.trim(); if (!n) return; builds[n] = clone(G); try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } renderTop(); }
-    else if (a === "bload") { const n = $("bsel").value; if (n && builds[n]) { G = merge(defState(), clone(builds[n])); renderAll(); } }
-    else if (a === "bdel") { const n = $("bsel").value; if (n && builds[n]) { delete builds[n]; try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } renderTop(); } }
+    if (a === "bsave") { const n = $("bname").value.trim(); if (!n) return say("build", "名前を入れてください", true); builds[n] = clone(G); try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } say("build", `「${n}」を保存しました`); }
+    else if (a === "bload") { const n = $("bsel").value; if (n && builds[n]) { G = merge(defState(), clone(builds[n])); DM.build = null; shareMsg = `「${n}」を読み込みました`; V.panel = "overview"; renderAll(); } else say("build", "読み込むビルドを選んでください", true); }
+    else if (a === "bdel") { const n = $("bsel").value; if (n && builds[n] && confirm(`「${n}」を削除します。よいですか？`)) { delete builds[n]; try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } say("build", `「${n}」を削除しました`); } }
     else if (a === "memo") { memo = { v: clone(window.__cur || {}) }; try { localStorage.setItem(KEY_M, JSON.stringify(memo)); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "memodel") { memo = null; try { localStorage.removeItem(KEY_M); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "dlg-open") { DM.preset = DM.code = DM.url = null; renderTop(); $("shareDlg").showModal(); }
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a.indexOf("pick:") === 0) { pickToggle(a.slice(5)); renderAll(); }
+    else if (a === "pick-make") {
+      const p = V.pick3 || {};
+      if (!SLOTS.every(([k]) => p[k])) return;
+      if (!confirm("今の入力をすべて初期値に戻して、この3人で作ります。よいですか？")) return;
+      G = defState(); G.team = { main: p.main, s1: p.s1, s2: p.s2 }; V.pick3 = null; shareMsg = "新しく作りました"; V.panel = "overview"; renderAll();
+    }
+    else if (a === "ld-any") { const el = $("dv-load"); DV.load = el ? el.value : ""; loadAny(DV.load); }
+    else if (a === "cp:url" || a === "cp:sid") {
+      const v = a === "cp:url" ? DV.url : ((/\/s\/([A-Za-z0-9]+)/.exec(DV.url || "") || [])[1] || "");
+      if (!v) return;
+      try { navigator.clipboard.writeText(v).then(() => say("url", "コピーしました"), () => say("url", "コピーできませんでした。枠の中を選んでコピーしてください", true)); } catch (e) { say("url", "コピーできませんでした", true); }
+    }
     else if (a === "multtoggle") { multOpen = !multOpen; try { localStorage.setItem("stellasora-sim-mult", multOpen ? "1" : "0"); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "drillclose") { V.drill = null; renderAll(); }
     else if (a.indexOf("help:") === 0) { V.help = V.help || {}; V.help[a.slice(5)] = !V.help[a.slice(5)]; renderAll(); }
@@ -982,10 +1062,10 @@
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
   });
   // ---- 共有・読み込み（ポップアップの各欄）: key = preset / code / url、op = in（読込）/ out（作成）/ copy ----
-  const say = (key, t, ng) => { DM[key] = { t, ng: !!ng }; renderTop(); };
-  const loadCode = (code, key, what) => S.shareDecode(code, defState()).then(g => { G = g; DM[key] = { t: what + "を読み込みました" }; renderAll(); }).catch(e => say(key, e.message || "読み込めませんでした", true));
+  const say = (key, t, ng) => { DM[key] = { t, ng: !!ng }; renderAll(); };
+  const loadCode = (code, key, what) => S.shareDecode(code, defState()).then(g => { G = g; DM[key] = { t: what + "を読み込みました" }; shareMsg = what + "を読み込みました"; V.panel = "overview"; renderAll(); }).catch(e => say(key, e.message || "読み込めませんでした", true));
   const loadPreset = (code, key) => {
-    try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); DM[key] = { t: "読み込みました（" + names.join("・") + "）。編成と素質Lvだけが変わります" }; renderAll(); }
+    try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); DM[key] = { t: "読み込みました（" + names.join("・") + "）。編成と素質Lvだけが変わります" }; shareMsg = "プリセットコード（" + names.join("・") + "）を読み込みました"; V.panel = "overview"; renderAll(); }
     catch (e) { say(key, e.message || "読み込めませんでした", true); }
   };
   function shareAct(key, op) {
@@ -1081,8 +1161,8 @@
     const code = decodeURIComponent(hc.slice(3));
     try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* 無視 */ }
     if (hc[1] === "p") {
-      try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); shareMsg = "URLのプリセット（" + names.join("・") + "）を読み込みました"; } catch (e) { shareMsg = e.message; }
+      try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); shareMsg = "URLのプリセット（" + names.join("・") + "）を読み込みました"; V.panel = "overview"; } catch (e) { shareMsg = e.message; }
       renderAll();
-    } else S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "URLのビルドを読み込みました"; renderAll(); }).catch(e => { shareMsg = e.message || "URLのビルドを読み込めませんでした"; renderAll(); });
+    } else S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "URLのビルドを読み込みました"; V.panel = "overview"; renderAll(); }).catch(e => { shareMsg = e.message || "URLのビルドを読み込めませんでした"; renderAll(); });
   }
 })();

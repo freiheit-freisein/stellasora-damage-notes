@@ -164,6 +164,25 @@
   .ch-btns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 8px 0; }
   .ch-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 4px 2px; line-height: 1.25; min-height: 46px; }
   .ch-btn span { font-size: 11px; font-weight: 700; color: var(--muted); }
+  /* ① 読込: 巡遊者の一覧（属性ごと）。押すと主力 → 支援1 → 支援2 の順に入る */
+  .pk-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0 10px; }
+  .pk-ch { font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; background: var(--surface-soft); color: var(--muted); }
+  .pk-ch.on { background: #E6F7F8; color: var(--text); }
+  .pk-bar .btn-add:disabled { opacity: .45; cursor: not-allowed; }
+  .pk-grp { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; align-items: start; margin-bottom: 8px; }
+  .pk-el { margin-top: 8px; text-align: center; font-weight: 900; color: var(--elc); }
+  .pk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .pk { position: relative; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 10px 4px 6px; border-radius: 12px; border: 2px solid var(--border); background: #fff; color: var(--text); font: inherit; cursor: pointer; text-align: left; }
+  .pk.on { border-color: #0ABEC5; background: #E6F7F8; }
+  .pk-ic { width: 30px; height: 30px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--elc); color: #fff; font-weight: 900; font-size: 14px; }
+  .pk-nm { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pk-rar { flex: none; font-size: 10px; color: var(--muted); }
+  .pk-slot { position: absolute; top: -8px; right: 6px; font-size: 10px; font-weight: 900; padding: 0 6px; border-radius: 999px; background: #4B5082; color: #fff; }
+  .ld-line { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; margin: 6px 0; max-width: 720px; }
+  .ld-line input[type=text], .ld-row input[type=text] { min-height: 36px; padding: 0 10px; border-radius: 8px; border: 2px solid var(--border); background: #fff; font: inherit; }
+  .ld-row { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: 6px; align-items: center; margin: 6px 0; max-width: 720px; }
+  .ld-lab { font-size: 13px; font-weight: 700; color: var(--indigo); }
+  .wide .msg { font-size: 12px; margin: 2px 0; } .wide .msg.ok { color: #08808A; } .wide .msg.ng { color: #C0392B; }
   .pgrid { display: grid; gap: 8px; margin: 4px 0 10px; }
   .phead { font-size: 14px; font-weight: 900; color: var(--indigo); margin: 10px 0 4px; }
   .pcat { margin-bottom: 6px; }
