@@ -89,7 +89,7 @@
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
     $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <button class="btn-add" data-act="rp-open">報告</button>`;
+      <button class="btn-add pri" data-act="go-share">共有・読み込み</button><button class="btn-add" data-act="rp-open">報告</button>`;   // 共有・読み込みは「⑥ 共有・保存」のタブを開く
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
     $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比較中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "再度比較する" : "比較"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比較を止める</button>` : "");
@@ -811,6 +811,7 @@
     const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
     const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
     return `<div class="wide">
+      <div class="muted help" style="margin-top:0">読み込むときは「① 読込」のタブからどうぞ。</div>
       <h3>共有URL・共有コード</h3>
       <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button><span></span></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
@@ -1005,6 +1006,7 @@
     const t = ev.target.closest("[data-act]");
     if (!t) return;
     const a = t.getAttribute("data-act");
+    if (a === "go-share") { V.panel = "share"; V.pick = null; V.lrPick = null; V.m = "in"; renderAll(); const t = $("selectors"); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); return; }   // 右上のボタン
     if (a.indexOf("panel:") === 0) { V.panel = a.slice(6); V.pick = null; V.lrPick = null; renderAll(); return; }
     if (a.indexOf("tf:") === 0) { V.tilesFor = a.slice(3); renderAll(); return; }
     if (a.indexOf("drill:") === 0) {
