@@ -159,9 +159,12 @@
     const jn = (jpOf(S.t, S.role, p.name) || {}).nums;
     const nums = jn && jn.length ? jn.map(x => { const m = String(x).split(/[～~〜]/); const u = /%|％/.test(x) ? "%" : ""; return m.length > 1 ? [m[0].replace(/[%％]/g, "") + u, m[1].replace(/[%％]/g, "") + u] : [String(x)]; }) : (p.nums || []);
     const lv6 = a => a.length > 1 ? a[a.length - 1] : null;
+    // 入力欄の横に単位（%）を出す。入れるのは数字だけ
+    const unit = a => /%|％/.test(String(a[0])) ? '<span class="ck-u">%</span>' : "";
+    const inp = (i, lv, a) => `<input type="text" inputmode="decimal" data-ck="${i}:${lv}" value="${esc((g[i] || {})[lv] || "")}" placeholder="違うときだけ">${unit(a)}`;
     const rowsH = nums.map((a, i) => `<tr><td>${i + 1}つ目</td><td>${a[0]}</td><td>${lv6(a) == null ? "—" : lv6(a)}</td>
-      <td><input type="text" data-ck="${i}:1" value="${esc((g[i] || {})[1] || "")}" placeholder="違うときだけ"></td>
-      <td>${lv6(a) == null ? "—" : `<input type="text" data-ck="${i}:6" value="${esc((g[i] || {})[6] || "")}" placeholder="違うときだけ">`}</td></tr>`).join("");
+      <td class="ck-in">${inp(i, 1, a)}</td>
+      <td class="ck-in">${lv6(a) == null ? "—" : inp(i, 6, a)}</td></tr>`).join("");
     return `<div class="ck">
       <div class="ck-h">ゲームの素質の画面と比べてください</div>
       <div class="muted">上の文は日本語Wikiの文です。ゲームの画面（素質の説明、初期Lv＝Lv1、最大＝Lv6）と、文と数字が合っているかを見てください。</div>
@@ -248,7 +251,7 @@
         const vals = {};
         document.querySelectorAll("[data-ck]").forEach(x => { const k = x.getAttribute("data-ck"); vals[k] = ckBuf[k] != null ? ckBuf[k] : x.value; });
         const g = {};
-        Object.keys(vals).filter(k => k !== "memo").forEach(k => { const [i, lv] = k.split(":"); const v = String(vals[k]).trim(); if (v) { g[i] = g[i] || {}; g[i][lv] = v; } });
+        Object.keys(vals).filter(k => k !== "memo").forEach(k => { const [i, lv] = k.split(":"); const v = String(vals[k]).replace(/[%％\s]/g, ""); if (v) { g[i] = g[i] || {}; g[i][lv] = v; } });
         if (st === "diff" && !Object.keys(g).length) { const m = $("ckmsg"); if (m) m.textContent = "ゲームの数字を、違うところだけ入れてから押してください"; return; }
         const o = { st, at: new Date().toISOString().slice(0, 10) };
         if (st === "diff") o.g = g;
