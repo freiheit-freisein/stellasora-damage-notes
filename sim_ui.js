@@ -826,7 +826,7 @@
     const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「URLを作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
     return `<div class="wide">
       <h3>共有URL・共有コード</h3>
-      <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
+      <div class="sh-line"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
         <span class="xtag"><span class="muted">タグを追加</span>${X_TAGS.map((t, i) => `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtag:${i}"${xTags[i] ? " checked" : ""}>${t}</label>`).join("")}</span></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
       ${msgOf("url")}${helpTxt("share", "開くだけ・入れるだけで、このビルドを読み込めます（「① 読込」に共有コードを入れても読み込めます）。", "Xで共有は、共有URLを作ってXの投稿画面を開きます（本文は編成の3人の名前とURLだけ）。")}
