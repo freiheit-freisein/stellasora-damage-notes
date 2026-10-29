@@ -763,7 +763,7 @@
     return `<div class="wide">
       <h3>新しく作る</h3>
       ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「この3人で作る」を押してください。今の入力は、すべて初期値に戻ります。")}
-      <div class="pk-bar">${chosen}<button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>この3人で作る</button></div>
+      <div class="pk-bar">${chosen}<button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して作る" : "この3人で作る"}</button></div>${msgOf("pick")}
       ${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}
       <h3 style="margin-top:18px">プリセットコードから作る</h3>
       <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" placeholder="ゲームの素質プリセットのコード" spellcheck="false"><button class="btn-add" data-act="dv:preset:in">読み込む</button></div>
@@ -772,7 +772,7 @@
       <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
       ${msgOf("load")}<div class="muted help">短い共有コード・共有URL・前の長い共有コードの、どれでも読み込めます。</div>
       <h3 style="margin-top:18px">このブラウザに保存したビルド</h3>
-      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button><button class="btn-add" data-act="bdel">削除</button></div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
+      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button><button class="btn-add" data-act="bdel">削除</button></div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
       ${msgOf("build")}</div>`;
   }
   // 短い共有コード（短縮URLのID）・共有URL・長い共有コードの、どれでも読み込む
@@ -1017,18 +1017,20 @@
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     if (a === "bsave") { const n = $("bname").value.trim(); if (!n) return say("build", "名前を入れてください", true); builds[n] = clone(G); try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } say("build", `「${n}」を保存しました`); }
     else if (a === "bload") { const n = $("bsel").value; if (n && builds[n]) { G = merge(defState(), clone(builds[n])); DM.build = null; shareMsg = `「${n}」を読み込みました`; V.panel = "overview"; renderAll(); } else say("build", "読み込むビルドを選んでください", true); }
-    else if (a === "bdel") { const n = $("bsel").value; if (n && builds[n] && confirm(`「${n}」を削除します。よいですか？`)) { delete builds[n]; try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } say("build", `「${n}」を削除しました`); } }
+    else if (a === "bdel") { const n = $("bsel").value; if (n && builds[n] && V.delSure !== n) { V.delSure = n; V.bselPick = n; return say("build", `「${n}」を削除します。よければ、もう一度「削除」を押してください`); }
+      if (n && builds[n]) { V.delSure = null; delete builds[n]; try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } say("build", `「${n}」を削除しました`); } }
     else if (a === "memo") { memo = { v: clone(window.__cur || {}) }; try { localStorage.setItem(KEY_M, JSON.stringify(memo)); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "memodel") { memo = null; try { localStorage.removeItem(KEY_M); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "dlg-open") { DM.preset = DM.code = DM.url = null; renderTop(); $("shareDlg").showModal(); }
     else if (a === "dlg-close") $("shareDlg").close();
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
-    else if (a.indexOf("pick:") === 0) { pickToggle(a.slice(5)); renderAll(); }
+    else if (a.indexOf("pick:") === 0) { pickToggle(a.slice(5)); V.pickSure = false; DM.pick = null; renderAll(); }
     else if (a === "pick-make") {
       const p = V.pick3 || {};
       if (!SLOTS.every(([k]) => p[k])) return;
-      if (!confirm("今の入力をすべて初期値に戻して、この3人で作ります。よいですか？")) return;
+      if (!V.pickSure) { V.pickSure = true; return say("pick", "今の入力は、すべて初期値に戻ります。よければ、もう一度「この3人で作る」を押してください"); }
+      V.pickSure = false; DM.pick = null;
       G = defState(); G.team = { main: p.main, s1: p.s1, s2: p.s2 }; V.pick3 = null; shareMsg = "新しく作りました"; V.panel = "overview"; renderAll();
     }
     else if (a === "ld-any") { const el = $("dv-load"); DV.load = el ? el.value : ""; loadAny(DV.load); }
