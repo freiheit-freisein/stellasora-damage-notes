@@ -617,7 +617,7 @@
       Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, POT_LV_MAX, (g, v) => { g.chars[id].sup[p].lv = v; }));
       // 未取得の素質（Lv0）は、チェックしたときだけ出す（特化構築の違うものまで出ると、見分けにくいため）。計算に入らないものは出さない
       if (V.potAll) potItems(k).filter(x => !x.lv && !x.noeff && !x.tags.some(t => t.indexOf("計算に未対応") >= 0)).forEach(x =>
-        pot(`pa:${x.path}`, x.name + (x.grp ? `（${x.grp}）` : ""), 0, x.core ? 1 : POT_LV_MAX, (g, v) => { const ks = x.path.split("."); let o = g; ks.slice(0, -1).forEach(q => { o[q] = o[q] || {}; o = o[q]; }); o[ks[ks.length - 1]] = v; }));
+        pot(`pa:${x.path}`, x.name + (x.grp ? ` (${x.grp.replace("特化構築", "特化")})` : ""), 0, x.core ? 1 : POT_LV_MAX, (g, v) => { const ks = x.path.split("."); let o = g; ks.slice(0, -1).forEach(q => { o[q] = o[q] || {}; o = o[q]; }); o[ks[ks.length - 1]] = v; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
         e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}\n${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
