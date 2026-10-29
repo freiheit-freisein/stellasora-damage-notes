@@ -124,7 +124,7 @@ window.SIM = window.SIM || {};
   });
   // まだ表も入力もない素質は、自動の下書き（data/spec_draft.js：日本語Wikiの説明文からルールで作った、確認前の内容）を使う
   const KN = { W: "属性ダメ", Bs: "スキルダメ", Bb: "通常ダメ", Bu: "必殺ダメ", mark: "印ダメ", atkPct: "攻撃力%", hpPct: "最大HP%", hpFlat: "最大HP", critRate: "会心率", critDmg: "会心ダメ",
-    taken: "敵の被ダメ", takenSkill: "敵のスキル被ダメ", takenBasic: "敵の通常被ダメ", takenMark: "敵の印被ダメ", extra: "追加ヒット" };
+    taken: "敵の被ダメ", takenSkill: "敵のスキル被ダメ", takenBasic: "敵の通常被ダメ", takenMark: "敵の印被ダメ", markMult: "印ダメ（別枠）", extra: "追加ヒット" };
   const TO = { all: "全員", main: "主力", lux: "同じ属性の全員", enemy: "" };
   const summary = e => e.map(x => (KN[x.k] || x.k) + (x.to && TO[x.to] ? "（" + TO[x.to] + "）" : "") + (x.stk > 1 ? "×" + x.stk + "重" : "") + (x.k === "extra" && x.m ? " " + x.m + "%" : "")).join("・");
   (S.CH || []).forEach(c => {
@@ -139,6 +139,11 @@ window.SIM = window.SIM || {};
       SPEC[c.id][name] = { txt: e.length ? "下書き：" + summary(e) + (d.review ? "（ほかに分類できなかった文あり）" : "") : "火力に影響しない（自動判定）", e, st: "auto", review: !!d.review };
     }));
   });
+  // 説明（txt）が空の素質は、効果の中身から短い説明を作る（edit.html で説明を書かずに保存したもの）
+  Object.keys(SPEC).forEach(id => Object.keys(SPEC[id]).forEach(name => {
+    const sp = SPEC[id][name];
+    if (!sp.txt) sp.txt = sp.e && sp.e.length ? summary(sp.e) : "火力に影響しない";
+  }));
   S.POT_SPEC = SPEC;
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
 
