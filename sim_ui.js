@@ -781,7 +781,7 @@
       <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
       ${msgOf("load")}<div class="muted help">短い共有コード・共有URL・前の長い共有コードの、どれでも読み込めます。</div>
       <h3 style="margin-top:18px">このブラウザに保存したビルド</h3>
-      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button><button class="btn-add" data-act="bdel">削除</button></div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
+      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」でできます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
       ${msgOf("build")}</div>`;
   }
   // 短い共有コード（短縮URLのID）・共有URL・長い共有コードの、どれでも読み込む
@@ -809,12 +809,23 @@
   }
   // 手元（localhost・ファイル）で動かしているか。短縮URLのサーバーがないので、長い共有コードの欄も出す
   const IS_LOCAL = location.protocol === "file:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  let xTags = false;   // Xで共有の本文にハッシュタグを入れるか（このブラウザに覚える）
+  try { xTags = localStorage.getItem("stellasora-sim-xtags") === "1"; } catch (e) { /* 無視 */ }
+  // 保存したビルドの一覧（名前の変更・コピー・削除）
+  function buildsHtml() {
+    const names = Object.keys(savedBuilds());
+    if (!names.length) return '<p class="muted">まだありません。</p>';
+    return `<table class="stt bl-t">${names.map((n, i) => V.renaming === n
+      ? `<tr><td colspan="2"><div class="ld-line" style="margin:0"><input type="text" id="bren" value="${esc(n)}"><button class="btn-add pri" data-act="brn-ok">決定</button><button class="btn-add" data-act="brn-no">やめる</button></div></td></tr>`
+      : `<tr><td title="${esc(n)}">${esc(n)}</td><td class="bl-b"><button class="btn-add" data-act="brn:${i}">名前を変更</button><button class="btn-add" data-act="bcp:${i}">コピー</button><button class="btn-add" data-act="bdl:${i}">${V.delSure === n ? "もう一度押して削除" : "削除"}</button></td></tr>`).join("")}</table>`;
+  }
   function renderShareTab() {
     const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
     const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
     return `<div class="wide">
       <h3>共有URL・共有コード</h3>
-      <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button><span></span></div>
+      <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
+        <label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtags"${xTags ? " checked" : ""}>共有時、本文にハッシュタグを入れる <span class="muted">（#ステラソラ #ビルド を本文の最後に追加します。）</span></label></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
       ${msgOf("url")}${helpTxt("share", "開くだけ・入れるだけで、このビルドを読み込めます（「① 読込」に共有コードを入れても読み込めます）。", "Xで共有は、共有URLを作ってXの投稿画面を開きます（本文は編成の3人の名前とURLだけ）。")}
       <h3 style="margin-top:18px">ビルドカード</h3>${cardBlock()}
@@ -824,6 +835,7 @@
       <h3 style="margin-top:18px">このブラウザに保存</h3>
       <div class="ld-line"><input type="text" id="bname" placeholder="名前を付けて保存"><button class="btn-add" data-act="bsave">保存</button></div>
       ${msgOf("build")}<div class="muted help">保存したビルドは「① 読込」から読み込めます。このブラウザの中だけに残ります。</div>
+      <h4 class="bl-h">保存したビルド</h4>${buildsHtml()}
       ${IS_LOCAL ? `<h3 style="margin-top:18px">長い共有コード</h3>
       <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
       ${msgOf("code")}<div class="muted help">サーバーを使わずに作れる、長い形の共有コードです（手元で動かしているときだけ出します）。</div>` : ""}</div>`;
@@ -1034,6 +1046,26 @@
     else if (a === "memodel") { memo = null; try { localStorage.removeItem(KEY_M); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
+    else if (a === "xtags") { xTags = !xTags; try { localStorage.setItem("stellasora-sim-xtags", xTags ? "1" : "0"); } catch (e) { /* 無視 */ } renderAll(); }
+    else if (/^(brn|bcp|bdl):\d+$/.test(a) || a === "brn-ok" || a === "brn-no") {
+      const builds = savedBuilds(), names = Object.keys(builds), [op, i] = a.split(":"), n = names[+i];
+      const put = () => { try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } };
+      if (op === "brn") { V.renaming = n; V.delSure = null; DM.build = null; renderAll(); const el = $("bren"); if (el) { el.focus(); el.select(); } }
+      else if (a === "brn-no") { V.renaming = null; renderAll(); }
+      else if (a === "brn-ok") {
+        const old = V.renaming, el = $("bren"), nn = el ? el.value.trim() : "";
+        if (!nn) return say("build", "名前を入れてください", true);
+        if (nn !== old && builds[nn]) return say("build", `「${nn}」はもうあります。ほかの名前にしてください`, true);
+        const out = {}; names.forEach(k => { out[k === old ? nn : k] = builds[k]; });   // 並び順はそのまま
+        try { localStorage.setItem(KEY_B, JSON.stringify(out)); } catch (e) { /* 無視 */ }
+        V.renaming = null; say("build", `「${old}」を「${nn}」に変えました`);
+      }
+      else if (op === "bcp" && n) { let c = `${n}（コピー）`, k = 2; while (builds[c]) c = `${n}（コピー${k++}）`; builds[c] = clone(builds[n]); put(); say("build", `「${c}」を作りました`); }
+      else if (op === "bdl" && n) {
+        if (V.delSure !== n) { V.delSure = n; return say("build", `「${n}」を削除します。よければ、もう一度押してください`); }
+        V.delSure = null; delete builds[n]; put(); say("build", `「${n}」を削除しました`);
+      }
+    }
     else if (a.indexOf("pick:") === 0) { pickToggle(a.slice(5)); V.pickSure = false; DM.pick = null; renderAll(); }
     else if (a === "pick-open") { V.pickSure = false; DM.pick = null; $("pickDlg").showModal(); renderPick(); }
     else if (a === "pick-close") { V.pickSure = false; DM.pick = null; $("pickDlg").close(); }
@@ -1126,7 +1158,7 @@
     const w = window.open("about:blank", "_blank");
     say("url", "Xで共有する準備をしています…");   // メッセージは、ポップアップの共有URLの欄に出す
     makeShort().then(url => {
-      const text = teamTitle();   // 本文は短く（ハッシュタグなし。共有する人が本文を長く書けるように）
+      const text = teamTitle() + (xTags ? "\n#ステラソラ #ビルド" : "");   // 本文は短く。ハッシュタグは、チェックしたときだけ最後に足す
       const intent = "https://x.com/intent/post?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
       if (w) w.location.href = intent; else location.href = intent;
       DV.url = url; say("url", "Xの投稿画面を開きました");
