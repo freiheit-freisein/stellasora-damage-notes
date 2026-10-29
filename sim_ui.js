@@ -572,11 +572,12 @@
     return rotDefault(id)[k] || 0;
   }
   // ---- 与ダメへの寄与率（今の入力のまま、1つ外すと何%下がるか）----
-  // 巡遊者ごとの対象のダメージ（3分間）: 主力は 通常×回数＋主力スキル×回数＋必殺技×回数（印を含む）、支援は 支援スキル×回数
+  // 巡遊者ごとの対象のダメージ（3分間）: 主力は 通常×回数＋主力スキル×回数＋必殺技×回数（印を含む）、支援は 支援スキル×回数＋必殺技×回数
   function dmgParts(g) {
     const r = E.calcTeam(clone(g)), mid = g.team.main, m = r.team[mid], n = (id, k) => rotCount(g, id, k);
+    const sup = id => r.team[id].groups.support.totExp * n(id, "support") + r.team[id].groups.ult.totExp * n(id, "ult");
     return { main: m.groups.basic.totExp * n(mid, "basic") + m.groups.main.totExp * n(mid, "main") + m.groups.ult.totExp * n(mid, "ult"),
-      s1: r.team[g.team.s1].groups.support.totExp * n(g.team.s1, "support"), s2: r.team[g.team.s2].groups.support.totExp * n(g.team.s2, "support") };
+      s1: sup(g.team.s1), s2: sup(g.team.s2) };
   }
   const sum3 = d => d.main + d.s1 + d.s2;
   // 項目ごとの「比べる値」。素質はLv、アシスト効果はLv、コア効果は突破。既定は今の1つ下（下げられなければ1つ上）。
@@ -857,7 +858,7 @@
       k === "basic" ? `目安 ${d.basic}（1ローテ${d.basicSec}秒${d.basicMeasured ? "" : "・未測定"}）` : (d.ct[k] ? `目安 ${d[k]}（CD ${d.ct[k]}秒）` : "CDが分かりません。回数を入れてください"));
     const rotHtml = SLOTS.map(([k, l]) => {
       const id = G.team[k], d = rotDefault(id);
-      const f = k === "main" ? rotIn(id, "basic", "通常1ローテ", d) + rotIn(id, "main", "主力スキル", d) + rotIn(id, "ult", "必殺技", d) : rotIn(id, "support", "支援スキル", d);
+      const f = k === "main" ? rotIn(id, "basic", "通常1ローテ", d) + rotIn(id, "main", "主力スキル", d) + rotIn(id, "ult", "必殺技", d) : rotIn(id, "support", "支援スキル", d) + rotIn(id, "ult", "必殺技", d);
       return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${f}</div>`;
     }).join("");
     let items;
