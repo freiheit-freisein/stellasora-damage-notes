@@ -809,8 +809,10 @@
   }
   // 手元（localhost・ファイル）で動かしているか。短縮URLのサーバーがないので、長い共有コードの欄も出す
   const IS_LOCAL = location.protocol === "file:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-  let xTags = false;   // Xで共有の本文にハッシュタグを入れるか（このブラウザに覚える）
-  try { xTags = localStorage.getItem("stellasora-sim-xtags") === "1"; } catch (e) { /* 無視 */ }
+  // Xで共有の本文の最後に足すハッシュタグ（1つずつ選べる。このブラウザに覚える）
+  const X_TAGS = ["#ステラソラ", "#ビルド"];
+  let xTags = [false, false];
+  try { const v = JSON.parse(localStorage.getItem("stellasora-sim-xtags2")); if (Array.isArray(v)) xTags = X_TAGS.map((t, i) => !!v[i]); } catch (e) { /* 無視 */ }
   // 保存したビルドの一覧（名前の変更・コピー・削除）
   function buildsHtml() {
     const names = Object.keys(savedBuilds());
@@ -821,11 +823,11 @@
   }
   function renderShareTab() {
     const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
-    const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
+    const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「URLを作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
     return `<div class="wide">
       <h3>共有URL・共有コード</h3>
       <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
-        <label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtags"${xTags ? " checked" : ""}>共有時、本文にハッシュタグを入れる <span class="muted">（#ステラソラ #ビルド を本文の最後に追加します。）</span></label></div>
+        <span class="xtag"><span class="muted">タグを追加</span>${X_TAGS.map((t, i) => `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtag:${i}"${xTags[i] ? " checked" : ""}>${t}</label>`).join("")}</span></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
       ${msgOf("url")}${helpTxt("share", "開くだけ・入れるだけで、このビルドを読み込めます（「① 読込」に共有コードを入れても読み込めます）。", "Xで共有は、共有URLを作ってXの投稿画面を開きます（本文は編成の3人の名前とURLだけ）。")}
       <h3 style="margin-top:18px">ビルドカード</h3>${cardBlock()}
@@ -1046,7 +1048,7 @@
     else if (a === "memodel") { memo = null; try { localStorage.removeItem(KEY_M); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "share-x") shareX();
     else if (a === "card-make") makeCard();
-    else if (a === "xtags") { xTags = !xTags; try { localStorage.setItem("stellasora-sim-xtags", xTags ? "1" : "0"); } catch (e) { /* 無視 */ } renderAll(); }
+    else if (/^xtag:\d$/.test(a)) { const i = +a.slice(5); xTags[i] = !xTags[i]; try { localStorage.setItem("stellasora-sim-xtags2", JSON.stringify(xTags)); } catch (e) { /* 無視 */ } renderAll(); }
     else if (/^(brn|bcp|bdl):\d+$/.test(a) || a === "brn-ok" || a === "brn-no") {
       const builds = savedBuilds(), names = Object.keys(builds), [op, i] = a.split(":"), n = names[+i];
       const put = () => { try { localStorage.setItem(KEY_B, JSON.stringify(builds)); } catch (e) { /* 無視 */ } };
@@ -1158,7 +1160,8 @@
     const w = window.open("about:blank", "_blank");
     say("url", "Xで共有する準備をしています…");   // メッセージは、ポップアップの共有URLの欄に出す
     makeShort().then(url => {
-      const text = teamTitle() + (xTags ? "\n#ステラソラ #ビルド" : "");   // 本文は短く。ハッシュタグは、チェックしたときだけ最後に足す
+      const tags = X_TAGS.filter((t, i) => xTags[i]).join(" ");
+      const text = teamTitle() + (tags ? "\n" + tags : "");   // 本文は短く。ハッシュタグは、チェックしたものだけ最後に足す
       const intent = "https://x.com/intent/post?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
       if (w) w.location.href = intent; else location.href = intent;
       DV.url = url; say("url", "Xの投稿画面を開きました");
