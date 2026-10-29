@@ -67,6 +67,8 @@ window.SIM = window.SIM || {};
     c.talentBonus = { skill: 0.021 };   // 心相ステータスボーナス: スキルダメージ +21%（心相50）
     // 支援スキルで地の印を発動: 攻撃力の125%（スキルLvで変わらない）。スキル1撃目 → 印 → スキル2撃目の順（実測）
     c.hits.support.push({ s: -1, fixed: 125, c: 1, t: "mark", name: "印ダメージ（岩錐）", tags: [] });
+    // 支援スキルの2ヒットは「震動波」（鳴動する重罪の +32% の対象）
+    c.hits.support.forEach(h => { if (h.t === "skill") h.tags = (h.tags || []).concat("wave"); });
   });
 
   // 敵。def=防御倍率、res=属性ごとの耐性（書いていない属性は resDefault、無ければ250）、weak=弱点（表示用）、weakMult=弱点補正。
