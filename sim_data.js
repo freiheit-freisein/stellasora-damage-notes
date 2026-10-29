@@ -48,7 +48,8 @@ window.SIM = window.SIM || {};
         main: [H(1, 0, 1, "skill", "浮遊砲（1発）", "cannon", ["cannon"])],
         support: [H(2, 0, 1, "basic", "ソードフォーム 1撃目", "sw1", ["giant"]), H(2, 1, 1, "basic", "2撃目", "sw2", ["giant"]), H(2, 2, 1, "basic", "3撃目", "sw3", ["giant"]),
           H(2, 3, 5, "basic", "4撃目", "sw4", ["giant"]), H(2, 4, 1, "skill", "飛ぶ刃（1発）", "blade", ["blade"])],
-        ult: [H(3, 0, 2, "ult", "砲撃（1回）", "u1"), H(3, 1, 1, "ult", "斬撃 1", "u2"), H(3, 2, 1, "ult", "斬撃 2", "u3")],
+        // 砲撃は2回撃ち、1回あたり2ヒット＝4ヒット（実測: ゲームの表示1つが2ヒットの合計。2026-10-29）
+        ult: [H(3, 0, 4, "ult", "砲撃（1発）", "u1"), H(3, 1, 1, "ult", "斬撃 1", "u2"), H(3, 2, 1, "ult", "斬撃 2", "u3")],
       } },
     { id: "tilia", en: "Tilia", jp: "ティリア", el: "光", ref: "atk", role: "サポーター", trust0: 15, talent0: 50, talentBonus: { skill: 0.021, ult: 0.043 },
       hits: {

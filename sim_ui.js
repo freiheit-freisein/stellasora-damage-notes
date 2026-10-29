@@ -926,14 +926,17 @@
   }
   function renderResult() {
     const main = G.team.main, s1 = G.team.s1, s2 = G.team.s2;
-    // 順番: 通常、主力、必殺、印、支援1、支援2
+    // 順番: 通常、主力、必殺、印、支援1（支援スキル・必殺技）、支援2（支援スキル・必殺技）
+    // 支援の必殺技は、テスト3（ホタル・ティリア）の実測で式の形を確認（2026-10-29。どのヒットも同じ割合で、差は2%以内）
     const items = [
       ["basic", "通常1ローテ", groupSummary(main, "basic"), main],
       ["main", "主力スキル", groupSummary(main, "main"), main],
       ["ult", "必殺技", groupSummary(main, "ult"), main],
       ["mark", "印", groupSummary(main, "main", true) || groupSummary(main, "ult", true), main],
       ["sup1", chOf(s1).jp + " 支援スキル", groupSummary(s1, "support"), s1],
+      ["supu1", chOf(s1).jp + " 必殺技", groupSummary(s1, "ult"), s1],
       ["sup2", chOf(s2).jp + " 支援スキル", groupSummary(s2, "support"), s2],
+      ["supu2", chOf(s2).jp + " 必殺技", groupSummary(s2, "ult"), s2],
     ];
     window.__items = items;
     const curVals = {};
