@@ -807,6 +807,8 @@
         <span class="muted">${cardUrl ? "入力を変えたら作り直してください。Xに載せるときは、画像を保存してから添付してください。" : "3人分の徽章・素質・ロスレコ・音符を1枚の画像にします。"}</span></div>
         ${cardUrl ? `<img src="${cardUrl}" alt="ビルドカード" style="width:100%;margin-top:8px;border-radius:12px;border:2px solid var(--border)">` : ""}</div>`;
   }
+  // 手元（localhost・ファイル）で動かしているか。短縮URLのサーバーがないので、長い共有コードの欄も出す
+  const IS_LOCAL = location.protocol === "file:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   function renderShareTab() {
     const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
     const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
@@ -814,7 +816,7 @@
       <h3>共有URL・共有コード</h3>
       <div class="ld-line" style="grid-template-columns:auto auto 1fr"><button class="btn-add pri" data-act="dv:url:out">作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button><span></span></div>
       ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
-      ${msgOf("url")}${helpTxt("share", "開くだけ・入れるだけで、このビルドを読み込めます（「① 読込」に共有コードを入れても読み込めます）。", "Xで共有は、共有URLを作ってXの投稿画面を開きます（本文は編成の3人の名前とURLだけ）。共有URLはサーバーに保存するので、作るのにネットが必要です。ネットがないときは、下の「長い共有コード」を使ってください。")}
+      ${msgOf("url")}${helpTxt("share", "開くだけ・入れるだけで、このビルドを読み込めます（「① 読込」に共有コードを入れても読み込めます）。", "Xで共有は、共有URLを作ってXの投稿画面を開きます（本文は編成の3人の名前とURLだけ）。")}
       <h3 style="margin-top:18px">ビルドカード</h3>${cardBlock()}
       <h3 style="margin-top:18px">プリセットコード（ゲームに入れる）</h3>
       <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:preset:out">作る</button><button class="btn-add" data-act="dv:preset:copy">コピー</button></div>
@@ -822,9 +824,9 @@
       <h3 style="margin-top:18px">このブラウザに保存</h3>
       <div class="ld-line"><input type="text" id="bname" placeholder="名前を付けて保存"><button class="btn-add" data-act="bsave">保存</button></div>
       ${msgOf("build")}<div class="muted help">保存したビルドは「① 読込」から読み込めます。このブラウザの中だけに残ります。</div>
-      <h3 style="margin-top:18px">長い共有コード</h3>
+      ${IS_LOCAL ? `<h3 style="margin-top:18px">長い共有コード</h3>
       <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
-      ${msgOf("code")}<div class="muted help">ネットがなくても作れる、長い形の共有コードです。</div></div>`;
+      ${msgOf("code")}<div class="muted help">サーバーを使わずに作れる、長い形の共有コードです（手元で動かしているときだけ出します）。</div>` : ""}</div>`;
   }
 
   function renderScore() {
