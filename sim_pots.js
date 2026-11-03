@@ -12,16 +12,17 @@
 window.SIM = window.SIM || {};
 (function (S) {
   const X = (group, name, o) => Object.assign({ k: "extra", group, name, t: "skill", c: 1 }, o);
-  // コア素質（Lvなし）の倍率は、ゲームの画面の値を使う（英語Wikiの値は約1/3.4と小さい。流星の閃き・暁の閃光は 2026-11-03 画面で確認）
+  // コア素質（素質のLvなし）の追加ヒットの倍率は、つながるスキルのLvで伸びる（lv: "main" など。m はそのスキルが Lv10 のときの値）。
+  // 主力スキルLv13（徽章+3）で 60%→72%、徽章を外すと 60%（流星の閃きのカード・2026-11-04）、支援スキルLv2 で 256%→106% など（画面）
   const SPEC = {
     noya: {
-      "Lucent Blitz": { txt: "主力スキル：長剣 +4回、光刃9発（各72%・スキル）", e: [{ k: "count", hit: "mLong", add: 4 }, X("main", "光刃（Lucent Blitz）", { m: 72, c: 9, tags: ["glow", "long"] })] },
-      "Dawnflare": { txt: "主力スキル：暁光乱刃 452%×6（スキル）／通常攻撃の突進：光刃3発（各72%）", e: [X("main", "暁光乱刃（Dawnflare）", { m: 452, c: 6, tags: ["long"] }), X("basic", "突進の光刃（Dawnflare）", { m: 72, c: 3, tags: ["glow", "long"] })] },
+      "Lucent Blitz": { txt: "主力スキル：長剣 +4回、光刃9発（各60%・スキル。主力スキルのLvで伸びる）", e: [{ k: "count", hit: "mLong", add: 4 }, X("main", "光刃（Lucent Blitz）", { m: 60, lv: "main", c: 9, tags: ["glow", "long"] })] },
+      "Dawnflare": { txt: "主力スキル：暁光乱刃 376%×6（スキル）／通常攻撃の突進：光刃3発（各60%）。どちらも主力スキルのLvで伸びる", e: [X("main", "暁光乱刃（Dawnflare）", { m: 376, lv: "main", c: 6, tags: ["long"] }), X("basic", "突進の光刃（Dawnflare）", { m: 60, lv: "main", c: 3, tags: ["glow", "long"] })] },
       "Prism Warp": { txt: "光刃が戻って追加ダメージ（スキル）＋長剣・光刃のスキル会心率（会心率は(Max!)でLv6から上がらない）", e: [X("*", "光刃の戻り（Prism Warp）", { n: 0, perGlow: true, tags: ["glow"] }), { k: "critRate", n: 1, tags: ["long", "glow"], ht: "skill", ext: "cap" }] },
       "Resolve: Blitz": { txt: "残光の敵に、長剣・光刃の倍率 ×(1+x)", e: [{ k: "mult", n: 0, tags: ["long", "glow"], cond: "glimmer" }] },
       "Lucent Tide": { txt: "（逆転の光明）光刃が印を発動できる（未反映）／主力スキル後12秒：セイナのスキル会心率＋（(Max!)でLv6から上がらない）、光のバランサーのスキル会心ダメ＋（2重）", e: [{ k: "critRate", n: 0, ht: "skill", stk: 2, ext: "cap" }, { k: "critDmg", n: 1, ht: "skill", stk: 2, to: "luxVers" }] },
-      "Stardust Descent": { txt: "主力スキル：星雷2本（各76%・通常）／突進が大剣250%＋星雷に置き換わる（印の発動で星雷1本は未反映）", e: [X("main", "星雷（Stardust Descent）", { m: 76, c: 2, t: "basic", tags: ["starfall"] }), { k: "drop", hit: "sprint" }, X("basic", "突進の大剣（Stardust Descent）", { m: 250, t: "basic", tags: ["great"] }), X("basic", "突進の星雷", { m: 76, t: "basic", tags: ["starfall"] })] },
-      "Sinbreaker": { txt: "特殊通常攻撃「星震の斬撃」 747%×2（通常・大剣）／通常攻撃の中の大剣の攻撃だけ、通常攻撃ダメージ +20%", e: [X("basic", "星震の斬撃（特殊通常攻撃）", { m: 747, c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20, tags: ["great"], grp: "basic" }] },
+      "Stardust Descent": { txt: "主力スキル：星雷2本（各64%・通常・主力スキルのLvで伸びる）／突進が大剣250%（通常攻撃のLvで伸びる・推定）＋星雷に置き換わる（印の発動で星雷1本は未反映）", e: [X("main", "星雷（Stardust Descent）", { m: 64, lv: "main", c: 2, t: "basic", tags: ["starfall"] }), { k: "drop", hit: "sprint" }, X("basic", "突進の大剣（Stardust Descent）", { m: 250, lv: "basic", t: "basic", tags: ["great"] }), X("basic", "突進の星雷", { m: 64, lv: "main", t: "basic", tags: ["starfall"] })] },
+      "Sinbreaker": { txt: "特殊通常攻撃「星震の斬撃」 623%×2（通常・大剣・主力スキルのLvで伸びる）／通常攻撃の中の大剣の攻撃だけ、通常攻撃ダメージ +20%", e: [X("basic", "星震の斬撃（特殊通常攻撃）", { m: 623, lv: "main", c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20, tags: ["great"], grp: "basic" }] },
       "Eclipse Phantom": { txt: "ジャッジメント後のフィールド 41〜165%×6（通常）＋大剣・スターフォールの通常会心率", e: [X("basic", "フィールド（Eclipse Phantom）", { n: 0, c: 6, t: "basic", tags: ["great"] }), { k: "critRate", n: 1, tags: ["great", "starfall"], ht: "basic" }] },
       "Gavel of Absolution": { txt: "スターフォール消滅時の雷撃（通常）＋通常会心率", e: [X("*", "雷撃（Gavel of Absolution）", { n: 0, t: "basic", perTag: "starfall" }), { k: "critRate", n: 1, ht: "basic" }] },
       "Resolve: Sunder": { txt: "防御貫通（防御の式が未確認のため計算に未反映）", e: [] },
@@ -31,12 +32,12 @@ window.SIM = window.SIM || {};
       "Argent Mirage: Legion's End": { txt: "スキルダメージ＋／必殺（長剣形態）に光刃7発（スキル）", e: [{ k: "Bs", n: 1, over: { 7: 65, 8: 70, 9: 75 } }, X("ult", "光刃（Argent Mirage）", { n: 0, c: 7, tags: ["glow", "long"], over: { 7: 130, 8: 140, 9: 150 } })] },
       "Empyrean Starfall: Devil's End": { txt: "通常攻撃ダメージ＋／必殺（大剣形態）のフィールド 41〜165%×6（通常）", e: [{ k: "Bb", n: 1 }, X("ult", "フィールド（Devil's End）", { n: 0, c: 6, t: "basic", tags: ["great"] })] },
       "Guiding Star": { txt: "（閃星の戦乙女）閃星効果中の会心ダメージ＋（Lv6 +60%・Lv7 +65%・Lv8 +70%・Lv9 +75%）", e: [{ k: "critDmg", n: 0, over: { 7: 65, 8: 70, 9: 75 } }] },   // Lv9=75% は画面で確認（2026-11-03・Discord）
-      "Tempest Scourge": { txt: "支援スキル：大剣の攻撃のあと、星雷陣 106%×6（通常）", e: [X("support", "星雷陣（Tempest Scourge）", { m: 106, c: 6, t: "basic", tags: ["great"] })] },
-      "Inquisitor's Edge": { txt: "支援スキル：大剣の攻撃時、星雷11本（各58%・通常）", e: [X("support", "星雷（Inquisitor's Edge）", { m: 58, c: 11, t: "basic", tags: ["starfall"] })] },
+      "Tempest Scourge": { txt: "支援スキル：大剣の攻撃のあと、星雷陣 256%×6（通常・支援スキルのLvで伸びる）", e: [X("support", "星雷陣（Tempest Scourge）", { m: 256, lv: "support", c: 6, t: "basic", tags: ["great"] })] },
+      "Inquisitor's Edge": { txt: "支援スキル：大剣の攻撃時、星雷11本（各140%・通常・支援スキルのLvで伸びる）", e: [X("support", "星雷（Inquisitor's Edge）", { m: 140, lv: "support", c: 11, t: "basic", tags: ["starfall"] })] },
       "Radiant Sever": { txt: "通常攻撃ダメージ＋（最大3重）", e: [{ k: "Bb", n: 0, stk: 3 }] },
       "Aegis: Sunder": { txt: "光属性ダメージ＋（長剣が当たるたび・最大5重）", e: [{ k: "W", n: 0, stk: 5 }] },
       "Fiendbreaker": { txt: "大剣・スターフォールの倍率 ×(1+x)", e: [{ k: "mult", n: 0, tags: ["great", "starfall"] }] },
-      "Skyrend Flash": { txt: "支援スキル：長剣の攻撃時、光刃を連射（各32%・スキル）。回数は不明のため仮に10回", e: [X("support", "光刃（Skyrend Flash）", { m: 32, c: 10, tags: ["glow", "long"], edit: true })] },
+      "Skyrend Flash": { txt: "支援スキル：長剣の攻撃時、光刃を連射（各79%・スキル・支援スキルのLvで伸びる）。回数は不明のため仮に10回", e: [X("support", "光刃（Skyrend Flash）", { m: 79, lv: "support", c: 10, tags: ["glow", "long"], edit: true })] },
       "Galeblade": { txt: "支援スキル：長剣 +10回", e: [{ k: "count", hit: "sLong", add: 10 }] },
       "Sunfire Cleave": { txt: "長剣・光刃のスキルダメージ＋", e: [{ k: "Bs", n: 0, tags: ["long", "glow"] }] },
       "Aegis: Blitz": { txt: "光属性ダメージ＋（大剣が当たるたび・最大3重）", e: [{ k: "W", n: 0, stk: 3 }] },
@@ -260,7 +261,7 @@ window.SIM = window.SIM || {};
           let cnt = e.c;
           const cc = (cs.pcnt || {})[key + "#" + ei];
           if (cc != null && cc !== "") cnt = +cc;
-          a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m: e.m != null ? e.m : v, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, owner: oid, key: key + "#" + ei });
+          a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m: e.m != null ? e.m : v, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, lvOf: e.lv || null, owner: oid, key: key + "#" + ei });
           return;
         }
         if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; return; }
@@ -342,7 +343,7 @@ window.SIM = window.SIM || {};
       if (e.raw != null) v = e.raw;
       else if (e.arr) v = lvVal(e.arr, lv, e.over, e.ext || ext) / (e.k === "extra" ? 1 : 100);
       else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || ext) / (e.flat || e.k === "extra" ? 1 : 100);
-      if (e.k === "extra") return `追加ヒット ${r1(e.m != null ? e.m : v)}%（${HTJ[e.t] || ""}）×${e.c || 1}`;
+      if (e.k === "extra") return `追加ヒット ${r1(e.m != null ? e.m : v)}%${e.lv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[e.lv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）×${e.c || 1}`;
       if (e.k === "count") return `ヒット回数 +${e.add}`;
       if (e.k === "drop") return "";
       const kn = typeof KJ[e.k] === "function" ? KJ[e.k](e.el || c.el) : (KJ[e.k] || e.k);

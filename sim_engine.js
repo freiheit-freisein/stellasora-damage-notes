@@ -231,6 +231,9 @@
     // ヒットの一覧: 基本のヒット（置き換え・回数の加算を反映）＋素質の追加ヒット
     const defs = (c.hits[group] || []).filter(h => !(h.id && ag.drop[h.id])).map(h => Object.assign({}, h, { c: h.c + ((h.id && ag.count[h.id]) || 0) }));
     const xs = ag.xhits.filter(x => x.group === group || x.group === "*");
+    // コア素質の追加ヒット（lvOf）は、つながるスキルのLv（徽章込み）で伸ばす（m は Lv10 の値）
+    const lvScale = k => { const i = { basic: 0, main: 1, support: 2, ult: 3 }[k], L = ((cs.skillLv || {})[k] || 10) + ((st.lvBonus && st.lvBonus[k]) || 0); return skillVal(c, i, 0, L) / skillVal(c, i, 0, 10); };
+    xs.forEach(x => { if (x.lvOf) x = Object.assign(x, { m0: x.m0 != null ? x.m0 : x.m }), x.m = x.m0 * lvScale(x.lvOf); });
     xs.filter(x => !x.perGlow && !x.perTag).forEach(x => defs.push({ fixed: x.m, c: x.c, t: x.t, name: x.name, tags: x.tags, extra: true }));
     const tagCount = tag => defs.reduce((n, h) => n + ((h.tags || []).indexOf(tag) >= 0 ? h.c : 0), 0);
     xs.filter(x => x.perGlow || x.perTag).forEach(x => {
