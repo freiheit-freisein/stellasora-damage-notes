@@ -29,7 +29,7 @@ window.SIM = window.SIM || {};
       "Veteran's Grit": { txt: "最大HP＋（基礎値に加算）", e: [{ k: "hpFlat", n: 0, flat: true }] },
       "Argent Mirage: Legion's End": { txt: "スキルダメージ＋／必殺（長剣形態）に光刃7発（スキル）", e: [{ k: "Bs", n: 1, over: { 9: 75 } }, X("ult", "光刃（Argent Mirage）", { n: 0, c: 7, tags: ["glow", "long"], over: { 9: 150 } })] },
       "Empyrean Starfall: Devil's End": { txt: "通常攻撃ダメージ＋／必殺（大剣形態）のフィールド 41〜165%×6（通常）", e: [{ k: "Bb", n: 1 }, X("ult", "フィールド（Devil's End）", { n: 0, c: 6, t: "basic", tags: ["great"] })] },
-      "Guiding Star": { txt: "（閃星の戦乙女）閃星効果中の会心ダメージ＋（Lv6 +60%）", e: [{ k: "critDmg", n: 0 }] },
+      "Guiding Star": { txt: "（閃星の戦乙女）閃星効果中の会心ダメージ＋（Lv6 +60%・Lv9 +75%）", e: [{ k: "critDmg", n: 0, over: { 9: 75 } }] },   // Lv9=75% は画面で確認（2026-11-03・Discord）
       "Tempest Scourge": { txt: "支援スキル：大剣のフィールド 92%×6（通常）", e: [X("support", "フィールド（Tempest Scourge）", { m: 92, c: 6, t: "basic", tags: ["great"] })] },
       "Inquisitor's Edge": { txt: "支援スキル：スターフォール11個（各50%・通常）", e: [X("support", "スターフォール（Inquisitor's Edge）", { m: 50, c: 11, t: "basic", tags: ["starfall"] })] },
       "Radiant Sever": { txt: "通常攻撃ダメージ＋（最大3重）", e: [{ k: "Bb", n: 0, stk: 3 }] },
