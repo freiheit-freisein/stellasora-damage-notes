@@ -315,6 +315,54 @@
     const v = qVal(o, sl.q);
     return `${o.label} ${q}${v != null ? " " + valTxt(o, v) : ""}${sl.t ? `（${JA(sl.t, id)}）` : ""}`;
   }
+  // ---- 徽章一覧のスクリーンショットから読み込む（テスト中。sim_ocr.js）----
+  const OCR_KINDS = ["triangle", "circle", "star"], OCR_KJ = { triangle: "初級", circle: "中級", star: "上級" };
+  function ocrPots(id) {
+    const out = [];
+    ["potMain", "potSupport", "potCommon"].forEach(key => potTargets(id, key).forEach(x => { if (!out.some(y => y[1] === x.en)) out.push([JA(x.en, id), x.en, key]); }));
+    return out;
+  }
+  function ocrBox(id) {
+    const st = V.ocr && V.ocr.id === id ? V.ocr : {};
+    let res = "";
+    if (st.rows) {
+      const n = st.rows.length;
+      const line = (r, i) => {
+        const o = r.k ? optOf(r.k) : null, v = o && r.q ? qVal(o, r.q) : null;
+        return `<div>${OCR_KJ[OCR_KINDS[Math.floor(i / 4)]] || "？"} ${i % 4 + 1}：${esc(r.label)}${r.nopot ? "（この巡遊者の素質に見つかりません）" : v != null ? " " + valTxt(o, v) : "（値が読めませんでした）"}${r.warn ? ' <span class="tag-ng">要確認</span>' : ""}</div>`;
+      };
+      res = `<div class="ocr-res">${st.rows.slice(0, 12).map(line).join("")}</div>
+        ${n < 12 ? `<p class="msg ng">最後の ${12 - n} 行が読めていません（一番下が切れた画面かもしれません）。入れたあとで、空いた枠を手で選んでください。</p>` : ""}
+        ${n > 12 ? `<p class="msg ng">13行以上読めたので、上から12行だけ使います。</p>` : ""}
+        ${st.rows.some(r => r.nopot) ? `<p class="msg ng">素質のレベル上昇が、この巡遊者の素質に見つかりませんでした。別の巡遊者の画面ではないか確かめてください（その枠は空にします）。</p>` : ""}
+        <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="ocr-apply:${id}">この内容で入れる</button><button class="btn-add" data-act="ocr-cancel">やめる</button></div>`;
+    }
+    return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <span class="tag-ng">テスト中</span>
+      <p class="muted" style="margin:4px 0">ゲームの「徽章一覧」を、一番下までスクロールして撮った画像を選ぶか、この画面で貼り付け（Ctrl+V）てください。画像はこのブラウザの中だけで読み、どこにも送りません。今はPC版の画面で試しています。</p>
+      <input type="file" accept="image/*" id="ocr-file" data-id="${id}"${st.busy ? " disabled" : ""}>
+      ${st.msg ? `<p class="msg${st.ng ? " ng" : ""}">${esc(st.msg)}</p>` : ""}${res}</div>`;
+  }
+  function runOcr(id, file) {
+    if (!file || !S.ocrEmblem) return;
+    V.ocr = { id, busy: true, msg: "読み取りの準備をしています…" }; renderAll();
+    S.ocrEmblem(file, ocrPots(id), m => { if (V.ocr && V.ocr.id === id) { V.ocr.msg = m; renderAll(); } })
+      .then(rows => { V.ocr = { id, rows, msg: rows.length ? "読み取りました。内容を確かめて「この内容で入れる」を押してください。" : "徽章の行が見つかりませんでした。徽章一覧の画面か確かめてください。", ng: !rows.length }; renderAll(); })
+      .catch(e => { V.ocr = { id, msg: e.message || "読み取れませんでした", ng: true }; renderAll(); });
+  }
+  function applyOcr(id) {
+    const cs = G.chars[id], rows = (V.ocr && V.ocr.rows) || [];
+    OCR_KINDS.forEach((kind, b) => {
+      const i = cs.emb.findIndex(e => e.kind === kind);
+      if (i < 0) return;
+      cs.emb[i].slots.forEach((sl, j) => {
+        const r = rows[b * 4 + j];
+        sl.k = r && r.k || ""; sl.q = r && r.q || (r && r.k ? sl.q : "gold"); sl.cat = r && r.k ? catOfKey(r.k) : "";
+        if (r && r.t) sl.t = r.t; else delete sl.t;
+      });
+      cs.embOn[i] = 1;
+    });
+    V.ocr = { id, msg: "入れました。違うところがあれば、下の枠で直してください。" };
+  }
   function renderEmblem(k) {
     const id = G.team[k], c = chOf(id), cs = G.chars[id];
     const order = cs.emb.map((e, i) => i).sort((a, b) => KIND_ORDER.indexOf(cs.emb[a].kind) - KIND_ORDER.indexOf(cs.emb[b].kind));
@@ -342,7 +390,7 @@
     const ex = emx(id);
     const lvTxt = Object.keys(ex.lv).filter(x => ex.lv[x]).map(x => ({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" }[x] + "Lv+" + ex.lv[x])).join("・");
     const potTxt = Object.keys(ex.pot).map(x => `${JA(x, id)} Lv+${ex.pot[x]}`).join("・");
-    return `<div class="wide"><h3>${esc(c.jp)}：徽章</h3><div>${order.map(card).join("")}</div>
+    return `<div class="wide"><h3>${esc(c.jp)}：徽章</h3>${ocrBox(id)}<div>${order.map(card).join("")}</div>
       <div class="note">合計: ${sumTxt || "なし"}${lvTxt ? `<br>スキルレベル上昇: ${lvTxt}（スキルLvの欄に反映）` : ""}${potTxt ? `<br>素質レベル上昇: ${potTxt}（取得している素質に反映）` : ""}</div>
       ${helpTxt("emb", "各枠は、左から 区分 → 項目 → 値 の順に選びます。", "金までしかない項目には虹を出しません。素質レベル上昇は、取得している素質（Lv1以上）にだけ足します。")}</div>`;
   }
@@ -1008,9 +1056,18 @@
   }
 
   // ---- イベント ----
+  // 徽章の画面で画像を貼り付けたら、読み取る
+  document.addEventListener("paste", ev => {
+    if (!/^emb:/.test(V.panel || "")) return;
+    const f = [...((ev.clipboardData && ev.clipboardData.files) || [])].find(x => /^image\//.test(x.type));
+    if (!f) return;
+    ev.preventDefault();
+    runOcr(G.team[V.panel.split(":")[1]], f);
+  });
   document.addEventListener("change", ev => {
     const t = ev.target;
     if (t.id === "bsel" || t.id === "bname") return;
+    if (t.id === "ocr-file") { runOcr(t.getAttribute("data-id"), t.files && t.files[0]); return; }
     // ロスレコの枠: 属性を変えたら、違う属性のロスレコは外す
     const lrel = t.getAttribute && t.getAttribute("data-lrel"), lrid = t.getAttribute && t.getAttribute("data-lrid");
     if (lrel || lrid) {
@@ -1143,6 +1200,8 @@
     else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
+    else if (a.indexOf("ocr-apply:") === 0) { applyOcr(a.slice(10)); save(); renderAll(); }
+    else if (a === "ocr-cancel") { V.ocr = null; renderAll(); }
     else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
