@@ -1232,12 +1232,13 @@
   }
 
   // ---- 更新履歴（data/changelog.js）----
+  const LOG_C = { chara: "巡遊者ステ", calc: "計算式", ui: "UI", pot: "素質内容", lr: "ロスレコ内容" };
   function renderLog() {
     const list = window.CHANGELOG || [];
     const day = d => { const [y, m, dd] = d.split("-").map(Number); return `${y}年${m}月${dd}日`; };
     $("logBody").innerHTML = `<h2 id="logDlgT"><span class="en">UPDATES</span>更新履歴</h2>
-      <p class="muted" style="margin:0"><span class="tag-ng" style="margin:0 2px 0 0">計算が変わる</span> が付いた更新は、前に保存したビルドや共有コードでも、ダメージの数字が変わります。</p>
-      <div class="log-list">${list.map(g => `<h3>${day(g.d)}</h3><ul>${g.items.map(it => `<li>${it.calc ? '<span class="tag-ng" style="margin:0 4px 0 0">計算が変わる</span>' : ""}${esc(it.t)}</li>`).join("")}</ul>`).join("")}</div>
+      <p class="muted" style="margin:0">UI 以外の更新は、前に保存したビルドや共有コードでも、ダメージの数字が変わることがあります。</p>
+      <div class="log-list">${list.map(g => `<h3>${day(g.d)}</h3><ul>${g.items.map(it => `<li><span class="log-c log-${it.c}">${LOG_C[it.c] || ""}${it.add ? "追加" : "変更"}</span>${esc(it.t)}</li>`).join("")}</ul>`).join("")}</div>
       <div class="foot"><button class="btn-add" data-act="log-close">閉じる</button></div>`;
   }
 
