@@ -259,6 +259,11 @@
   .dlg .line { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 6px; align-items: center; }
   .dlg .line input { min-height: 40px; border: 2px solid var(--border); border-radius: 10px; padding: 0 10px; font-family: monospace; font-size: 13px; width: 100%; }
   .dlg .line .btn-add { min-height: 40px; padding: 0 14px; }
+  .log-list { max-height: calc(100vh - 220px); overflow-y: auto; margin-top: 10px; }
+  .log-list h3 { margin: 14px 0 6px; font-size: 15px; color: var(--indigo); }
+  .log-list h3:first-child { margin-top: 0; }
+  .log-list ul { margin: 0; padding-left: 18px; }
+  .log-list li { margin: 4px 0; font-size: 14px; line-height: 1.6; }
   .dlg .msg { font-size: 12px; color: var(--muted); min-height: 18px; margin-top: 2px; }
   .dlg .msg.ng { color: var(--danger); } .dlg .msg.ok { color: var(--ok); }
   .dlg .foot { display: flex; justify-content: flex-end; margin-top: 14px; gap: 8px; flex-wrap: wrap; }
@@ -385,6 +390,7 @@
 <nav class="mbar" id="mbar" aria-label="表示の切り替え"></nav>
 <dialog id="pickDlg" class="dlg pick-dlg" aria-labelledby="pickDlgT"><div id="pickBody"></div></dialog>
 <dialog id="reportDlg" class="dlg" aria-labelledby="reportDlgT"><div id="reportBody"></div></dialog>
+<dialog id="logDlg" class="dlg" aria-labelledby="logDlgT"><div id="logBody"></div></dialog>
 <div class="app">
   <div id="left">
     <div class="panel"><h2><span class="en">MULTIPLIERS</span>共通の倍率<span class="muted" id="tilesFor"></span><span id="multSum" class="mult-sum"></span><button type="button" class="help-btn" data-act="multtoggle" id="multBtn"></button></h2><div class="tiles" id="tiles"></div></div>
@@ -413,6 +419,7 @@
 <script src="sim_share.js"></script>
 <script src="data/preset_map.js"></script>
 <script src="sim_preset.js"></script>
+<script src="data/changelog.js"></script>
 <script src="sim_ui.js"></script>
 </body>
 </html>

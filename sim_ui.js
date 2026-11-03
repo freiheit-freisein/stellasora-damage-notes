@@ -89,7 +89,7 @@
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
     $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
-      <button class="btn-add" data-act="rp-open">報告</button>`;
+      <button class="btn-add" data-act="log-open">更新履歴</button><button class="btn-add" data-act="rp-open">報告</button>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
     $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比較中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "再度比較する" : "比較"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比較を止める</button>` : "");
@@ -1132,6 +1132,8 @@
     else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
+    else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
+    else if (a === "log-close") $("logDlg").close();
     else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta2-closed", "1"); } catch (e) { /* 無視 */ } }
     else if (a === "rp-send") sendReport();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
@@ -1227,6 +1229,16 @@
       .then(r => r.json().catch(() => ({ error: "この環境では送れません（公開しているページで使えます）" })))
       .then(j => { RP.busy = false; if (j.ok) { RP.done = true; RP.body = ""; RP.msg = null; } else RP.msg = { t: j.error || "送れませんでした", ng: true }; renderReport(); })
       .catch(() => { RP.busy = false; RP.msg = { t: "送れませんでした（通信の失敗）", ng: true }; renderReport(); });
+  }
+
+  // ---- 更新履歴（data/changelog.js）----
+  function renderLog() {
+    const list = window.CHANGELOG || [];
+    const day = d => { const [y, m, dd] = d.split("-").map(Number); return `${y}年${m}月${dd}日`; };
+    $("logBody").innerHTML = `<h2 id="logDlgT"><span class="en">UPDATES</span>更新履歴</h2>
+      <p class="muted" style="margin:0"><span class="tag-ng" style="margin:0 2px 0 0">計算が変わる</span> が付いた更新は、前に保存したビルドや共有コードでも、ダメージの数字が変わります。</p>
+      <div class="log-list">${list.map(g => `<h3>${day(g.d)}</h3><ul>${g.items.map(it => `<li>${it.calc ? '<span class="tag-ng" style="margin:0 4px 0 0">計算が変わる</span>' : ""}${esc(it.t)}</li>`).join("")}</ul>`).join("")}</div>
+      <div class="foot"><button class="btn-add" data-act="log-close">閉じる</button></div>`;
   }
 
   renderAll();
