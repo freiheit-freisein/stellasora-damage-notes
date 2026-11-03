@@ -264,7 +264,7 @@
   .ocr-pick { display: inline-flex; align-items: center; cursor: pointer; font-size: 15px; margin: 0; }   /* ファイル選択を、隣のボタンと同じ見た目に */
   .ocr-pick input { display: none; }
   .ocr-pick.dis { opacity: .5; pointer-events: none; }
-  .ocr-res { font-size: 13px; line-height: 1.7; margin-top: 8px; columns: 3 220px; }
+  .ocr-res { font-size: 13px; line-height: 1.7; margin-top: 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }   /* 初級・中級・上級を1列ずつ */
   .log-list { max-height: calc(100vh - 220px); overflow-y: auto; margin-top: 10px; }
   .log-list h3 { margin: 14px 0 6px; font-size: 15px; color: var(--indigo); }
   .log-list h3:first-child { margin-top: 0; }

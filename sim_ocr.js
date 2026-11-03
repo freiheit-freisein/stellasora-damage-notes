@@ -27,10 +27,13 @@
     for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
     return d[m][n];
   };
-  const best = (s, cands) => {
-    let b = null, bs = 1e9;
-    cands.forEach(c => { const sc = lev(s, c[0]) / Math.max(c[0].length, 1); if (sc < bs) { bs = sc; b = c; } });
-    return { c: b, score: bs };
+  // 同じ文字が同じ順に並んでいる数（最長共通部分列）
+  const lcs = (a, b) => { const d = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0)); for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = a[i - 1] === b[j - 1] ? d[i - 1][j - 1] + 1 : Math.max(d[i - 1][j], d[i][j - 1]); return d[a.length][b.length]; };
+  // mix: 素質名用。崩れた文字が多いときも、合っている文字の数で近いものを選べるように、編集距離と共通の文字の割合を平均する
+  const best = (s, cands, mix) => {
+    let b = null, bs = 1e9, b2 = 1e9;
+    cands.forEach(c => { const L = Math.max(c[0].length, 1), e = lev(s, c[0]) / L, sc = mix ? (e + 1 - lcs(s, c[0]) / L) / 2 : e; if (sc < bs) { b2 = bs; bs = sc; b = c; } else if (sc < b2) b2 = sc; });
+    return { c: b, score: bs, gap: b2 - bs };
   };
   const fmtV = (o, v) => o.fmt === "pct" ? String(Math.round(v * 1000) / 10) : String(v);
   // 読んだ数字を、その項目の品質の段階に当てはめる（「129%」→ 12%、「13」→ +3 など）
@@ -98,10 +101,11 @@
         if (!m) return;
         const name = m[1].replace(/^[^ぁ-んァ-ン一-龠A-Za-z]+/, "").replace(/\s/g, ""), val = vm ? vm.t : m[2];
         if (/レベル$/.test(name) && !/上昇$/.test(name)) {   // 素質のレベル上昇（「○○レベル +3」）
-          const b = best(name.replace(/レベル$/, ""), pots);
-          if (!b.c || b.score > 0.6) { rows.push({ k: null, label: name, warn: true, nopot: true, read: t }); return; }   // 素質が見つからなくても、行の位置はずらさない
+          const b = best(name.replace(/レベル$/, ""), pots, true);
+          // 素質名は下線つきの色文字で崩れやすい。一番近いものが2番目よりはっきり近ければ、崩れていても当てる（要確認）
+          if (!b.c || (b.score > 0.5 && !(b.score <= 0.8 && b.gap >= 0.1))) { rows.push({ k: null, label: name, warn: true, nopot: true, read: t }); return; }   // 素質が見つからなくても、行の位置はずらさない
           const s = snap((window.EMBLEM_OPTIONS || []).find(x => x.key === b.c[2]), val);
-          rows.push({ k: b.c[2], q: s && s.q, t: b.c[1], label: b.c[0] + "レベル", warn: !s || b.score > 0.35, read: t });
+          rows.push({ k: b.c[2], q: s && s.q, t: b.c[1], label: b.c[0] + "レベル", warn: !s || b.score > 0.3, read: t });
           return;
         }
         const b = best(name, NM);
