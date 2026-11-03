@@ -158,24 +158,17 @@
     const c = chOf(id), cs = G.chars[id];
     const o = E.outsideStats(c, cs);
     const d = RD.team[id].st;
-    const b = R.team[id], st = b.st, ef = b.ef, ag = ef.ag || {};
-    const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
+    const v = E.battleView(R.team[id], G);
     const row = (k, a, m) => `<tr><td>${k}</td><td style="text-align:right">${a}</td><td class="bt" style="text-align:right">${m}</td></tr>`;
-    // 会心率・会心ダメージの戦闘中: 素質・ロスレコの会心の効果（攻撃の種類だけを指定したもの）も足す。種類で違うときは「通常／スキル」を並べる
-    const crit = (k0, base, extraFor) => {
-      const v = t => base + (extraFor ? extraFor(t) : 0) + (ag.mods || []).filter(mo => mo.k === k0 && !mo.tags && !mo.grp && (!mo.ht || mo.ht === t)).reduce((a, mo) => a + mo.v, 0);
-      const vb = v("basic"), vs = v("skill");
-      return Math.abs(vb - vs) < 1e-9 ? pct(vb) : `通常 ${pct(vb)}／スキル ${pct(vs)}`;
-    };
-    const cRate = crit("critRate", st.critRate, t => st.rateAdd[t] || 0);
-    const cDmg = crit("critDmg", st.critDmg + (G.heartCrit && id === "noya" ? 0.12 : 0));
-    return `<div class="box"><table class="stt"><tr><th></th><th title="ゲームのステータス画面の値">ステ画面</th><th class="bt" title="今の敵で、素質・スキル・ロスレコの効果を足した値">戦闘中</th></tr>
-      ${row("最大HP", fmt(o.hp), fmt(st.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(batk), fmt(d.atk))}
-      ${row("会心率", pct(o.critRate), cRate, pct(d.critRate))}${row("会心ダメージ", pct(o.critDmg), cDmg, pct(d.critDmg))}
-      ${row(c.el + "属性ダメージ", pct(1 + o.elemAdd), pct(1 + st.elemAdd + ef.W), pct(1 + d.elemAdd))}
-      ${row("通常攻撃ダメージ", "—", pct(st.basicAdd + ef.Bb), pct(d.basicAdd))}${row("スキルダメージ", "—", pct(st.skillAdd + ef.Bs), pct(d.skillAdd))}
-      ${row("必殺技ダメージ", "—", pct(st.ultAdd + ef.Bu), pct(d.ultAdd))}${row("印ダメージ", "—", pct(st.markAdd + (ag.markAdd || 0)), pct(d.markAdd))}
-      ${row("属性耐性貫通", fmt(o.pen), fmt(st.pen), fmt(d.pen))}${row("敵の被ダメージ", "—", "×" + f3(ef.taken), "—")}</table></div>`;
+    // 会心は、攻撃の種類で違うときは「通常／スキル」を並べる（長剣・光刃など攻撃を限った効果は入れない）
+    const two = x => Math.abs(x.basic - x.skill) < 1e-9 ? pct(x.basic) : `通常 ${pct(x.basic)}／スキル ${pct(x.skill)}`;
+    return `<div class="box"><table class="stt"><tr><th></th><th title="ゲームのステータス画面の値">ステ画面</th><th class="bt" title="今の敵で、素質・スキル・ロスレコの効果を足した値（直接入力した欄は、その値）">戦闘中</th></tr>
+      ${row("最大HP", fmt(o.hp), fmt(v.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(v.atk), fmt(d.atk))}
+      ${row("会心率", pct(o.critRate), two(v.critRate), pct(d.critRate))}${row("会心ダメージ", pct(o.critDmg), two(v.critDmg), pct(d.critDmg))}
+      ${row(c.el + "属性ダメージ", pct(o.elemAdd), pct(v.elem), pct(d.elemAdd))}
+      ${row("通常攻撃ダメージ", "—", pct(v.basic), pct(d.basicAdd))}${row("スキルダメージ", "—", pct(v.skill), pct(d.skillAdd))}
+      ${row("必殺技ダメージ", "—", pct(v.ult), pct(d.ultAdd))}${row("印ダメージ", "—", pct(v.mark), pct(d.markAdd))}
+      ${row("属性耐性貫通", fmt(o.pen), fmt(v.pen), fmt(d.pen))}${row("敵の被ダメージ", "—", "×" + f3(v.taken), "—")}</table></div>`;
   }
 
 
@@ -218,19 +211,20 @@
   // ---- 巡遊者（直接入力）----
   function renderDirect() {
     const col = ([k, l]) => {
-      const id = G.team[k], c = chOf(id), p = `chars.${id}.manual`, st = R.team[id].st;
+      const id = G.team[k], c = chOf(id), p = `chars.${id}.manual`, v = E.battleView(R.team[id], G);
       const f = (label, key, ph) => fld(label, inp(`${p}.${key}`, { w: 110, ph: ph }));
+      const p1 = x => Math.round(x * 1000) / 10;
       return `<div class="chcol${mHide(k)}"><h3>${l}：${esc(c.jp)}</h3>
-        ${f("最大HP", "hp", fmt(st.hp))}${f("攻撃力", "atk", fmt(st.atk))}
-        ${f("会心率(%)", "critRate", Math.round(st.critRate * 1000) / 10)}${f("会心ダメージ(%)", "critDmg", Math.round(st.critDmg * 1000) / 10)}
-        ${f(c.el + "属性ダメージ(%)", "elem", Math.round(st.elemAdd * 1000) / 10)}${f("通常攻撃ダメージ(%)", "basic", Math.round(st.basicAdd * 1000) / 10)}
-        ${f("スキルダメージ(%)", "skill", Math.round(st.skillAdd * 1000) / 10)}${f("必殺技ダメージ(%)", "ult", Math.round(st.ultAdd * 1000) / 10)}
-        ${f("印ダメージ(%)", "mark", Math.round(st.markAdd * 1000) / 10)}${f("属性耐性貫通", "pen", fmt(st.pen))}
+        ${f("最大HP", "hp", fmt(v.hp))}${f("攻撃力", "atk", fmt(v.atk))}
+        ${f("会心率(%)", "critRate", p1(v.critRate.basic))}${f("会心ダメージ(%)", "critDmg", p1(v.critDmg.basic))}
+        ${f(c.el + "属性ダメージ(%)", "elem", p1(v.elem))}${f("通常攻撃ダメージ(%)", "basic", p1(v.basic))}
+        ${f("スキルダメージ(%)", "skill", p1(v.skill))}${f("必殺技ダメージ(%)", "ult", p1(v.ult))}
+        ${f("印ダメージ(%)", "mark", p1(v.mark))}${f("属性耐性貫通", "pen", fmt(v.pen))}
         ${cardsHtml(id)}
       </div>`;
     };
     return `<div class="wide"><label class="check" style="font-weight:700"><input type="checkbox" data-p="directPriority" data-t="b"${G.directPriority !== false ? " checked" : ""}>入力されている欄は直接入力を優先する</label>
-      ${helpTxt("direct", "空欄は計算のまま。入れた欄だけ上書きして計算します。", "薄い数字は今の計算値です。「属性ダメージ」は 100% を除いた加算分（画面が112%なら12）です。戦闘中だけ付く効果は画面に出ないので、その分は素質・ロスレコ・「その他」で補います。")}
+      ${helpTxt("direct", "入れた欄は、戦闘中の最終の値として計算します。空欄は計算のまま。", "薄い数字は今の戦闘中の計算値です。入れた欄には、素質・ロスレコ・心相などの戦闘中の効果を足しません（長剣・光刃など、攻撃を限った効果だけは足します）。属性ダメージなどは 100% を除いた加算分（+282% なら 282）で入れます。会心率・会心ダメージは、通常攻撃の値を入れてください（スキルなどは、計算での通常攻撃との差をそのまま足します）。")}
       ${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div></div>`;
   }
   function renderAdd(k) {
@@ -697,10 +691,9 @@
       txt(`支援${L2("support")}・必殺${L2("ult")}`, X0 + colW - 20, top + 58, 18, "#FFFFFF", { align: "right" });
       txt(`信頼Lv${cs.trustLv || 0}・心相${cs.talent || 0}`, X0 + colW - 20, top + 84, 18, "rgba(255,255,255,.92)", { align: "right" });
       // ステータス: ステ画面（ゲームのステータス画面）と戦闘中（素質・スキル・ロスレコの効果も足した値）を並べる
-      const b = R.team[id], st = b.st, ef = b.ef, o = E.outsideStats(c, cs);
-      const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
-      const stats = [["HP", fmt(o.hp), fmt(st.hp)], ["攻撃力", fmt(o.atk), fmt(batk)], ["会心率", pct(o.critRate), pct(st.critRate)], ["会心ダメージ", pct(o.critDmg), pct(st.critDmg)],
-        [c.el + "属性ダメージ", pct(1 + o.elemAdd), pct(1 + st.elemAdd + ef.W)], ["属性耐性貫通", fmt(o.pen), fmt(Math.min(st.pen, 250))]];
+      const o = E.outsideStats(c, cs), v = E.battleView(R.team[id], G);
+      const stats = [["HP", fmt(o.hp), fmt(v.hp)], ["攻撃力", fmt(o.atk), fmt(v.atk)], ["会心率", pct(o.critRate), pct(v.critRate.basic)], ["会心ダメージ", pct(o.critDmg), pct(v.critDmg.basic)],
+        [c.el + "属性ダメージ", pct(o.elemAdd), pct(v.elem)], ["属性耐性貫通", fmt(o.pen), fmt(Math.min(v.pen, 250))]];
       const xs = X0 + colW - 190, xb = X0 + colW - 22;
       txt("ステ画面", xs, top + 122, 14, "#9AA0C8", { align: "right" }); txt("戦闘中", xb, top + 122, 14, "#08808A", { align: "right" });
       stats.forEach(([n, a, v], i) => { const yy = top + 148 + i * 30; txt(n, X0 + 22, yy, 19, "#5F6492"); txt(a, xs, yy, 19, "#5F6492", { align: "right", w: 500 }); txt(v, xb, yy, 22, "#1E2250", { align: "right", w: 900 }); });
