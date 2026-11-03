@@ -161,9 +161,17 @@
     const b = R.team[id], st = b.st, ef = b.ef, ag = ef.ag || {};
     const batk = st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct);
     const row = (k, a, m) => `<tr><td>${k}</td><td style="text-align:right">${a}</td><td class="bt" style="text-align:right">${m}</td></tr>`;
+    // 会心率・会心ダメージの戦闘中: 素質・ロスレコの会心の効果（攻撃の種類だけを指定したもの）も足す。種類で違うときは「通常／スキル」を並べる
+    const crit = (k0, base, extraFor) => {
+      const v = t => base + (extraFor ? extraFor(t) : 0) + (ag.mods || []).filter(mo => mo.k === k0 && !mo.tags && !mo.grp && (!mo.ht || mo.ht === t)).reduce((a, mo) => a + mo.v, 0);
+      const vb = v("basic"), vs = v("skill");
+      return Math.abs(vb - vs) < 1e-9 ? pct(vb) : `通常 ${pct(vb)}／スキル ${pct(vs)}`;
+    };
+    const cRate = crit("critRate", st.critRate, t => st.rateAdd[t] || 0);
+    const cDmg = crit("critDmg", st.critDmg + (G.heartCrit && id === "noya" ? 0.12 : 0));
     return `<div class="box"><table class="stt"><tr><th></th><th title="ゲームのステータス画面の値">ステ画面</th><th class="bt" title="今の敵で、素質・スキル・ロスレコの効果を足した値">戦闘中</th></tr>
       ${row("最大HP", fmt(o.hp), fmt(st.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(batk), fmt(d.atk))}
-      ${row("会心率", pct(o.critRate), pct(st.critRate), pct(d.critRate))}${row("会心ダメージ", pct(o.critDmg), pct(st.critDmg), pct(d.critDmg))}
+      ${row("会心率", pct(o.critRate), cRate, pct(d.critRate))}${row("会心ダメージ", pct(o.critDmg), cDmg, pct(d.critDmg))}
       ${row(c.el + "属性ダメージ", pct(1 + o.elemAdd), pct(1 + st.elemAdd + ef.W), pct(1 + d.elemAdd))}
       ${row("通常攻撃ダメージ", "—", pct(st.basicAdd + ef.Bb), pct(d.basicAdd))}${row("スキルダメージ", "—", pct(st.skillAdd + ef.Bs), pct(d.skillAdd))}
       ${row("必殺技ダメージ", "—", pct(st.ultAdd + ef.Bu), pct(d.ultAdd))}${row("印ダメージ", "—", pct(st.markAdd + (ag.markAdd || 0)), pct(d.markAdd))}
