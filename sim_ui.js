@@ -339,7 +339,7 @@
     }
     return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <span class="tag-ng">テスト中</span>
       <p class="muted" style="margin:4px 0">ゲームの「徽章一覧」を一番下までスクロールして撮った画像を、クリップボードから読み込むか、ファイルで選んでください（この画面で Ctrl+V でも読めます）。画像はこのブラウザの中だけで読み、どこにも送りません。今はPC版の画面で試しています。</p>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-add pri" data-act="ocr-clip:${id}"${st.busy ? " disabled" : ""}>クリップボードから読み込む</button><input type="file" accept="image/*" id="ocr-file" data-id="${id}"${st.busy ? " disabled" : ""}></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-add pri" data-act="ocr-clip:${id}"${st.busy ? " disabled" : ""}>クリップボードから読み込む</button><label class="btn-add ocr-pick${st.busy ? " dis" : ""}">画像ファイルを選ぶ<input type="file" accept="image/*" id="ocr-file" data-id="${id}"${st.busy ? " disabled" : ""}></label></div>
       ${st.msg ? `<p class="msg${st.ng ? " ng" : ""}">${esc(st.msg)}</p>` : ""}${res}</div>`;
   }
   function runOcr(id, file) {
