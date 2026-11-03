@@ -161,7 +161,7 @@
     const v = E.battleView(R.team[id], G);
     const row = (k, a, m) => `<tr><td>${k}</td><td style="text-align:right">${a}</td><td class="bt" style="text-align:right">${m}</td></tr>`;
     // 会心は、攻撃の種類で違うときは「通常／スキル」を並べる（長剣・光刃など攻撃を限った効果は入れない）
-    const two = x => Math.abs(x.basic - x.skill) < 1e-9 ? pct(x.basic) : `通常 ${pct(x.basic)}／スキル ${pct(x.skill)}`;
+    const two = x => Math.abs(x.basic - x.skill) < 1e-9 ? pct(x.basic) : `<span class="tv">通常 ${pct(x.basic)}</span><span class="tv">スキル ${pct(x.skill)}</span>`;   // 幅が狭くても切れないように2行
     return `<div class="box"><table class="stt"><tr><th></th><th title="ゲームのステータス画面の値">ステ画面</th><th class="bt" title="今の敵で、素質・スキル・ロスレコの効果を足した値（直接入力した欄は、その値）">戦闘中</th></tr>
       ${row("最大HP", fmt(o.hp), fmt(v.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(v.atk), fmt(d.atk))}
       ${row("会心率", pct(o.critRate), two(v.critRate), pct(d.critRate))}${row("会心ダメージ", pct(o.critDmg), two(v.critDmg), pct(d.critDmg))}
@@ -214,7 +214,7 @@
       const id = G.team[k], c = chOf(id), p = `chars.${id}.manual`, v = E.battleView(R.team[id], G);
       const f = (label, key, ph) => fld(label, inp(`${p}.${key}`, { w: 110, ph: ph }));
       const p1 = x => Math.round(x * 1000) / 10;
-      return `<div class="chcol${mHide(k)}"><h3>${l}：${esc(c.jp)}</h3>
+      return `<div class="chcol dir-col${mHide(k)}"><h3>${l}：${esc(c.jp)}</h3>
         ${f("最大HP", "hp", fmt(v.hp))}${f("攻撃力", "atk", fmt(v.atk))}
         ${f("会心率(%)", "critRate", p1(v.critRate.basic))}${f("会心ダメージ(%)", "critDmg", p1(v.critDmg.basic))}
         ${f(c.el + "属性ダメージ(%)", "elem", p1(v.elem))}${f("通常攻撃ダメージ(%)", "basic", p1(v.basic))}

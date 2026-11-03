@@ -45,11 +45,13 @@
   .obtn:hover { background: #fbddb4; }
   .obtn.on { background: var(--indigo); color: #fff; border-color: var(--indigo); }
   /* 表示エリア */
-  .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }   /* 幅が足りないときは折り返す（ステータスの表が切れないように） */
   .chcol { border: 2px solid var(--border); border-radius: 14px; padding: 10px; }
   .chcol h3 { margin: 0 0 6px; font-size: 15px; color: var(--indigo); display: flex; gap: 6px; align-items: center; }
   .fld { display: grid; grid-template-columns: 112px 1fr; gap: 4px 8px; align-items: center; margin: 3px 0; font-size: 13px; }
   .fld label { margin: 0; font-size: 12px; }
+  .dir-col .fld { grid-template-columns: 150px minmax(0, 1fr); }   /* 直接入力: ラベルを改行しない */
+  .dir-col .fld label { white-space: nowrap; }
   .fld input[type=number], .fld select { min-height: 32px; padding: 0 8px; border-radius: 8px; }
   .card-t { width: 100%; font-size: 12px; margin-top: 0; table-layout: fixed; }
   .card-t td:nth-child(1) { width: 112px; }
@@ -280,6 +282,7 @@
   .stt { width: 100%; font-size: 12px; table-layout: fixed; margin: 0; }
   .stt th, .stt td { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .stt th { font-size: 11px; text-align: right; }
+  .stt .tv { display: block; }   /* 会心の「通常／スキル」は2行に分ける */
   .stt th:first-child, .stt td:first-child { text-align: left; width: 34%; color: var(--muted); font-weight: 700; }
   .stt td.bt { background: rgba(10,190,197,.08); font-weight: 700; color: var(--indigo); }
   .stt th.bt { color: var(--link); }
