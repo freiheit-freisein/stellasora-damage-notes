@@ -23,7 +23,7 @@
     CH.forEach(c => { set.add(c.id); const t = TREKKERS.find(x => x.en === c.en); if (t && t.potentials) ["main", "support"].forEach(r => (t.potentials[r] || []).forEach(g => g.potentials.forEach(x => { set.add(x.name); set.add(S.potKey(x.name)); }))); });
     // 敵は、最初の3体だけ辞書に入れる（あとから足した敵は文字のまま書き出す。辞書が変わると、それまでの共有コードが読めなくなるため）
     (S.ENEMIES || []).filter(e => ["stomp", "defense", "deep"].indexOf(e.id) >= 0).forEach(e => set.add(e.id));
-    Object.keys(S.DEFAULT_ENEMY_TRAITS || {}).forEach(k => S.DEFAULT_ENEMY_TRAITS[k].forEach(t => set.add(t.id)));
+    Object.keys(S.DEFAULT_ENEMY_TRAITS || {}).forEach(k => S.DEFAULT_ENEMY_TRAITS[k].forEach(t => { if (!t.nodict) set.add(t.id); }));   // あとから足した特性（nodict）は辞書に入れない
     // Wikiから自動で足したロスレコ（auto）は辞書に入れない（文字のまま書き出す）。辞書が変わると、それまでの共有コードが読めなくなるため
     (window.LOSTRECORDS || []).filter(r => !r.auto).forEach(r => set.add(r.id));
     (window.EMBLEM_OPTIONS || []).forEach(o => set.add(o.key));

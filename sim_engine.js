@@ -242,6 +242,7 @@
       ag.mods.forEach(mo => {
         if (mo.tags && !mo.tags.some(t => tags.indexOf(t) >= 0)) return;
         if (mo.ht && mo.ht !== type) return;
+        if (mo.grp && mo.grp !== group) return;   // 技の指定（例: 通常攻撃の中の大剣だけ）
         if (mo.k === "mult") mAdd += mo.v;
         else if (mo.k === "critRate") crAdd += mo.v;
         else if (mo.k === "critDmg") cdAdd += mo.v;
@@ -262,8 +263,7 @@
       if (type === "mark") taken *= ag.takenMark * (ag.markMult || 1);
       if (type === "skill") taken *= ag.takenSkill;
       if (type === "basic") taken *= ag.takenBasic || 1;
-      if (traits.crack && type === "skill") taken *= 1.15;
-      if (traits.chase && (type === "skill" || type === "basic")) taken *= 1.24;
+      (S.DEFAULT_ENEMY_TRAITS[G.enemy] || []).forEach(tr => { if (traits[tr.id] && tr.ht.indexOf(type) >= 0) taken *= tr.x; });   // 敵の特性
       const dd = enemyD(en, c.el, st.pen, G);
       const markX = type === "mark" && c.id === "noya" ? (en.markX || 1) : 1;   // セイナ(原点)の印だけの別枠。ほかの印にはかからない（グレイの地の印で実測）
       const mult = m / 100 * (1 + (mh.mult || 0)) * (1 + mAdd);

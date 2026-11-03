@@ -16,11 +16,11 @@ window.SIM = window.SIM || {};
     noya: {
       "Lucent Blitz": { txt: "主力スキル：長剣 +4回、光刃9発（各21%・スキル）", e: [{ k: "count", hit: "mLong", add: 4 }, X("main", "光刃（Lucent Blitz）", { m: 21, c: 9, tags: ["glow", "long"] })] },
       "Dawnflare": { txt: "主力スキル：ブレードライト 134%×6（スキル）／通常攻撃の突進：光刃3発（各21%）", e: [X("main", "ブレードライト（Dawnflare）", { m: 134, c: 6, tags: ["long"] }), X("basic", "突進の光刃（Dawnflare）", { m: 21, c: 3, tags: ["glow", "long"] })] },
-      "Prism Warp": { txt: "光刃が戻って追加ダメージ（スキル）＋長剣・光刃のスキル会心率（会心率は(Max!)でLv6から上がらない）", e: [X("*", "光刃の戻り（Prism Warp）", { n: 0, perGlow: true, tags: [] }), { k: "critRate", n: 1, tags: ["long", "glow"], ht: "skill", ext: "cap" }] },
+      "Prism Warp": { txt: "光刃が戻って追加ダメージ（スキル）＋長剣・光刃のスキル会心率（会心率は(Max!)でLv6から上がらない）", e: [X("*", "光刃の戻り（Prism Warp）", { n: 0, perGlow: true, tags: ["glow"] }), { k: "critRate", n: 1, tags: ["long", "glow"], ht: "skill", ext: "cap" }] },
       "Resolve: Blitz": { txt: "残光の敵に、長剣・光刃の倍率 ×(1+x)", e: [{ k: "mult", n: 0, tags: ["long", "glow"], cond: "glimmer" }] },
       "Lucent Tide": { txt: "（逆転の光明）光刃が印を発動できる（未反映）／主力スキル後12秒：セイナのスキル会心率＋（(Max!)でLv6から上がらない）、光のバランサーのスキル会心ダメ＋（2重）", e: [{ k: "critRate", n: 0, ht: "skill", stk: 2, ext: "cap" }, { k: "critDmg", n: 1, ht: "skill", stk: 2, to: "luxVers" }] },
       "Stardust Descent": { txt: "主力スキル：スターフォール2個（各23%・通常）／突進が大剣89%＋スターフォールに置き換わる", e: [X("main", "スターフォール（Stardust Descent）", { m: 23, c: 2, t: "basic", tags: ["starfall"] }), { k: "drop", hit: "sprint" }, X("basic", "突進の大剣（Stardust Descent）", { m: 89, t: "basic", tags: ["great"] }), X("basic", "突進のスターフォール", { m: 23, t: "basic", tags: ["starfall"] })] },
-      "Sinbreaker": { txt: "ジャッジメントスターフォール 222%×2（通常）／通常攻撃ダメージ +20%", e: [X("basic", "ジャッジメントスターフォール", { m: 222, c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20 }] },
+      "Sinbreaker": { txt: "ジャッジメントスターフォール 222%×2（通常）／通常攻撃の中の大剣の攻撃だけ、通常攻撃ダメージ +20%", e: [X("basic", "ジャッジメントスターフォール", { m: 222, c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20, tags: ["great"], grp: "basic" }] },
       "Eclipse Phantom": { txt: "ジャッジメント後のフィールド 41〜165%×6（通常）＋大剣・スターフォールの通常会心率", e: [X("basic", "フィールド（Eclipse Phantom）", { n: 0, c: 6, t: "basic", tags: ["great"] }), { k: "critRate", n: 1, tags: ["great", "starfall"], ht: "basic" }] },
       "Gavel of Absolution": { txt: "スターフォール消滅時の雷撃（通常）＋通常会心率", e: [X("*", "雷撃（Gavel of Absolution）", { n: 0, t: "basic", perTag: "starfall" }), { k: "critRate", n: 1, ht: "basic" }] },
       "Resolve: Sunder": { txt: "防御貫通（防御の式が未確認のため計算に未反映）", e: [] },
@@ -58,7 +58,7 @@ window.SIM = window.SIM || {};
       "Blazing Radiance": { txt: "印ダメージ＋、印を出すたびに光属性ダメージ＋（最大10重）", e: [{ k: "mark", n: 0 }, { k: "W", n: 1, stk: 10 }] },
       "Phantom Blast": { txt: "回避時の影（スキル）。回避が必要なので既定は反映しない", off: true, e: [X("main", "影（Phantom Blast）", { n: 0 })] },
       "Absolute Brilliance": { txt: "必殺の印（ルーセント）＋攻撃力%（最大3重）", e: [X("ult", "ルーセント（Absolute Brilliance）", { arr: [17, 22, 27.1, 32.2, 37.2, 42.3], t: "mark" }), { k: "atkPct", n: 0, stk: 3 }] },
-      "Persistent Warmth": { txt: "必殺後、次のスキル発動で光属性ダメージ＋", e: [{ k: "W", n: 0 }] },
+      "Persistent Warmth": { txt: "必殺後、次のスキル発動から30秒、光属性のスキルダメージ＋", e: [{ k: "Bs", n: 0 }] },
       "Ultimate Radiance": { txt: "必殺技ダメージ＋", e: [{ k: "Bu", n: 0 }] },
       "Radiance of Shattered Stars": { txt: "HP80%未満の敵に必殺技ダメージ＋", e: [{ k: "Bu", n: 0 }] },
       "Radiance Blade: Twin Shadow": { txt: "全員が光のとき、飛ぶ刃のスキル会心率＋0.3%・スキルダメ＋3%（各20重）", e: [{ k: "critRate", raw: 0.003, stk: 20, tags: ["blade"], ht: "skill", cond: "allLux" }, { k: "Bs", raw: 0.03, stk: 20, tags: ["blade"], cond: "allLux" }] },
@@ -267,7 +267,7 @@ window.SIM = window.SIM || {};
         if (e.k === "markMult") { a.markMult *= 1 + v; return; }   // 印ダメージの別枠（印ダメージ+の足し算とは別に掛ける）
         if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
         if (e.k === "takenBasic") { a.takenBasic = (a.takenBasic || 1) * (1 + v); return; }
-        if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || (e.tags && (e.k === "Bs" || e.k === "Bb"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, cond: e.cond || null }); return; }
+        if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || ((e.tags || e.grp) && (e.k === "Bs" || e.k === "Bb"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: e.cond || null }); return; }
         if (e.k === "mark") { a.markAdd += v; return; }
         if (a[e.k] != null) a[e.k] += v;
       });
@@ -327,7 +327,7 @@ window.SIM = window.SIM || {};
   const KJ = { W: el => el + "属性ダメージ", Bs: "スキルダメージ", Bb: "通常攻撃ダメージ", Bu: "必殺技ダメージ", mark: "印ダメージ", markMult: "印ダメージ（別枠の掛け算）",
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）" };
-  const TAGJ = { wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃" };
+  const TAGJ = { wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃" };
   const TOJ = { all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
@@ -346,7 +346,7 @@ window.SIM = window.SIM || {};
       if (e.k === "drop") return "";
       const kn = typeof KJ[e.k] === "function" ? KJ[e.k](e.el || c.el) : (KJ[e.k] || e.k);
       const flat = e.flat || e.k === "hpFlat" || e.k === "atkFlat" || e.k === "pen";
-      const tg = e.tags && e.tags.length ? e.tags.map(t => TAGJ[t] || t).join("・") + "の" : "";
+      const tg = (e.grp ? (S.SKILL_NAME && S.SKILL_NAME[e.grp] || e.grp) + "の中の" : "") + (e.tags && e.tags.length ? e.tags.map(t => TAGJ[t] || t).join("・") + "の" : "");
       const notes = [];
       if (e.k === "taken" && !e.to) notes.push("自分の攻撃だけ");
       else if (e.to && e.to !== "enemy") notes.push(TOJ[e.to] || e.to);
