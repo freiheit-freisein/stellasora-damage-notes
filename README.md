@@ -54,7 +54,7 @@ PCの横長画面（1920x1080）前提です。スマホ対応は、まだです
 | `calc.js` `data.js` `data_sup.js` | 検証済みの式とデータ（ウィロー・ナツカ・エレノア、ロスレコ・音符など）。計算ページが使う |
 | `sim.html` `sim_ui.js` `sim_engine.js` `sim_data.js` `sim_pots.js` `sim_lr.js` `sim_share.js` | 計算ページ（画面・計算エンジン・キャラと敵のデータ・素質と心相の効果表・ロスレコ）。以前のウィロー側の検証ページとは、全シナリオで一致を確認済み |
 | `sim_preset.js` `data/preset_map.js` | ゲームの素質プリセットコードの読み込み・書き出し |
-| `sim_ocr.js` | 徽章一覧のスクリーンショットの読み取り（テスト中。Tesseract.js をブラウザの中だけで使う） |
+| `sim_ocr.js` `docs/ocr.md` | 徽章一覧のスクリーンショットの読み取り（テスト中。Tesseract.js をブラウザの中だけで使う）と、その仕組み・工夫のまとめ |
 | `data/changelog.js` | 計算ページの「更新履歴」の中身 |
 | `data/skill_ct.js` | スキルのCDと必殺技の消費SP（日本語Wikiから。ローテーションの回数に使う） |
 | `functions/` `migrations/` `wrangler.toml` | 公開ページのサーバー側（短縮URL・報告。Cloudflare Pages Functions と D1） |
