@@ -345,7 +345,7 @@
       const un = (cs.talent || 0) >= h.n * 10, key = "heart" + h.n, onv = (cs.pon || {})[key], on = onv == null ? !h.off : onv;
       return `<div class="pot${un ? " core" : ""}"><b>${h.n} ${esc(h.name)}</b>${un ? '<span class="tag-ok">解放済み</span>' : '<span class="tag-ng">未解放</span>'}
         <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}
-        ${un && id === "noya" && h.n === 1 ? `<label class="check" style="font-weight:400;margin-top:4px"><input type="checkbox" data-p="heartCrit" data-t="b"${G.heartCrit ? " checked" : ""}>「閃星」中（印の会心ダメージ +12%）</label>` : ""}</div>`;
+        ${un && id === "noya" && h.n === 1 ? `<label class="check" style="font-weight:400;margin-top:4px"><input type="checkbox" data-p="heartCrit" data-t="b"${G.heartCrit ? " checked" : ""}>「閃星」中（会心ダメージ +12%）</label>` : ""}</div>`;
     }).join("")}</div>` : '<p class="muted">この巡遊者の、心相の戦闘中の効果は、まだ登録していません。反映したい効果は「その他」に入れてください。</p>';
     return `<div class="wide"><h3>${esc(c.jp)}：心相</h3>
       ${fld("心相", `<div class="pz-lvs seg" role="group" aria-label="心相">${Array.from({ length: 50 / (rar >= 5 ? 10 : 5) + 1 }, (_, i) => i * (rar >= 5 ? 10 : 5)).map(v => `<button type="button" class="pz-lv${(+cs.talent || 0) === v ? " on" : ""}" aria-pressed="${(+cs.talent || 0) === v}" data-act="plv|${v}|${p}.talent">${rar >= 5 ? v / 10 + "凸" : v / 10}</button>`).join("")}</div>`, rar >= 5 ? "" : "星4は5段階ずつ（0.5凸きざみ）")}

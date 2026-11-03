@@ -269,7 +269,7 @@
       const mult = m / 100 * (1 + (mh.mult || 0)) * (1 + mAdd);
       const normal = refVal * mult * W * B * taken * dd.D * markX * (other.mult || 1);
       let cd = st.critDmg + (mh.critDmg || 0) + cdAdd;
-      if (type === "mark" && G.heartCrit && c.id === "noya") cd += 0.12;           // 心相1 閃星中: 会心+12%（印の会心 1.74）
+      if (G.heartCrit && c.id === "noya") cd += 0.12;   // 心相1 閃星中: 会心ダメージ+12%。印だけでなく通常・スキルにも乗る（空壺ノ王で 突進・2撃目・3撃目の会心が 1.7400 倍。2026-11-04）
       const rate = clamp(st.critRate + (st.rateAdd[type] || 0) + (mh.critRate || 0) + crAdd, 0, 1);
       const crit = normal * cd;
       const avg = normal * (1 - rate) + crit * rate;
