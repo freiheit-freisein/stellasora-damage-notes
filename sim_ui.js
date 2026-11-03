@@ -329,14 +329,14 @@
       const n = st.rows.length;
       const line = (r, i) => {
         const o = r.k ? optOf(r.k) : null, v = o && r.q ? qVal(o, r.q) : null;
-        return `<div>${OCR_KJ[OCR_KINDS[Math.floor(i / 4)]] || "？"} ${i % 4 + 1}：${r.nopot ? `<s>${esc(r.label)}</s>（該当無し）` : esc(r.label) + (v != null ? " " + valTxt(o, v) : "（値が読めませんでした）")}${r.warn && !r.nopot ? ' <span class="tag-ng">要確認</span>' : ""}</div>`;
+        return `<div>${OCR_KJ[OCR_KINDS[Math.floor(i / 4)]] || "？"} ${i % 4 + 1}：${r.nopot ? `<s>${esc(r.label)}</s>（該当無し）` : esc(r.label) + (v != null ? " " + valTxt(o, v) : "（値が読めませんでした）") + (r.part ? "（部分一致）" : "")}${r.warn && !r.nopot ? ' <span class="tag-ng">要確認</span>' : ""}</div>`;
       };
       // 初級・中級・上級を1列ずつ（4行ずつ）
       const rs = st.rows.slice(0, 12);
       res = `<div class="ocr-res">${[0, 1, 2].map(b => `<div>${rs.slice(b * 4, b * 4 + 4).map((r, j) => line(r, b * 4 + j)).join("")}</div>`).join("")}</div>
         ${n < 12 ? `<p class="msg ng">最後の ${12 - n} 行が読めていません（一番下が切れた画面かもしれません）。入れたあとで、空いた枠を手で選んでください。</p>` : ""}
         ${n > 12 ? `<p class="msg ng">13行以上読めたので、上から12行だけ使います。</p>` : ""}
-        ${st.rows.some(r => r.nopot) ? `<p class="msg ng">素質のレベル上昇が、この巡遊者の素質に見つかりませんでした。別の巡遊者の画面ではないか確かめてください（その枠は空にします）。</p>` : ""}
+        ${st.rows.some(r => r.nopot) ? `<p class="msg ng">素質のレベル上昇が、この巡遊者の素質に見つかりませんでした。巡遊者が異なるか、読み取りがうまく行かなかった可能性があります。読めなかった枠は空白になりますので、手動で選択してください。</p>` : ""}
         <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="ocr-apply:${id}">この内容で入れる</button><button class="btn-add" data-act="ocr-cancel">やめる</button></div>`;
     }
     return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <span class="tag-ng">テスト中</span>
