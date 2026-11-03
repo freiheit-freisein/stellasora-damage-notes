@@ -165,7 +165,7 @@
     const exRow = (lab, x) => x.extra.length ? `<tr><td colspan="3" class="ccx"><details><summary>その他の${lab}</summary>${x.extra.map(e => { const ty = (e.tags || e.grp) && e.ht ? x.extra.filter(y => !y.tags && !y.grp && y.ht === e.ht).reduce((t, y) => t + y.v, 0) : 0, tot = x.common + ty + e.v; return `<div>${esc(exName(e))} <b>+${pct(e.v)}</b>（合計 ${pct(lab === "会心率" ? Math.min(tot, 1) : tot)}）</div>`; }).join("")}</details></td></tr>` : "";
     return `<div class="box"><table class="stt"><tr><th></th><th title="ゲームのステータス画面の値">ステ画面</th><th class="bt" title="今の敵で、素質・スキル・ロスレコの効果を足した値（直接入力した欄は、その値）">戦闘中</th></tr>
       ${row("最大HP", fmt(o.hp), fmt(v.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(v.atk), fmt(d.atk))}
-      ${row("会心率", pct(o.critRate), pct(v.critRate.common), pct(d.critRate))}${exRow("会心率", v.critRate)}${row("会心ダメージ", pct(o.critDmg), pct(v.critDmg.common), pct(d.critDmg))}${exRow("会心ダメージ", v.critDmg)}
+      ${row("会心率（共通）", pct(o.critRate), pct(v.critRate.common), pct(d.critRate))}${exRow("会心率", v.critRate)}${row("会心ダメージ（共通）", pct(o.critDmg), pct(v.critDmg.common), pct(d.critDmg))}${exRow("会心ダメージ", v.critDmg)}
       ${row(c.el + "属性ダメージ", pct(o.elemAdd), pct(v.elem), pct(d.elemAdd))}
       ${row("通常攻撃ダメージ", "—", pct(v.basic), pct(d.basicAdd))}${row("スキルダメージ", "—", pct(v.skill), pct(d.skillAdd))}
       ${row("必殺技ダメージ", "—", pct(v.ult), pct(d.ultAdd))}${row("印ダメージ", "—", pct(v.mark), pct(d.markAdd))}
@@ -217,7 +217,7 @@
       const p1 = x => Math.round(x * 1000) / 10;
       return `<div class="chcol dir-col${mHide(k)}"><h3>${l}：${esc(c.jp)}</h3>
         ${f("最大HP", "hp", fmt(v.hp))}${f("攻撃力", "atk", fmt(v.atk))}
-        ${f("会心率(%)", "critRate", p1(v.critRate.common))}${f("会心ダメージ(%)", "critDmg", p1(v.critDmg.common))}
+        ${f("会心率（共通）(%)", "critRate", p1(v.critRate.common))}${f("会心ダメージ（共通）(%)", "critDmg", p1(v.critDmg.common))}
         ${f(c.el + "属性ダメージ(%)", "elem", p1(v.elem))}${f("通常攻撃ダメージ(%)", "basic", p1(v.basic))}
         ${f("スキルダメージ(%)", "skill", p1(v.skill))}${f("必殺技ダメージ(%)", "ult", p1(v.ult))}
         ${f("印ダメージ(%)", "mark", p1(v.mark))}${f("属性耐性貫通", "pen", fmt(v.pen))}
