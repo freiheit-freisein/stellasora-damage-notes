@@ -12,15 +12,16 @@
 window.SIM = window.SIM || {};
 (function (S) {
   const X = (group, name, o) => Object.assign({ k: "extra", group, name, t: "skill", c: 1 }, o);
+  // コア素質（Lvなし）の倍率は、ゲームの画面の値を使う（英語Wikiの値は約1/3.4と小さい。流星の閃き・暁の閃光は 2026-11-03 画面で確認）
   const SPEC = {
     noya: {
-      "Lucent Blitz": { txt: "主力スキル：長剣 +4回、光刃9発（各21%・スキル）", e: [{ k: "count", hit: "mLong", add: 4 }, X("main", "光刃（Lucent Blitz）", { m: 21, c: 9, tags: ["glow", "long"] })] },
-      "Dawnflare": { txt: "主力スキル：ブレードライト 134%×6（スキル）／通常攻撃の突進：光刃3発（各21%）", e: [X("main", "ブレードライト（Dawnflare）", { m: 134, c: 6, tags: ["long"] }), X("basic", "突進の光刃（Dawnflare）", { m: 21, c: 3, tags: ["glow", "long"] })] },
+      "Lucent Blitz": { txt: "主力スキル：長剣 +4回、光刃9発（各72%・スキル）", e: [{ k: "count", hit: "mLong", add: 4 }, X("main", "光刃（Lucent Blitz）", { m: 72, c: 9, tags: ["glow", "long"] })] },
+      "Dawnflare": { txt: "主力スキル：暁光乱刃 452%×6（スキル）／通常攻撃の突進：光刃3発（各72%）", e: [X("main", "暁光乱刃（Dawnflare）", { m: 452, c: 6, tags: ["long"] }), X("basic", "突進の光刃（Dawnflare）", { m: 72, c: 3, tags: ["glow", "long"] })] },
       "Prism Warp": { txt: "光刃が戻って追加ダメージ（スキル）＋長剣・光刃のスキル会心率（会心率は(Max!)でLv6から上がらない）", e: [X("*", "光刃の戻り（Prism Warp）", { n: 0, perGlow: true, tags: ["glow"] }), { k: "critRate", n: 1, tags: ["long", "glow"], ht: "skill", ext: "cap" }] },
       "Resolve: Blitz": { txt: "残光の敵に、長剣・光刃の倍率 ×(1+x)", e: [{ k: "mult", n: 0, tags: ["long", "glow"], cond: "glimmer" }] },
       "Lucent Tide": { txt: "（逆転の光明）光刃が印を発動できる（未反映）／主力スキル後12秒：セイナのスキル会心率＋（(Max!)でLv6から上がらない）、光のバランサーのスキル会心ダメ＋（2重）", e: [{ k: "critRate", n: 0, ht: "skill", stk: 2, ext: "cap" }, { k: "critDmg", n: 1, ht: "skill", stk: 2, to: "luxVers" }] },
       "Stardust Descent": { txt: "主力スキル：スターフォール2個（各23%・通常）／突進が大剣89%＋スターフォールに置き換わる", e: [X("main", "スターフォール（Stardust Descent）", { m: 23, c: 2, t: "basic", tags: ["starfall"] }), { k: "drop", hit: "sprint" }, X("basic", "突進の大剣（Stardust Descent）", { m: 89, t: "basic", tags: ["great"] }), X("basic", "突進のスターフォール", { m: 23, t: "basic", tags: ["starfall"] })] },
-      "Sinbreaker": { txt: "ジャッジメントスターフォール 222%×2（通常）／通常攻撃の中の大剣の攻撃だけ、通常攻撃ダメージ +20%", e: [X("basic", "ジャッジメントスターフォール", { m: 222, c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20, tags: ["great"], grp: "basic" }] },
+      "Sinbreaker": { txt: "特殊通常攻撃「星震の斬撃」 222%×2（通常・大剣）／通常攻撃の中の大剣の攻撃だけ、通常攻撃ダメージ +20%", e: [X("basic", "星震の斬撃（特殊通常攻撃）", { m: 222, c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20, tags: ["great"], grp: "basic" }] },
       "Eclipse Phantom": { txt: "ジャッジメント後のフィールド 41〜165%×6（通常）＋大剣・スターフォールの通常会心率", e: [X("basic", "フィールド（Eclipse Phantom）", { n: 0, c: 6, t: "basic", tags: ["great"] }), { k: "critRate", n: 1, tags: ["great", "starfall"], ht: "basic" }] },
       "Gavel of Absolution": { txt: "スターフォール消滅時の雷撃（通常）＋通常会心率", e: [X("*", "雷撃（Gavel of Absolution）", { n: 0, t: "basic", perTag: "starfall" }), { k: "critRate", n: 1, ht: "basic" }] },
       "Resolve: Sunder": { txt: "防御貫通（防御の式が未確認のため計算に未反映）", e: [] },
