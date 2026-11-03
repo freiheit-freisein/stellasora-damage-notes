@@ -58,7 +58,7 @@ window.SIM = window.SIM || {};
       "Blazing Radiance": { txt: "印ダメージ＋、印を出すたびに光属性ダメージ＋（最大10重）", e: [{ k: "mark", n: 0 }, { k: "W", n: 1, stk: 10 }] },
       "Phantom Blast": { txt: "回避時の影（スキル）。回避が必要なので既定は反映しない", off: true, e: [X("main", "影（Phantom Blast）", { n: 0 })] },
       "Absolute Brilliance": { txt: "必殺の印（ルーセント）＋攻撃力%（最大3重）", e: [X("ult", "ルーセント（Absolute Brilliance）", { arr: [17, 22, 27.1, 32.2, 37.2, 42.3], t: "mark" }), { k: "atkPct", n: 0, stk: 3 }] },
-      "Persistent Warmth": { txt: "必殺後、次のスキル発動から30秒、光属性のスキルダメージ＋", e: [{ k: "Bs", n: 0 }] },
+      "Persistent Warmth": { txt: "必殺後、次のスキル発動から30秒、光属性ダメージ＋", e: [{ k: "W", n: 0 }] },   // ゲームの画面は「光属性ダメージ」（Wikiの日本語は「光属性スキルダメージ」・2026-11-03 画面で確認）
       "Ultimate Radiance": { txt: "必殺技ダメージ＋", e: [{ k: "Bu", n: 0 }] },
       "Radiance of Shattered Stars": { txt: "HP80%未満の敵に必殺技ダメージ＋", e: [{ k: "Bu", n: 0 }] },
       "Radiance Blade: Twin Shadow": { txt: "全員が光のとき、飛ぶ刃のスキル会心率＋0.3%・スキルダメ＋3%（各20重）", e: [{ k: "critRate", raw: 0.003, stk: 20, tags: ["blade"], ht: "skill", cond: "allLux" }, { k: "Bs", raw: 0.03, stk: 20, tags: ["blade"], cond: "allLux" }] },
