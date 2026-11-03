@@ -32,10 +32,10 @@ window.SIM = window.SIM || {};
     { id: "noya", en: "Firstlight Noya", jp: "セイナ(原点)", el: "光", ref: "hp", role: "ヴァンガード", trust0: 18, talent0: 20, talentBonus: { basic: 0.021, skill: 0.021, elem: 0.015, crit: 0.03 },
       // Wikiにステータスが無いので、基礎値は手元の画面の値。信頼・心相の表は他のキャラの表を流用（要確認）。
       manual: { baseHp: 94662, baseAtk: 6966, tables: "Nazuka", talent: { hp: 690, atk: 0 } },
-      // 4撃目の突進は、Wikiでは「スキルダメージ ×3」だが、手元の実測の組み立て(光チームのページ)では「通常攻撃 ×1」で一致していたので、そちらに合わせている。
+      // 突進は「最大HPの85%×3の光属性のスキルダメージ」（ゲームのスキル画面で確認・2026-11-04）。以前は光チームのページに合わせて「通常攻撃×1」にしていた。
       hits: {
         basic: [H(0, 0, 2, "basic", "1撃目", "b1", ["great"]), H(0, 1, 3, "basic", "2撃目", "b2", ["great"]), H(0, 2, 2, "basic", "3撃目", "b3", ["great"]),
-          H(0, 3, 2, "skill", "4撃目 光刃", "glow4", ["glow", "long"]), H(0, 4, 1, "basic", "4撃目 長剣（突進）", "sprint", ["long"])],
+          H(0, 3, 2, "skill", "4撃目 光刃", "glow4", ["glow", "long"]), H(0, 4, 3, "skill", "突進（長剣）", "sprint", ["long"])],
         main: [H(1, 0, 5, "skill", "主力スキル 長剣", "mLong", ["long"]), H(1, 1, 1, "basic", "主力スキル 大剣", "mGreat", ["great"]), H(1, 2, 1, "basic", "主力スキル 星雷", "mStar", ["starfall"]),
           { s: -1, fixed: 70, c: 1, t: "mark", name: "印ダメージ（ルーセント）", tags: [] }],
         support: [H(2, 0, 8, "skill", "支援 長剣", "sLong", ["long"]), H(2, 1, 6, "basic", "衝撃波 連続", "sField", ["great"]), H(2, 2, 1, "basic", "衝撃波 最後", "sLast", ["great"])],
