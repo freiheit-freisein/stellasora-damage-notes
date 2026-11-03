@@ -338,8 +338,8 @@
         <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="ocr-apply:${id}">この内容で入れる</button><button class="btn-add" data-act="ocr-cancel">やめる</button></div>`;
     }
     return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <span class="tag-ng">テスト中</span>
-      <p class="muted" style="margin:4px 0">ゲームの「徽章一覧」を、一番下までスクロールして撮った画像を選ぶか、この画面で貼り付け（Ctrl+V）てください。画像はこのブラウザの中だけで読み、どこにも送りません。今はPC版の画面で試しています。</p>
-      <input type="file" accept="image/*" id="ocr-file" data-id="${id}"${st.busy ? " disabled" : ""}>
+      <p class="muted" style="margin:4px 0">ゲームの「徽章一覧」を一番下までスクロールして撮った画像を、クリップボードから読み込むか、ファイルで選んでください（この画面で Ctrl+V でも読めます）。画像はこのブラウザの中だけで読み、どこにも送りません。今はPC版の画面で試しています。</p>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-add pri" data-act="ocr-clip:${id}"${st.busy ? " disabled" : ""}>クリップボードから読み込む</button><input type="file" accept="image/*" id="ocr-file" data-id="${id}"${st.busy ? " disabled" : ""}></div>
       ${st.msg ? `<p class="msg${st.ng ? " ng" : ""}">${esc(st.msg)}</p>` : ""}${res}</div>`;
   }
   function runOcr(id, file) {
@@ -1202,6 +1202,15 @@
     else if (a === "rp-close") $("reportDlg").close();
     else if (a.indexOf("ocr-apply:") === 0) { applyOcr(a.slice(10)); save(); renderAll(); }
     else if (a === "ocr-cancel") { V.ocr = null; renderAll(); }
+    else if (a.indexOf("ocr-clip:") === 0) {
+      // クリップボードの画像を読む（ブラウザが許可を聞くことがある。使えないブラウザでは Ctrl+V の案内を出す）
+      const id = a.slice(9), ng = m => { V.ocr = { id, msg: m, ng: true }; renderAll(); };
+      if (!navigator.clipboard || !navigator.clipboard.read) { ng("このブラウザでは、ボタンからクリップボードを読めません。この画面で Ctrl+V（スマホは長押しで貼り付け）をしてください。"); return; }
+      navigator.clipboard.read().then(async items => {
+        for (const it of items) { const ty = it.types.find(x => /^image\//.test(x)); if (ty) { const b = await it.getType(ty); runOcr(id, new File([b], "clipboard", { type: ty })); return; } }
+        ng("クリップボードに画像がありません。ゲームの画面をコピー（スクリーンショット）してから押してください。");
+      }).catch(() => ng("クリップボードを読めませんでした（許可されていないかもしれません）。この画面で Ctrl+V をしてください。"));
+    }
     else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
