@@ -282,9 +282,10 @@
   .stt { width: 100%; font-size: 12px; table-layout: fixed; margin: 0; }
   .stt th, .stt td { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .stt th { font-size: 11px; text-align: right; }
-  .stt td.ccx { white-space: normal; padding: 0 6px 4px; font-size: 11px; color: var(--muted); }   /* その他の会心率・会心ダメージ（開くと中身） */
-  .stt td.ccx summary { cursor: pointer; text-align: left; }   /* 会心率（共通）の項目名の下に、左寄せで */
-  .stt td.ccx div { text-align: left; padding-left: 14px; }
+  .stt tr.ccx-h td { font-size: 11px; color: var(--link); cursor: pointer; padding-top: 0; }   /* その他の会心率・会心ダメージ（押すと開く） */
+  .stt tr.ccx-r td { font-size: 11px; padding-top: 1px; padding-bottom: 1px; }
+  .stt tr.ccx-r td:first-child { padding-left: 16px; font-weight: 400; }
+  .stt tr.ccx-r td.bt { font-weight: 400; }
   .stt th:first-child, .stt td:first-child { text-align: left; width: 42%; color: var(--muted); font-weight: 700; white-space: normal; }   /* 項目名は切らない（狭いときは折り返す） */
   .stt td.bt { background: rgba(10,190,197,.08); font-weight: 700; color: var(--indigo); }
   .stt th.bt { color: var(--link); }

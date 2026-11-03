@@ -162,7 +162,17 @@
     const row = (k, a, m) => `<tr><td>${k}</td><td style="text-align:right">${a}</td><td class="bt" style="text-align:right">${m}</td></tr>`;
     // 会心は共通の値だけを出し、種類ごと・特定の攻撃だけの上乗せは「その他の会心率 ▶」を開くと見える
     const exName = x => (x.grp ? (S.SKILL_NAME[x.grp] || x.grp) + "の中の" : "") + (x.tags ? x.tags.map(t => S.TAGJ[t] || t).join("・") + (x.ht ? "（" + S.HTJ[x.ht] + "）" : "") : (S.HTJ[x.ht] || x.ht));
-    const exRow = (lab, x) => x.extra.length ? `<tr><td colspan="3" class="ccx"><details><summary>その他の${lab}</summary>${x.extra.map(e => { const ty = (e.tags || e.grp) && e.ht ? x.extra.filter(y => !y.tags && !y.grp && y.ht === e.ht).reduce((t, y) => t + y.v, 0) : 0, tot = x.common + ty + e.v; return `<div>${esc(exName(e))} <b>+${pct(e.v)}</b>（合計 ${pct(lab === "会心率" ? Math.min(tot, 1) : tot)}）</div>`; }).join("")}</details></td></tr>` : "";
+    // その他の会心: 押すと、種類ごと・特定の攻撃ごとの行が開く（項目名の列に上乗せ、戦闘中の列にその合計）
+    const exRow = (lab, x) => {
+      if (!x.extra.length) return "";
+      const key = id + ":" + lab, open = !!(V.cc || {})[key];
+      const head = `<tr class="ccx-h" data-act="cc:${esc(key)}"><td colspan="3">${open ? "▼" : "▶"} その他の${lab}</td></tr>`;
+      if (!open) return head;
+      return head + x.extra.map(e => {
+        const ty = (e.tags || e.grp) && e.ht ? x.extra.filter(y => !y.tags && !y.grp && y.ht === e.ht).reduce((t, y) => t + y.v, 0) : 0, tot = x.common + ty + e.v;
+        return `<tr class="ccx-r"><td>${esc(exName(e))} +${pct(e.v)}</td><td></td><td class="bt">${pct(lab === "会心率" ? Math.min(tot, 1) : tot)}</td></tr>`;
+      }).join("");
+    };
     return `<div class="box"><table class="stt"><tr><th></th><th title="ゲームのステータス画面の値">ステ画面</th><th class="bt" title="今の敵で、素質・スキル・ロスレコの効果を足した値（直接入力した欄は、その値）">戦闘中</th></tr>
       ${row("最大HP", fmt(o.hp), fmt(v.hp), fmt(d.hp))}${row("攻撃力", fmt(o.atk), fmt(v.atk), fmt(d.atk))}
       ${row("会心率（共通）", pct(o.critRate), pct(v.critRate.common), pct(d.critRate))}${exRow("会心率", v.critRate)}${row("会心ダメージ（共通）", pct(o.critDmg), pct(v.critDmg.common), pct(d.critDmg))}${exRow("会心ダメージ", v.critDmg)}
@@ -1133,6 +1143,7 @@
     else if (a.indexOf("cmp|") === 0) { const m = /^cmp\|(-?\d+)\|(.+)$/.exec(a); if (m) { V.cmp = V.cmp || {}; V.cmp[m[2]] = +m[1]; renderAll(); } }
     else if (a === "rp-open") { RP.msg = null; RP.done = false; renderReport(); $("reportDlg").showModal(); }
     else if (a === "rp-close") $("reportDlg").close();
+    else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
     else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta2-closed", "1"); } catch (e) { /* 無視 */ } }
