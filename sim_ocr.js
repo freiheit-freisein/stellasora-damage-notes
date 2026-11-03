@@ -109,10 +109,14 @@
       const vals = (await wn.recognize(vc)).data.lines.map(x => ({ t: x.text.trim(), y: (x.bbox.y0 + x.bbox.y1) / 2 }));
       const NM = names(), rows = [];
       // 素質名の読み直し: 下線つきの色文字は白黒にすると崩れやすいので、その行の名前の所だけを灰色のまま切り出して読み、近いほうを使う
-      // 左の端は、白黒で読んだときの名前の最初の文字の位置（左の帯は白黒では読まれないので、名前の始まりが分かる）
+      // 左の端は、項目名の列の始まり（どの行も項目名は同じ位置から始まる）。ほかの行の白黒で読んだ最初の文字の位置の真ん中の値を使う。
+      // 素質の行の文字そのものは使わない（解像度が低いと、色文字の素質名が白黒で消えて「レベル」だけが読まれ、そこから切ってしまうため）
+      const firstX = l => { const wd = (l.words || []).find(x => /[ぁ-んァ-ン一-龠]/.test(x.text)); return wd ? wd.bbox.x0 : null; };
+      const xs = r.data.lines.filter(l => !/レベル\s*\S*\s*$/.test(l.text) || /上昇/.test(l.text)).map(firstX).filter(x => x != null).sort((a, b) => a - b);
+      const colX = xs.length ? xs[xs.length >> 1] : null;
       const reread = async (bb, words) => {
         const wd = (words || []).find(x => /[ぁ-んァ-ン一-龠]/.test(x.text)), pad = Math.round((bb.y1 - bb.y0) * 0.35);
-        const x0 = Math.max(0, (wd ? wd.bbox.x0 : bb.x0) - pad), x1 = Math.round(c.width * 0.72), y0 = Math.max(0, bb.y0 - pad), y1 = Math.min(c.height, bb.y1 + pad);
+        const x0 = Math.max(0, (colX != null ? colX : wd ? wd.bbox.x0 : bb.x0) - pad), x1 = Math.round(c.width * 0.72), y0 = Math.max(0, bb.y0 - pad), y1 = Math.min(c.height, bb.y1 + pad);
         const rc = document.createElement("canvas"); rc.width = x1 - x0; rc.height = y1 - y0; rc.getContext("2d").drawImage(cg, x0, y0, rc.width, rc.height, 0, 0, rc.width, rc.height);
         return (await w.recognize(rc)).data.text.replace(/\s/g, "").replace(/^[^ぁ-んァ-ン一-龠]+/, "").replace(/^(主力|支援|汎用)?素質/, "");
       };
