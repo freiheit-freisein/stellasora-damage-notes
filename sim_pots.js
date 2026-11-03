@@ -333,6 +333,7 @@ window.SIM = window.SIM || {};
   const TOJ = { all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
+  S.TAGJ = TAGJ; S.HTJ = HTJ;
   S.potCalcText = (cid, name, lv) => {
     const sp = (S.POT_SPEC[cid] || {})[name];
     if (!sp || !sp.e || !sp.e.length) return "";

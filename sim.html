@@ -282,7 +282,9 @@
   .stt { width: 100%; font-size: 12px; table-layout: fixed; margin: 0; }
   .stt th, .stt td { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .stt th { font-size: 11px; text-align: right; }
-  .stt .tv { display: block; }   /* 会心の「通常／スキル」は2行に分ける */
+  .stt td.ccx { white-space: normal; padding: 0 6px 4px; font-size: 11px; color: var(--muted); }   /* その他の会心率・会心ダメージ（開くと中身） */
+  .stt td.ccx summary { cursor: pointer; text-align: right; }
+  .stt td.ccx div { text-align: right; }
   .stt th:first-child, .stt td:first-child { text-align: left; width: 34%; color: var(--muted); font-weight: 700; }
   .stt td.bt { background: rgba(10,190,197,.08); font-weight: 700; color: var(--indigo); }
   .stt th.bt { color: var(--link); }

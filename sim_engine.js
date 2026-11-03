@@ -215,10 +215,10 @@
     return e;
   }
 
-  // 会心のうち、攻撃の種類だけで決まる分（徽章の種類別の会心率＋種類だけを指定した素質・ロスレコの効果）
+  // 会心のうち、攻撃の種類で決まる個別の分（徽章の種類別の会心率＋種類を指定した素質・ロスレコの効果）。共通の分は入れない
   function typeCrit(st, ag, k0, t) {
     let v = k0 === "critRate" ? (st.rateAdd[t] || 0) : 0;
-    (ag.mods || []).forEach(mo => { if (mo.k === k0 && !mo.tags && !mo.grp && (!mo.ht || mo.ht === t)) v += mo.v; });
+    (ag.mods || []).forEach(mo => { if (mo.k === k0 && !mo.tags && !mo.grp && mo.ht === t) v += mo.v; });
     return v;
   }
   const TYPE_NAME = { basic: "通常攻撃", skill: "スキル", ult: "必殺技", mark: "印" };
@@ -285,9 +285,9 @@
       const normal = refVal * mult * W * B * taken * dd.D * markX * (other.mult || 1);
       let cd = st.critDmg + (mh.critDmg || 0) + cdAdd;
       if (G.heartCrit && c.id === "noya" && !man.critDmg) cd += 0.12;   // 心相1 閃星中: 会心ダメージ+12%。印だけでなく通常・スキルにも乗る（空壺ノ王で 突進・2撃目・3撃目の会心が 1.7400 倍。2026-11-04）
-      // 直接入力の会心は通常攻撃の値。ほかの種類は、計算での通常攻撃との差だけずらす
-      if (man.critDmg) cd += typeCrit(st, ag, "critDmg", type) - typeCrit(st, ag, "critDmg", "basic");
-      const rate = clamp(st.critRate + (man.critRate ? typeCrit(st, ag, "critRate", type) - typeCrit(st, ag, "critRate", "basic") : (st.rateAdd[type] || 0)) + (mh.critRate || 0) + crAdd, 0, 1);
+      // 直接入力の会心は共通の値。種類ごとの個別の分は、その上に足す
+      if (man.critDmg) cd += typeCrit(st, ag, "critDmg", type);
+      const rate = clamp(st.critRate + (man.critRate ? typeCrit(st, ag, "critRate", type) : (st.rateAdd[type] || 0)) + (mh.critRate || 0) + crAdd, 0, 1);
       const crit = normal * cd;
       const avg = normal * (1 - rate) + crit * rate;
       const cnt = h.c * ((hid && ef.count[hid]) || 1);
@@ -320,13 +320,22 @@
   // 画面に出す「戦闘中」のステータス（直接入力の欄は、その値のまま）。属性ダメージなどは 100% を除いた加算分
   function battleView(o, G) {
     const st = o.st, ef = o.ef, ag = ef.ag || {}, man = st.man || {};
-    const crit = (k0, t) => man[k0] ? st[k0] + typeCrit(st, ag, k0, t) - typeCrit(st, ag, k0, "basic")
-      : st[k0] + typeCrit(st, ag, k0, t) + (k0 === "critDmg" && G.heartCrit && o.c.id === "noya" ? 0.12 : 0);
+    // 会心: common = 全部の攻撃に乗る共通の値。extra = 種類ごと・特定の攻撃だけの上乗せ（[種類の名前か攻撃の名前, 値]）
+    const crit = k0 => {
+      let common = st[k0];
+      if (!man[k0]) {
+        if (k0 === "critDmg" && G.heartCrit && o.c.id === "noya") common += 0.12;
+        (ag.mods || []).forEach(mo => { if (mo.k === k0 && !mo.tags && !mo.grp && !mo.ht) common += mo.v; });
+      }
+      const extra = [];
+      ["basic", "skill", "ult", "mark"].forEach(t => { const v = typeCrit(st, ag, k0, t); if (Math.abs(v) > 1e-9) extra.push({ ht: t, v }); });
+      (ag.mods || []).forEach(mo => { if (mo.k === k0 && (mo.tags || mo.grp)) extra.push({ tags: mo.tags, grp: mo.grp, ht: mo.ht, v: mo.v }); });
+      return { common, extra };
+    };
     return {
       hp: st.hp,
       atk: man.atk ? st.atk : st.mode === "auto" ? st.baseAtk * (1 + st.atkPct + ef.atkPct) : st.atk * (1 + ef.atkPct),
-      critRate: { basic: crit("critRate", "basic"), skill: crit("critRate", "skill") },
-      critDmg: { basic: crit("critDmg", "basic"), skill: crit("critDmg", "skill") },
+      critRate: crit("critRate"), critDmg: crit("critDmg"),
       elem: st.elemAdd + (man.elem ? 0 : ef.W), basic: st.basicAdd + (man.basic ? 0 : ef.Bb), skill: st.skillAdd + (man.skill ? 0 : ef.Bs),
       ult: st.ultAdd + (man.ult ? 0 : ef.Bu), mark: st.markAdd + (man.mark ? 0 : (ag.markAdd || 0)), pen: st.pen, taken: ef.taken,
     };
