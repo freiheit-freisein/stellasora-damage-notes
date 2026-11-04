@@ -4,7 +4,9 @@
 # - git で管理しているファイルだけを入れる（NOTES.md・tools・docs・Markdown は入れない）
 # - HTML から読む JS・CSS に ?v=（コミットの短いハッシュ）を付ける。stella-tool.com は Cloudflare の設定で JS・CSS が
 #   ブラウザに4時間キャッシュされるので、公開のたびに URL を変えて、新しいファイルを確実に読ませる
-# - _headers: 検索エンジンに載せない（X-Robots-Tag: noindex）、HTML はキャッシュせず毎回確認する
+# - _headers: 計算ページ（/sim）は検索に出す。素質の確認ページ（/edit）は出さない（X-Robots-Tag: noindex）。HTML はキャッシュせず毎回確認する
+# - _redirects: トップ（/）は計算ページ（/sim）へ 301。404.html: 無いURLは 404 を返す（無いと Cloudflare Pages がトップを 200 で返す）
+# - robots.txt・sitemap.xml: 検索エンジン向け。短縮URL（/s/…）は functions が noindex を付ける
 import os, re, shutil, subprocess
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,10 +34,26 @@ for f in files:
         shutil.copyfile(os.path.join(ROOT, f), dst)
     n += 1
 open(os.path.join(OUT, '_headers'), 'w', encoding='utf-8', newline='\n').write(
-    '/*\n  X-Robots-Tag: noindex, nofollow\n'
+    '/edit\n  X-Robots-Tag: noindex, nofollow\n'
+    '/edit.html\n  X-Robots-Tag: noindex, nofollow\n'
     '/*.html\n  Cache-Control: no-cache\n'
     '/\n  Cache-Control: no-cache\n'
     '/*.js\n  Cache-Control: public, max-age=31536000, immutable\n'
     '/*.css\n  Cache-Control: public, max-age=31536000, immutable\n')
-open(os.path.join(OUT, 'robots.txt'), 'w', encoding='utf-8', newline='\n').write('User-agent: *\nAllow: /\n')   # noindex を読ませるため、クロールは止めない
+SITE = 'https://sim.stella-tool.com'
+
+
+def put(name, text):
+    open(os.path.join(OUT, name), 'w', encoding='utf-8', newline='\n').write(text)
+
+
+put('robots.txt', f'User-agent: *\nAllow: /\nSitemap: {SITE}/sitemap.xml\n')   # /edit・/s/ は noindex を読ませるため、クロールは止めない
+lastmod = subprocess.run(['git', 'log', '-1', '--format=%cs'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+put('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    f'  <url><loc>{SITE}/sim</loc><lastmod>{lastmod}</lastmod></url>\n</urlset>\n')
+put('_redirects', '/ /sim 301\n')
+put('404.html', '<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n<meta name="robots" content="noindex">\n'
+    '<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>ページが見つかりません - 巡遊者の計算ノート</title>\n'
+    '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n</head>\n<body style="font-family:sans-serif;padding:40px;color:#4B5082">\n'
+    '<p>ページが見つかりませんでした。</p>\n<p><a href="/sim">巡遊者の計算ノートへ</a></p>\n</body>\n</html>\n')
 print(n, 'files ->', OUT, 'v=' + ver)

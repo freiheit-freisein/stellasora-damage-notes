@@ -2,16 +2,19 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>巡遊者の計算ノート FOR STELLA SORA</title>
 <meta name="description" content="ステラソラ（Stella Sora）の巡遊者のダメージを、素質・徽章・ロスレコ・音符まで入れて計算する非公式ツール。ビルドを短いURLで共有できます。">
+<link rel="canonical" href="https://sim.stella-tool.com/sim">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://sim.stella-tool.com/sim">
+<meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="巡遊者の計算ノート">
 <meta property="og:title" content="巡遊者の計算ノート FOR STELLA SORA">
 <meta property="og:description" content="素質・徽章・ロスレコ・音符まで入れて、巡遊者のダメージを計算する非公式ツール">
 <meta property="og:image" content="https://sim.stella-tool.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "巡遊者の計算ノート", "alternateName": "巡遊者の計算ノート FOR STELLA SORA", "url": "https://sim.stella-tool.com/sim", "description": "ステラソラ（Stella Sora）の巡遊者のダメージを、素質・徽章・ロスレコ・音符まで入れて計算する非公式ツール。ビルドを短いURLで共有できます。", "applicationCategory": "GameApplication", "operatingSystem": "Web", "inLanguage": "ja", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="common.css">
@@ -390,12 +393,20 @@
     .mchip b { font-size: 14px; color: var(--indigo); }
     .mchip .up { color: var(--ok); } .mchip .down { color: var(--danger); }
   }
+  /* ページの見出し（見た目は今のロゴのまま）と、ページの下の「このツールについて」 */
+  .logo-h1 { margin: 0; font-size: inherit; font-weight: inherit; display: inline-flex; align-items: center; gap: 10px; }
+  .about .wrap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .about h2 { margin: 0 0 8px; font-size: 15px; font-weight: 900; color: #fff; }
+  .about p, .about li { font-size: 13px; line-height: 1.8; }
+  .about ul, .about ol { margin: 0; padding-left: 1.3em; }
+  .about .fine { grid-column: 1 / -1; color: #C5CAE3; font-size: 12px; }
+  @media (max-width: 860px) { .about .wrap { grid-template-columns: 1fr; gap: 16px; } }
 </style>
 </head>
 <body class="m-in">
 <header class="site-header"><div class="wrap">
   <svg class="logo-star" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>
-  <span class="logo-ja">巡遊者の計算ノート</span><span class="logo-en">FOR STELLA SORA</span><span class="beta" title="β版：データや計算が間違っている可能性があります。気づいたことは「報告」から教えてください">β版</span>
+  <h1 class="logo-h1"><span class="logo-ja">巡遊者の計算ノート</span><span class="logo-en">FOR STELLA SORA</span></h1><span class="beta" title="β版：データや計算が間違っている可能性があります。気づいたことは「報告」から教えてください">β版</span>
   <span style="flex:1"></span>
   <div class="topbar" id="topbar"></div>
 </div></header>
@@ -415,6 +426,30 @@
     <div class="panel" id="drillPanel" style="display:none"><h2><span class="en">DETAIL</span><span id="drillTitle">内訳</span><span style="flex:1"></span><button type="button" class="help-btn" data-act="drillclose">閉じる</button></h2><div id="drill"></div></div>
   </div>
 </div>
+<footer class="site-footer about"><div class="wrap">
+  <section>
+    <h2>このツールについて</h2>
+    <p>ステラソラ（Stella Sora）の巡遊者のダメージを計算する、非公式のファンメイドツールです。巡遊者3人の編成で、主力・支援それぞれの攻撃のダメージを出します。</p>
+  </section>
+  <section>
+    <h2>入れられるもの</h2>
+    <ul>
+      <li>巡遊者（心相・凸・スキルLv）</li>
+      <li>素質（Lv1〜9）、徽章</li>
+      <li>ロスレコ（突破 I〜VI・アシスト効果・音符）</li>
+      <li>敵（指名手配のボスなど）</li>
+    </ul>
+  </section>
+  <section>
+    <h2>使い方</h2>
+    <ol>
+      <li>「読み込む・作る」で巡遊者を3人選ぶ（素質のプリセットコードからも作れます）</li>
+      <li>素質・徽章・ロスレコ・敵を入れる</li>
+      <li>右の「結果」でダメージと倍率の内訳を見る。ビルドは短いURLで共有できます</li>
+    </ol>
+  </section>
+  <p class="fine">β版です。数値はゲームの画面・実測・Wikiをもとにしていて、間違っていることがあります。気づいたことは「報告」から教えてください。ゲームの運営会社とは関係ありません。</p>
+</div></footer>
 <script src="data/trekkers.js"></script>
 <script src="data.js"></script>
 <script src="data_sup.js"></script>
