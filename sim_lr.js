@@ -116,6 +116,8 @@
   // 手で入れたロスレコは、画面で確かめた突破（データの core.rank）の値を基準に、Wikiと同じ「突破1つごとに 突破1の値の+20%」で伸ばす
   // （突破6 = 突破1の2倍。未来導く明星・願い星の願い・夕涼みのWikiの値と一致）。基礎ステータスは突破で変えない（伸び方が未確認）
   const ROMAN = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 };
+  // 画面の表記（ゲーム内と同じローマ数字）。データは 1〜6 のまま
+  S.lrRoman = n => ["", "I", "II", "III", "IV", "V", "VI"][n] || String(n);
   const rankMul = n => 1 + 0.2 * (n - 1);
   S.lrRankOf = (G, rid) => {
     const fx = S.LR_FX[rid], r = L.find(x => x.id === rid);

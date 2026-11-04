@@ -524,7 +524,7 @@
     const rankSel = (arr, id) => {
       if (arr !== "lrMain") return "";
       const rk = id ? S.lrRankOf(G, id) : { can: false };
-      return rk.can ? `<select data-p="lrRank.${id}" data-t="n" title="突破">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === rk.rank ? " selected" : ""}>突破${n}</option>`).join("")}</select>` : `<span class="muted" style="font-size:11px">${id ? "突破は固定" : ""}</span>`;
+      return rk.can ? `<select data-p="lrRank.${id}" data-t="n" title="突破">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === rk.rank ? " selected" : ""}>突破${S.lrRoman(n)}</option>`).join("")}</select>` : `<span class="muted" style="font-size:11px">${id ? "突破は固定" : ""}</span>`;
     };
     const slot = (arr, i, lab) => {
       const path = `${arr}.${i}`, cur = (G[arr] || [])[i] || "", r = L.find(x => x.id === cur);
@@ -568,7 +568,7 @@
         return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}</div>`;
       };
       const rk = S.lrRankOf(G, id);
-      const rankSel = rk.can ? ` <span class="muted">突破${rk.rank}${rk.r0 ? `（画面で確かめた値は突破${rk.r0}。ほかの突破はWikiの伸び方で計算。基礎ステータスは変わりません）` : ""}</span>` : "";
+      const rankSel = rk.can ? ` <span class="muted">突破${S.lrRoman(rk.rank)}${rk.r0 ? `（画面で確かめた値は突破${S.lrRoman(rk.r0)}。ほかの突破はWikiの伸び方で計算。基礎ステータスは変わりません）` : ""}</span>` : "";
       const core = fx.core.map(it => item(id + ":c:" + it.id, it, rk.rank, rk.scale)).join("");
       const as = fx.assists.map(a => {
         const lv = S.lrAssistLv(S.notesTotal(G), a);
@@ -963,7 +963,8 @@
       if (!d) return '<span class="muted">外す</span>';
       const nx = dir => { let v = d.t + dir; if (v === d.cur) v += dir; return v >= d.lo && v <= d.hi ? v : null; };
       const btn = (dir, ch) => { const v = nx(dir); return `<button class="obtn" data-act="cmp|${v == null ? "" : v}|${esc(d.key)}"${v == null ? " disabled" : ""}>${ch}</button>`; };
-      return `<span class="decin"><span class="muted">${d.unit}${d.cur} →</span>${btn(-1, "◀")}<b class="${d.t > d.cur ? "up" : ""}">${d.unit}${d.t}</b>${btn(1, "▶")}</span>`;
+      const sh = v => d.unit === "突破" ? "突破" + S.lrRoman(v) : d.unit + v;   // ロスレコの突破はゲームと同じ I〜VI
+      return `<span class="decin"><span class="muted">${sh(d.cur)} →</span>${btn(-1, "◀")}<b class="${d.t > d.cur ? "up" : ""}">${sh(d.t)}</b>${btn(1, "▶")}</span>`;
     };
     const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label.replace("\n", " "))}">${x.label.split("\n").map(esc).join('<br><span class="ind">') + (x.label.indexOf("\n") >= 0 ? "</span>" : "")}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     return `<div class="wide"><h3 style="margin:0 0 6px">ビルド確認（与ダメへの寄与率）</h3>

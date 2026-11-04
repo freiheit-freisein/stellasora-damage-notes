@@ -151,11 +151,14 @@
           const x = r && findRec(r);
           if (!x) { skipped.push(`ロスレコ（${label}）：${(r && (r.id || r.name)) || "?"} がこの計算ページにありません`); return; }
           ids.push(x.id);
-          if (r.copies != null && S.lrRankOf) {
-            const rk = S.lrRankOf(G, x.id), n = Math.round(+r.copies);
-            if (rk.can && n >= 0 && n <= 5) { G.lrRank = G.lrRank || {}; G.lrRank[x.id] = n + 1; }
-            else if (!rk.can) meta.push(`ロスレコ ${x.name}：突破はこの計算ページでは固定です`);
-          }
+          // 突破: rank（1〜6。ゲーム内の表記は I〜VI。"IV" のようなローマ数字の文字でもよい）
+          if (r.rank != null && S.lrRankOf) {
+            const RM = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 }, n = typeof r.rank === "string" && RM[r.rank.trim().toUpperCase()] || Math.round(+r.rank);
+            const rk = S.lrRankOf(G, x.id);
+            if (!(n >= 1 && n <= 6)) skipped.push(`ロスレコ ${x.name}：突破 ${r.rank} は 1〜6（I〜VI）ではありません`);
+            else if (rk.can) { G.lrRank = G.lrRank || {}; G.lrRank[x.id] = n; }
+            else meta.push(`ロスレコ ${x.name}：突破はこの計算ページでは固定です`);
+          } else if (r.copies != null) skipped.push(`ロスレコ ${x.name}：凸数（copies）では突破を入れられません。rank（突破 I〜VI = 1〜6）で書いてください`);
         });
         G[path] = [0, 1, 2].map(i => ids[i] || "");
         if (ids.length) done.push(`ロスレコ（${label}）：` + ids.map(id => (window.LOSTRECORDS.find(y => y.id === id) || {}).name).join("・"));
