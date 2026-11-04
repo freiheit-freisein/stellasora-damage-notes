@@ -112,7 +112,7 @@
     const t = TREKKERS.find(x => x.en === S.t), [d, n, dr] = done(S.t, t);
     $("bar").innerHTML = `<b>巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
       <button class="sbtn${S.role === "main" ? " on" : ""}" data-act="role:main">主力の素質</button><button class="sbtn${S.role === "support" ? " on" : ""}" data-act="role:support">支援の素質</button>
-      <span class="muted">${esc(TJ(S.t))}：ゲームの画面と確認した素質 ${Object.keys(chk[S.t] || {}).length} ／ 全 ${n} 件</span>
+      <span class="muted">${esc(TJ(S.t))}：確認済み ${d} ／ 全 ${n} 件（このブラウザで「合ってる」などを押したもの ${Object.keys(chk[S.t] || {}).length} 件）</span>
       <label class="muted" style="margin-left:auto"><input type="checkbox" data-act="adv"${S.adv ? " checked" : ""}> 詳しい入力を出す（通常は使いません）</label>`;
   };
   function renderList() {
@@ -122,7 +122,7 @@
       const u = specOf(S.t, p.name), b = builtIn(S.t, p.name), dr = draftOf(S.t, S.role, p.name);
       const tag = (!u && !b && dr) ? `<span class="tag t-draft">下書き（自動）${dr.review ? "・要確認" : ""}</span>` : u ? (u.draft ? `<span class="tag t-draft">下書き（未確認）</span>` : `<span class="tag t-user">入力済み${u.e && u.e.length ? "" : "（影響なし）"}</span>`) : b ? `<span class="tag t-built">組み込み（検証済み）</span>` : `<span class="tag t-none">未入力</span>`;
       const ck = chkOf(S.t, p.name);
-      const ckTag = ck ? `<span class="tag ck-${ck.st}">${CK_NAME[ck.st]}</span>` : '<span class="tag t-none">未確認</span>';
+      const ckTag = ck ? `<span class="tag ck-${ck.st}">${CK_NAME[ck.st]}</span>` : ((u && !u.draft) || (!u && b)) ? '<span class="tag ck-ok">確認済み</span>' : '<span class="tag t-none">未確認</span>';
       return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${ckTag}${S.adv ? tag : ""}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || ""))}</span></div>`;
     };
     const builds = groups.filter(g => !/Generic/i.test(g.title)), gen = groups.find(g => /Generic/i.test(g.title));
