@@ -130,7 +130,7 @@ stellasora-data/
   "from": "https://sim.stella-tool.com",
   "team": [
     {
-      "trekker": 112,
+      "trekker": 162,
       "level": 90,
       "copies": 5,
       "potentials": [ { "role": "main", "slot": 1, "lv": 6 }, { "role": "main", "slot": 0, "core": true } ],
@@ -140,7 +140,7 @@ stellasora-data/
     }
   ],
   "records": { "main": [ { "id": "mirai", "copies": 5 } ], "sub": [ { "id": "negai", "copies": 5 } ] },
-  "meta": { "boss": "anaaki", "score": 2646192, "mvp": 112 }
+  "meta": { "boss": "kubo", "score": 2646192, "mvp": 162 }
 }
 ```
 

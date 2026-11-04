@@ -860,9 +860,32 @@
       <h3 style="margin-top:18px">共有コード・共有URLを読み込む</h3>
       <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
       ${msgOf("load")}<div class="muted help">共有URL・共有コード、どちらでも読み込めます。</div>
+      <h3 style="margin-top:18px">ほかのサイトの編成データを読み込む</h3>
+      <textarea id="dv-bjson" rows="4" spellcheck="false" placeholder='{ "format": "stellasora-build", "schema": 1, "team": [ … ] }' style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12px">${esc(DV.bjson || "")}</textarea>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><button class="btn-add" data-act="bj-in">読み込む</button><label class="btn-add ocr-pick">ファイルを選ぶ<input type="file" accept=".json,application/json" id="bj-file"></label></div>
+      ${msgOf("bjson")}${bimpBox()}<div class="muted help">ほかのファンサイトで作った編成データ（JSON）を貼り付けるか、ファイルを選んでください。書いてある項目だけが入り、それ以外は初期値になります。形の決まりは <a href="https://github.com/freiheit-freisein/stellasora-data" target="_blank" rel="noopener">stellasora-data</a> にあります。</div>
       <h3 style="margin-top:18px">このブラウザに保存したビルド</h3>
       ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」で行えます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
       ${msgOf("build")}</div>`;
+  }
+  // 編成データを読み込んだ結果（読み込めたもの・入れられなかったもの・計算に使わない情報）
+  function bimpBox() {
+    const r = V.bimp;
+    if (!r) return "";
+    const ul = (list, cls) => list.length ? `<ul class="${cls}" style="margin:4px 0 4px 18px;padding:0">${list.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : "";
+    return `<div class="box" style="font-size:13px"><b>読み込めたもの</b>${ul(r.done, "")}
+      ${r.skipped.length ? `<b class="tag-ng" style="display:inline-block;margin-top:4px">入れられなかったもの</b>${ul(r.skipped, "")}` : ""}
+      ${r.meta.length ? `<b style="display:inline-block;margin-top:4px">そのほかの情報（計算には使いません）</b>${ul(r.meta, "muted")}` : ""}
+      <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="panel:overview">巡遊者を見る</button></div></div>`;
+  }
+  function loadBuild(text, key) {
+    try {
+      const r = S.buildApply(text, defState(), catOfKey);
+      G = r.G; V.bimp = r;
+      DM[key] = { t: "読み込みました。" + (r.skipped.length ? "入れられなかったものがあります。下の一覧を確かめてください" : "") };
+      shareMsg = "編成データを読み込みました";
+      renderAll();
+    } catch (e) { V.bimp = null; say(key, e.message || "読み込めませんでした", true); }
   }
   // 短い共有コード（短縮URLのID）・共有URL・長い共有コードの、どれでも読み込む
   function loadAny(v) {
@@ -1069,6 +1092,11 @@
   document.addEventListener("change", ev => {
     const t = ev.target;
     if (t.id === "bsel" || t.id === "bname") return;
+    if (t.id === "bj-file") {
+      const f = t.files && t.files[0];
+      if (f) f.text().then(tx => { DV.bjson = tx; loadBuild(tx, "bjson"); }, () => say("bjson", "ファイルを読めませんでした", true));
+      return;
+    }
     if (t.id === "ocr-file") { runOcr(t.getAttribute("data-id"), t.files && t.files[0]); return; }
     // ロスレコの枠: 属性を変えたら、違う属性のロスレコは外す
     const lrel = t.getAttribute && t.getAttribute("data-lrel"), lrid = t.getAttribute && t.getAttribute("data-lrid");
@@ -1179,6 +1207,7 @@
       V.pickSure = false; DM.pick = null; $("pickDlg").close();
       G = defState(); G.team = { main: p.main, s1: p.s1, s2: p.s2 }; V.pick3 = null; shareMsg = "新しく作りました"; V.panel = "overview"; renderAll();
     }
+    else if (a === "bj-in") { const el = $("dv-bjson"); DV.bjson = el ? el.value : ""; if (!DV.bjson.trim()) say("bjson", "編成データ（JSON）を貼り付けてください", true); else loadBuild(DV.bjson, "bjson"); }
     else if (a === "ld-any") { const el = $("dv-load"); DV.load = el ? el.value : ""; loadAny(DV.load); }
     else if (a === "cp:url" || a === "cp:sid") {
       const v = a === "cp:url" ? DV.url : ((/\/s\/([A-Za-z0-9]+)/.exec(DV.url || "") || [])[1] || "");
@@ -1327,8 +1356,13 @@
   renderAll();
   // β版のお知らせ（閉じたら、このブラウザでは次から出さない）
   try { if (!localStorage.getItem("stellasora-sim-beta2-closed")) $("betabar").hidden = false; } catch (e) { $("betabar").hidden = false; }
-  // URLから読み込む（読み込んだらURLからは消す）: #c=共有コード（短縮URLから移動してきたとき）、#p=プリセットコード（プリセット共有サイトなどから）
+  // URLから読み込む（読み込んだらURLからは消す）: #c=共有コード（短縮URLから移動してきたとき）、#p=プリセットコード（プリセット共有サイトなどから）、#b=編成データ
   const hc = location.hash;
+  if (hc.indexOf("#b=") === 0) {   // #b=編成データ（JSON を UTF-8 の Base64URL にしたもの。ほかのサイトから）
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* 無視 */ }
+    V.panel = "load";
+    try { loadBuild(S.buildFromHash(decodeURIComponent(hc.slice(3))), "bjson"); } catch (e) { say("bjson", "URLの編成データを読めませんでした", true); }
+  }
   if (hc.indexOf("#c=") === 0 || hc.indexOf("#p=") === 0) {
     const code = decodeURIComponent(hc.slice(3));
     try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* 無視 */ }
