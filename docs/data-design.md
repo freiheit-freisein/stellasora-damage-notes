@@ -208,7 +208,7 @@ stellasora-data/
 | 段階 | やること |
 |---|---|
 | 1 | この文書の「決めること」を決める |
-| 2 | `stellasora-data` を作り、今の `data/shared/potentials.json` を `potentials.json` と `effects.json` に分けて入れる（**済み**：ローカルの `../stellasora-data`、まだ GitHub に上げていない） |
+| 2 | `stellasora-data` を作り、今の `data/shared/potentials.json` を `potentials.json` と `effects.json` に分けて入れる（**済み**：https://github.com/freiheit-freisein/stellasora-data（公開）） |
 | 3 | 計算ツールとプリセット共有サイトの組み立ての手順（`build_shared.py` `build_preset_map.py`）を、データリポジトリから読むように変える |
 | 4 | 編成データの読み込み・書き出しを計算ツールに入れる |
 | 5 | 徽章・ロスレコ・敵のデータを、順にデータリポジトリへ移す |
