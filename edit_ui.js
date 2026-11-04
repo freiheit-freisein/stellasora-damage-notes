@@ -205,7 +205,7 @@
       ${((jpOf(S.t, S.role, p.name) || {}).terms || []).map(x => `<div class="muted" style="margin:2px 0">用語「${esc(x.term)}」：${esc(x.text)}</div>`).join("")}
       ${(jpOf(S.t, S.role, p.name) || {}).text ? '<div class="muted">↑ 日本語Wikiの文章。ゲーム内の文章と数値が違うことがあります（例：テレサ「絶流・波紋」はWiki 77%・ゲーム 60%）。' + (meta.fromDraft ? "下の効果は、この文章から自動で作った下書きです。" : "") + '</div>' : ""}
       ${meta.fromDraft ? `<div class="eff" style="border-color:#E3B27A"><b>下書きの内容</b><br>${rows.length ? rows.map(r => "・" + esc(describe(toEngine(r), p))).join("<br>") : "（効果なし／火力に影響しない、と判断）"}${meta.unk ? `<br><span style="color:var(--danger)">自動で分類できなかった文：</span>${meta.unk.map(esc).join(" ／ ")}` : ""}<div style="margin-top:6px"><button class="btn-add" data-act="ok" style="background:var(--indigo);color:#fff">この内容でOK（確認済みにする）</button></div></div>` : ""}
-      <div class="muted">Lvごとの数値（文章の中の数値を、左から順に拾ったもの）。ゲーム内の画面で確認できるのは Lv1 と Lv6 だけで、Lv2〜5 はWikiの値（未確認）、Lv7〜9 は、実際にビルドを組まないと分かりません。</div>${numsTable(p)}
+      <div class="muted">Lvごとの数値（文章の中の数値を、左から順に拾ったもの）。素質の一覧の画面で見えるのは Lv1 と Lv6 です。Lv2〜5・Lv7〜9 は星ノ塔の周回中の画面で見えます（まだ集めきれていないので、Lv2〜5 はWikiの値、Lv7〜9 は推定値）。</div>${numsTable(p)}
       <div class="fld"><label>火力に影響しない</label><div><input type="checkbox" data-f="none"${meta.none ? " checked" : ""}> <span class="muted">（盾・回復・防御・復活など。効果の入力は不要です）</span></div></div>
       <div class="fld"><label>既定で反映しない</label><div><input type="checkbox" data-f="off"${meta.off ? " checked" : ""}> <span class="muted">（条件が重い効果）</span></div></div>
       <div class="fld"><label>Lv7〜9の値</label><div class="muted">既定は、直前の増え方で延長（推定）。説明文で数値に「(Max!)」が付いているものは、効果ごとのチェックで「Lv6から上がらない」にします。確定していません。</div></div>
