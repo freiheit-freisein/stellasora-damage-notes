@@ -123,7 +123,7 @@
       const tag = (!u && !b && dr) ? `<span class="tag t-draft">下書き（自動）${dr.review ? "・要確認" : ""}</span>` : u ? (u.draft ? `<span class="tag t-draft">下書き（未確認）</span>` : `<span class="tag t-user">入力済み${u.e && u.e.length ? "" : "（影響なし）"}</span>`) : b ? `<span class="tag t-built">組み込み（検証済み）</span>` : `<span class="tag t-none">未入力</span>`;
       const ck = chkOf(S.t, p.name);
       const ckTag = ck ? `<span class="tag ck-${ck.st}">${CK_NAME[ck.st]}</span>` : '<span class="tag t-none">未確認</span>';
-      return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${ckTag}${S.adv ? tag : ""}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || "").slice(0, 70))}</span></div>`;
+      return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${ckTag}${S.adv ? tag : ""}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || ""))}</span></div>`;
     };
     const builds = groups.filter(g => !/Generic/i.test(g.title)), gen = groups.find(g => /Generic/i.test(g.title));
     const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
