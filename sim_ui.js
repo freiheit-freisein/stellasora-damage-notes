@@ -847,9 +847,9 @@
     const ls = dlg.querySelector(".pk-list"), keep = ls ? ls.scrollTop : 0, keepD = dlg.scrollTop;   // 描き直しても、一覧のスクロールの位置を保つ
     $("pickBody").innerHTML = `<h2 id="pickDlgT"><span class="en">NEW</span>巡遊者を選んで作る</h2>
       ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「この3人で作る」を押してください。入力中のデータは、すべて初期値に戻ります。")}
-      <div class="pk-bar">${chosen}<button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して作る" : "この3人で作る"}</button></div>${msgOf("pick")}
+      <div class="pk-bar">${chosen}</div>
       <div class="pk-list">${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}</div>
-      <div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button></div>`;
+      ${msgOf("pick")}<div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button><button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して作る" : "この3人で作る"}</button></div>`;
     const ls2 = dlg.querySelector(".pk-list"); if (ls2) ls2.scrollTop = keep; dlg.scrollTop = keepD;
   }
   function renderLoad() {
@@ -863,13 +863,13 @@
       <h3 style="margin-top:18px">共有コード・共有URLを読み込む</h3>
       <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
       ${msgOf("load")}<div class="muted help">共有URL・共有コード、どちらでも読み込めます。</div>
+      <h3 style="margin-top:18px">このブラウザに保存したビルドを読み込む</h3>
+      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」で行えます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
+      ${msgOf("build")}
       <h3 style="margin-top:18px">ほかのサイトの編成データを読み込む</h3>
       <textarea id="dv-bjson" rows="4" spellcheck="false" placeholder='{ "format": "stellasora-build", "schema": 1, "team": [ … ] }' style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12px">${esc(DV.bjson || "")}</textarea>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><button class="btn-add" data-act="bj-in">読み込む</button><label class="btn-add ocr-pick">ファイルを選ぶ<input type="file" accept=".json,application/json" id="bj-file"></label></div>
-      ${msgOf("bjson")}${bimpBox()}<div class="muted help">ほかのファンサイトで作った編成データ（JSON）を貼り付けるか、ファイルを選んでください。書いてある項目だけが入り、それ以外は初期値になります。形の決まりは <a href="https://github.com/freiheit-freisein/stellasora-data" target="_blank" rel="noopener">stellasora-data</a> にあります。</div>
-      <h3 style="margin-top:18px">このブラウザに保存したビルド</h3>
-      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」で行えます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
-      ${msgOf("build")}</div>`;
+      ${msgOf("bjson")}${bimpBox()}<div class="muted help">ほかのファンサイトで作った編成データ（JSON）を貼り付けるか、ファイルを選んでください。書いてある項目だけが入り、それ以外は初期値になります。形の決まりは <a href="https://github.com/freiheit-freisein/stellasora-data" target="_blank" rel="noopener">stellasora-data</a> にあります。</div></div>`;
   }
   // 編成データを読み込んだ結果（読み込めたもの・入れられなかったもの・計算に使わない情報）
   function bimpBox() {
