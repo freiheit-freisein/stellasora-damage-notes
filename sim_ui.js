@@ -603,12 +603,14 @@
   // 敵は、先に種類（指名手配・首領討伐・防衛戦）を選んでから選ぶ。種類は名前から決める
   const ENEMY_CATS = [["指名手配", /指名手配/], ["首領討伐", /首領討伐/], ["防衛戦", /防衛戦/]];
   const enemyCat = e => (ENEMY_CATS.find(([, re]) => re.test(e.name)) || ENEMY_CATS[0])[0];
+  // 指名手配はシーズンの新しい順（同じシーズンの中はデータの順）
+  const enemiesOf = cat => S.ENEMIES.map((e, i) => [e, i]).filter(([e]) => enemyCat(e) === cat).sort((a, b) => ((b[0].season || 0) - (a[0].season || 0)) || (a[1] - b[1])).map(([e]) => e);
   function renderGimmick() {
     const en = G.enemyObj;
     const tr = S.DEFAULT_ENEMY_TRAITS[G.enemy] || [];
     return `<div class="wide"><h3>エネミー</h3>
       ${fld("種類", `<select id="enemy-cat">${ENEMY_CATS.map(([k]) => `<option${k === enemyCat(G.enemyObj) ? " selected" : ""}>${k}</option>`).join("")}</select>`)}
-      ${fld("敵", inp("enemy", { sel: S.ENEMIES.filter(e => enemyCat(e) === enemyCat(G.enemyObj)).map(e => [e.id, e.name.replace(/（(指名手配|首領討伐)・/, "（")]), str: true }))}
+      ${fld("敵", inp("enemy", { sel: enemiesOf(enemyCat(G.enemyObj)).map(e => [e.id, (e.season ? `シーズン${e.season}：` : "") + e.name.replace(/（(指名手配|首領討伐)・/, "（")]), str: true }))}
       <p class="note">弱点: ${en.weak.join("・") || "なし"}（弱点補正 ×${en.weakMult}）／防御倍率 ${en.def}／印の別枠 ×${en.markX}／主力の最大HP +${pct(en.hpBonus)}${en.teamHp ? `／全員のHP +${pct(en.teamHp)}・攻撃 +${pct(en.teamAtk)}・会心率 +${pct(en.teamCrit)}` : ""}</p>
       <p class="muted">${esc(en.note)}</p>
       ${tr.map(t => `<label class="check" style="font-weight:400"><input type="checkbox" data-p="traits.${t.id}" data-t="b"${G.traits[t.id] ? " checked" : ""}>${esc(t.name)}</label>`).join("")}
@@ -1108,7 +1110,7 @@
     if (t.id === "ocr-file") { runOcr(t.getAttribute("data-id"), t.files && t.files[0]); return; }
     // 敵の種類を変えたら、その種類の最初の敵にする
     if (t.id === "enemy-cat") {
-      const e = S.ENEMIES.find(x => enemyCat(x) === t.value);
+      const e = enemiesOf(t.value)[0];
       if (e) { setPath("enemy", e.id); renderAll(); }
       return;
     }

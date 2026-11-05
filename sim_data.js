@@ -82,12 +82,12 @@ window.SIM = window.SIM || {};
   const BOSS = { def: 0.5, resDefault: 750, weakMult: 1, extra: {} };
   const RES_WEAK = 250, RES_RESIST = 2000;   // 耐性の属性: 翠煌ノ刃(光)で 徽章なし808・両方（光ダメ122%・貫通145）2,763 が耐性2000の式と一致（gistの第3段の上限）
   S.ENEMIES = [
-    Object.assign({ id: "stomp", name: "暴走のストンプクラブ（指名手配・水火弱点）", res: { 水: RES_WEAK, 火: RES_WEAK, 地: RES_RESIST }, weak: ["水", "火"], markX: 1.68, hpBonus: 0,
+    Object.assign({ id: "stomp", season: 12, name: "暴走のストンプクラブ（指名手配・水火弱点）", res: { 水: RES_WEAK, 火: RES_WEAK, 地: RES_RESIST }, weak: ["水", "火"], markX: 1.68, hpBonus: 0,
       note: "ボス（防御0.5・弱点の水と火は耐性250・ほかは等倍の750）。テスト3（信頼Lv21）のセイナ(原点)の通常1撃目 77,865（光は等倍）、光貫通35で 86,380（×1.0846＝耐性750の式）。地属性は耐性あり（2026-10-29: ナズナの初段19・グレイの印297。値は耐性2000として計算）。印の倍率は セイナ(光)の実測 ≒1.65〜1.68。" }, BOSS),
     { id: "defense", name: "骸魔防衛戦の雑魚（初段のみ）", def: 1, res: { 光: 250, 水: 250, 風: 250 }, weak: [], weakMult: 1,
       extra: {}, markX: 1, hpBonus: 0, teamHp: 0.15, teamAtk: 0.15, teamCrit: 0.10,
       note: "耐性250・防御1.00（徽章なしのセイナ初段 323,158 が式と完全一致）。全員に 最大HP+15%・攻撃+15%・会心率+10%。雑魚は1撃で倒れるので初段だけ測れる。印の倍率は未確認（1とした）。" },
-    Object.assign({ id: "deep", name: "深層ノ主（指名手配・風光弱点・闇耐性）", res: { 風: RES_WEAK, 光: RES_WEAK, 闇: RES_RESIST }, weak: ["風", "光"], markX: 1.41, hpBonus: 0.20,
+    Object.assign({ id: "deep", season: 12, name: "深層ノ主（指名手配・風光弱点・闇耐性）", res: { 風: RES_WEAK, 光: RES_WEAK, 闇: RES_RESIST }, weak: ["風", "光"], markX: 1.41, hpBonus: 0.20,
       note: "ボス（防御0.5・弱点の風と光は耐性250・耐性の闇は2000・ほかは750）。テスト3（信頼Lv21）のセイナ(原点)の通常1撃目 167,421、光貫通35で 186,105（×1.0868＝耐性250の式）。主力の最大HP+20%。" }, BOSS),
     Object.assign({ id: "mikoi", name: "未恋ノ禍実（首領討伐・難易度3・光弱点・闇耐性）", res: { 光: RES_WEAK, 闇: RES_RESIST }, weak: ["光"], markX: 1, hpBonus: 0,
       note: "首領討伐。光が有効（耐性250）、闇が耐性。テスト5（信頼Lv21）のセイナ(原点)の通常1撃目 60,655、光貫通35で 68,408（×1.0868）。印の倍率は未確認（1とした）。" }, BOSS),
@@ -102,9 +102,9 @@ window.SIM = window.SIM || {};
     Object.assign({ id: "genwaku", name: "幻惑ノ花（首領討伐・難易度3・火弱点・風耐性）", res: { 火: RES_WEAK, 風: RES_RESIST }, weak: ["火"], markX: 1, hpBonus: 0,
       note: "首領討伐。火が有効（耐性250）、風が耐性（2000）、ほかは等倍（750）。防御0.5。実測は未確認（ほかのボスと同じ形として入れた）。印の倍率は未確認（1とした）。" }, BOSS),
     // 2026-11 からの指名手配（画面: 弱点・耐性のアイコンと特性）。耐性・防御・印の倍率は未実測（ほかのボスと同じ形として入れた）
-    Object.assign({ id: "kubo", name: "空壺ノ王（指名手配・光水弱点・風耐性）", res: { 光: RES_WEAK, 水: RES_WEAK, 風: RES_RESIST }, weak: ["光", "水"], markX: 1.14, hpBonus: 0.20,
+    Object.assign({ id: "kubo", season: 13, name: "空壺ノ王（指名手配・光水弱点・風耐性）", res: { 光: RES_WEAK, 水: RES_WEAK, 風: RES_RESIST }, weak: ["光", "水"], markX: 1.14, hpBonus: 0.20,
       note: "指名手配（2026-11〜）。弱点は光・水、耐性は風（画面のアイコン）。特性「亀裂の響き」: 主力の最大HP+20%・主力の被ダメージ+10%。テスト3（通常Lv10・信頼21・徽章なし）の実測: 突進 131,771・1撃目 187,099 は、光耐性250・防御0.5 の予測の ×1.019 。テスト5（徽章なし）では 突進 62,580 で、未恋ノ禍実との比が計算どおり（防御0.5・主力HP+20%）→ ×1.019 はボスではなく、テスト3のロスレコ側の何か（未特定）。印 98,026 は、星願1以上の予測 84,369×1.019（テスト3の上乗せ込み）の ×1.14 → 印の倍率 1.14。2026-11-04" }, BOSS),
-    Object.assign({ id: "genwakuW", name: "幻惑ノ花（指名手配・光地弱点・火耐性）", res: { 光: RES_WEAK, 地: RES_WEAK, 火: RES_RESIST }, weak: ["光", "地"], markX: 1, hpBonus: 0,
+    Object.assign({ id: "genwakuW", season: 13, name: "幻惑ノ花（指名手配・光地弱点・火耐性）", res: { 光: RES_WEAK, 地: RES_WEAK, 火: RES_RESIST }, weak: ["光", "地"], markX: 1, hpBonus: 0,
       note: "指名手配（2026-11〜）。首領討伐の幻惑ノ花とは弱点が違う（指名手配は光・地が弱点、火が耐性。画面のアイコン）。テスト3（通常Lv10・信頼21・徽章なし）の実測: 突進・1撃目・2撃目・3撃目 すべて光耐性250・防御0.5 の予測の ×1.022 （空壺ノ王と同じく、テスト3のロスレコ側の何かとみる。未特定）。印の倍率は未実測（1）。2026-11-04" }, BOSS),
   ];
   // 敵の特性（チェックで入れる）。ht = かかるダメージの種類、x = 別枠の掛け算
