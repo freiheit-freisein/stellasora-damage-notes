@@ -206,6 +206,13 @@
   @media (max-width: 1500px) { .app { grid-template-columns: minmax(0, 1fr) 480px; } .tiles { grid-template-columns: repeat(3, 1fr); } }
 
   /* ---- 見た目は素質ノート（プリセット共有サイト）に合わせる: 方眼の背景・白いカード・2pxの薄い枠。面は少しだけ透かす ---- */
+  /* 巡遊者ノートの帯（素質ノートの style.css と同じ見た目） */
+  .notes-bar { background: var(--text); font-size: 12px; line-height: 1; }
+  .notes-bar .wrap { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .notes-bar a { flex: none; display: block; padding: 8px 10px; color: #C5CAE3; font-weight: 700; text-decoration: none; white-space: nowrap; }
+  .notes-bar a:hover { color: #fff; }
+  .notes-bar a[aria-current] { color: #fff; box-shadow: inset 0 -2px var(--accent); }
+  .notes-bar .nb-home { padding-left: 0; margin-right: 8px; font-family: var(--font-en); font-size: 15px; font-weight: 400; letter-spacing: .08em; color: #fff; }
   .site-header { background: rgba(255,255,255,.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; }
   .site-header .wrap { padding-top: 8px; padding-bottom: 8px; flex-wrap: wrap; }
   .logo-star { width: 26px; height: 26px; fill: var(--accent); flex: none; }
@@ -405,6 +412,11 @@
 </style>
 </head>
 <body class="m-in">
+<nav class="notes-bar" aria-label="巡遊者ノートのツール"><div class="wrap">
+  <a class="nb-home" href="https://stella-tool.com/" title="巡遊者ノート（トップ）">TREKKERS’ NOTES</a>
+  <a href="https://sim.stella-tool.com/sim" aria-current="true">計算ノート</a>
+  <a href="https://preset.stella-tool.com/">素質ノート</a>
+</div></nav>
 <header class="site-header"><div class="wrap">
   <svg class="logo-star" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>
   <h1 class="logo-h1"><span class="logo-ja">巡遊者の計算ノート</span><span class="logo-en">FOR STELLA SORA</span></h1><span class="beta" title="β版：データや計算が間違っている可能性があります。気づいたことは「報告」から教えてください">β版</span>
@@ -450,7 +462,7 @@
     </ol>
   </section>
   <p class="fine">β版です。数値はゲームの画面・実測・Wikiをもとにしていて、間違っていることがあります。気づいたことは「報告」から教えてください。ゲームの運営会社とは関係ありません。</p>
-  <p class="fine"><a href="https://stella-tool.com/">巡遊者ノート（トップ）</a>　<a href="https://ofuse.me/stella_tool" target="_blank" rel="noopener">応援する（OFUSE）</a></p>
+  <p class="fine"><a href="https://stella-tool.com/">巡遊者ノート（トップ）</a>　<a href="https://preset.stella-tool.com/">素質ノート</a>　<a href="https://ofuse.me/stella_tool" target="_blank" rel="noopener">応援する（OFUSE）</a></p>
 </div></footer>
 <script src="data/trekkers.js"></script>
 <script src="data.js"></script>
