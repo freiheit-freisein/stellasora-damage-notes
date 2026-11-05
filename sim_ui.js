@@ -521,6 +521,7 @@
   const lrOptName = r => {
     const st = r.stats || {}, parts = r.rarity ? [`★${r.rarity}`] : [];
     LR_ST.forEach(([k, lab]) => { const v = st[k]; if (!v) return;
+      if (k === "baseAtk" && S.lrAtkScalable(r)) { const mx = S.lrAtkMax(r); return parts.push(`${lab} ${mx - 650}-${mx}`); }   // 突破I〜VI
       parts.push(k === "elemDmg" ? `${r.element}属性ダメージ${Math.round(v * 1000) / 10}%` : /Dmg$/.test(k) ? `${lab}${Math.round(v * 1000) / 10}%` : `${lab} ${Math.round(v)}`); });
     return `${r.name}${r.auto || r.autoFx ? "*" : ""}${parts.length ? `（${parts.join(" / ")}）` : ""}`;
   };
@@ -528,11 +529,13 @@
     const L = LOSTRECORDS;
     // 枠: クリア → 属性 → 名前（徽章と同じ形）。属性だけ選んだ状態は画面の中だけで持つ
     const ELS = ["水", "火", "風", "地", "光", "闇"].filter(e => L.some(x => x.element === e)).concat([...new Set(L.map(x => x.element))].filter(e => ["水", "火", "風", "地", "光", "闇"].indexOf(e) < 0));
-    // 突破（メインだけ。サブは初期音符だけなので要らない）
+    // 突破: メインはコア効果と基礎攻撃力、サブは基礎攻撃力が変わる（★5）
     const rankSel = (arr, id) => {
-      if (arr !== "lrMain") return "";
-      const rk = id ? S.lrRankOf(G, id) : { can: false };
-      return rk.can ? `<select data-p="lrRank.${id}" data-t="n" title="突破">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === rk.rank ? " selected" : ""}>突破${S.lrRoman(n)}</option>`).join("")}</select>` : `<span class="muted" style="font-size:11px">${id ? "突破は固定" : ""}</span>`;
+      const r = id && L.find(x => x.id === id);
+      const fxCan = arr === "lrMain" && id && S.lrRankOf(G, id).can, atkCan = S.lrAtkScalable(r);
+      if (!fxCan && !atkCan) return `<span class="muted" style="font-size:11px">${id ? "突破は固定" : ""}</span>`;
+      const now = S.lrRankNow(G, id);
+      return `<select data-p="lrRank.${id}" data-t="n" title="突破">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === now ? " selected" : ""}>突破${S.lrRoman(n)}</option>`).join("")}</select>`;
     };
     const slot = (arr, i, lab) => {
       const path = `${arr}.${i}`, cur = (G[arr] || [])[i] || "", r = L.find(x => x.id === cur);
@@ -576,7 +579,7 @@
         return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}</div>`;
       };
       const rk = S.lrRankOf(G, id);
-      const rankSel = rk.can ? ` <span class="muted">突破${S.lrRoman(rk.rank)}${rk.r0 ? `（画面で確かめた値は突破${S.lrRoman(rk.r0)}。ほかの突破はWikiの伸び方で計算。基礎ステータスは変わりません）` : ""}</span>` : "";
+      const rankSel = rk.can ? ` <span class="muted">突破${S.lrRoman(rk.rank)}${rk.r0 ? `（画面で確かめた値は突破${S.lrRoman(rk.r0)}。ほかの突破はWikiの伸び方で計算）` : ""}</span>` : "";
       const core = fx.core.map(it => item(id + ":c:" + it.id, it, rk.rank, rk.scale)).join("");
       const as = fx.assists.map(a => {
         const lv = S.lrAssistLv(S.notesTotal(G), a);
@@ -592,7 +595,7 @@
       ${fld("記録レベル", inp("recordLv", { sel: recOpts }), `戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）`)}
       <h3 style="margin-top:14px">ロスレコ・音符</h3>
       <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div>${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
-      ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。コア効果は「突破」で値を選べます。条件付きの効果は、既定では反映しません（チェックで反映）。")}
+      ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。「突破」で、コア効果の値と基礎攻撃力が変わります（★5の基礎攻撃力は、突破1つごとに +130。サブも基礎攻撃力が変わります）。条件付きの効果は、既定では反映しません（チェックで反映）。")}
       <h3 style="margin-top:12px;font-size:14px">音符効果（探索で獲得した数を入力。サブのロスレコの初期音符は自動で足します）</h3>
       ${noteIn}
       <h3 style="margin-top:12px;font-size:14px">効果の数（暁光・星願など。戦闘中のある時点を想定して入力）</h3>

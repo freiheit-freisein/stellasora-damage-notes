@@ -78,7 +78,7 @@
       const r = (window.LOSTRECORDS || []).find(x => x.id === id);
       if (!r) return;
       const s = r.stats || {}, m = !r.element || r.element === el;
-      t.baseAtk += s.baseAtk || 0; t.baseHp += s.baseHp || 0;
+      t.baseAtk += S.lrBaseAtk ? S.lrBaseAtk(G, id) : (s.baseAtk || 0); t.baseHp += s.baseHp || 0;   // 基礎攻撃力は突破で変わる（sim_lr.js）
       if (m) t.elem += s.elemDmg || 0;
       t.basicDmg += s.basicDmg || 0; t.skillDmg += s.skillDmg || 0; t.ultDmg += s.ultDmg || 0;
       const a = isMain && r.core && r.core.always && (r.core.always.target !== "main" || charMain) && r.core.always;

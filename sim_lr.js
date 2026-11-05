@@ -114,11 +114,36 @@
 
   // 突破（凸 1〜6）。自動のロスレコは、Wikiの突破ごとの値（既定1）。
   // 手で入れたロスレコは、画面で確かめた突破（データの core.rank）の値を基準に、Wikiと同じ「突破1つごとに 突破1の値の+20%」で伸ばす
-  // （突破6 = 突破1の2倍。未来導く明星・願い星の願い・夕涼みのWikiの値と一致）。基礎ステータスは突破で変えない（伸び方が未確認）
+  // （突破6 = 突破1の2倍。未来導く明星・願い星の願い・夕涼みのWikiの値と一致）。基礎攻撃力は上の S.lrBaseAtk
   const ROMAN = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 };
   // 画面の表記（ゲーム内と同じローマ数字）。データは 1〜6 のまま
   S.lrRoman = n => ["", "I", "II", "III", "IV", "V", "VI"][n] || String(n);
   const rankMul = n => 1 + 0.2 * (n - 1);
+  // 基礎攻撃力は、★5なら突破1つごとに +130（突破I = 突破VIの値 − 650）。ゲームの画面で確認: 桜花爛漫・未来導く明星（I 981／Wiki最大 1631）、
+  // 揺らめく光の向こう側（II 1111）、白日の花園（III 1192／最大 1582）、見据える先に（II 1013／最大 1533）、レモネードと紅茶（I 883／最大 1533）、伝説のアラシ（II 1062／最大 1582）、
+  // 古池の水音（III 1241／最大 1631）、晴天の彩花（III 1192／最大 1582）、栄光の瞬間・虹を描こう（VI 1533）。どれも Lv90。2026-11-06
+  // 自動（Wiki）のロスレコの値は突破VI（Lv90）。手で入れたものは、画面で確かめた突破（core.rank）の値。突破が分からないものは突破VIの値とみる。
+  // 基礎HP・属性ダメージなど、ほかのステータスは突破で変わらない（ゲームの画面では上の段＝基礎攻撃力だけが変わる）
+  const ATK_STEP = 130;
+  S.lrAtkScalable = r => !!(r && r.rarity === 5 && (r.stats || {}).baseAtk);
+  // 突破（1〜6）。保存した値 → 画面で確かめた突破 → 自動は I・手入力で突破が分からないものは VI
+  S.lrRankNow = (G, rid) => {
+    const r = L.find(x => x.id === rid), v = +((G.lrRank || {})[rid]);
+    if (v >= 1 && v <= 6) return v;
+    const r0 = ROMAN[(r && r.core && r.core.rank) || ""];
+    return r0 || (r && r.auto ? 1 : 6);
+  };
+  S.lrAtkMax = r => {
+    const a = (r.stats || {}).baseAtk || 0, r0 = ROMAN[(r.core && r.core.rank) || ""];
+    return r.auto || !r0 ? a : a + ATK_STEP * (6 - r0);
+  };
+  S.lrBaseAtk = (G, rid) => {
+    const r = L.find(x => x.id === rid);
+    if (!r) return 0;
+    if (!S.lrAtkScalable(r)) return (r.stats || {}).baseAtk || 0;
+    return S.lrAtkMax(r) - ATK_STEP * (6 - S.lrRankNow(G, rid));
+  };
+
   S.lrRankOf = (G, rid) => {
     const fx = S.LR_FX[rid], r = L.find(x => x.id === rid);
     const v = +((G.lrRank || {})[rid]);

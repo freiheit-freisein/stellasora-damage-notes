@@ -795,7 +795,7 @@ window.SUPPORT_MEASUREMENTS = [
 LOSTRECORDS.push(
   { id: "yukidoke-reimei", name: "雪解け告げる黎明", rarity: 5, element: "風", level: 90, levelMax: 90, stats: { baseAtk: 1533, elemDmg: 0.12 }, initNotes: { "必殺の音符": 7, "集中の音符": 7 }, core: null, assist: [] },
   { id: "chitei-no-kanata", name: "地底の彼方へ！", rarity: 5, element: "風", level: 90, levelMax: 90, stats: { baseAtk: 1533, elemDmg: 0.12 }, initNotes: { "風の音符": 7, "爆発の音符": 7 }, core: null, assist: [] },
-  { id: "lemonade-koucha", name: "レモネードと紅茶", rarity: null, element: "風", level: 70, levelMax: 90, stats: { baseAtk: 552, elemDmg: 0.10 }, initNotes: { "幸運の音符": 2, "体力の音符": 10 }, core: null, assist: [] },
+  { id: "lemonade-koucha", name: "レモネードと紅茶", rarity: 5, element: "風", level: 90, levelMax: 90, stats: { baseAtk: 883, elemDmg: 0.12 }, initNotes: { "幸運の音符": 2, "体力の音符": 10 }, core: { name: "レモネードと紅茶", rank: "I" }, assist: [] },   // 画面 Lv90・突破I（2026-11-06）。以前は Lv70 の 552・風10%
 );
 // 検証ビルド「テスト用2」（星ノ塔1Fクリア時点）: ウィロー主力・ナツカ/エレノア支援
 window.TEST2_CTX = {
