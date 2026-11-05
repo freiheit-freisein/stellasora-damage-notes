@@ -516,6 +516,14 @@
   // ---- ロスレコ・音符 ----
   // ロスレコの名前。Wikiから自動で入れたもの（ゲーム内では未確認）は「*」を付ける。★の数も添える
   const lrName = r => `${r.name}${r.auto || r.autoFx ? "*" : ""}${r.rarity ? `（★${r.rarity}）` : ""}`;
+  // 選ぶときの名前: どんなロスレコか分かるように、★・基礎ステータス・属性ダメージなどを添える
+  const LR_ST = [["baseAtk", "基礎攻撃力"], ["baseHp", "基礎HP"], ["elemDmg", ""], ["skillDmg", "スキルダメージ"], ["ultDmg", "必殺技ダメージ"]];
+  const lrOptName = r => {
+    const st = r.stats || {}, parts = r.rarity ? [`★${r.rarity}`] : [];
+    LR_ST.forEach(([k, lab]) => { const v = st[k]; if (!v) return;
+      parts.push(k === "elemDmg" ? `${r.element}属性ダメージ${Math.round(v * 1000) / 10}%` : /Dmg$/.test(k) ? `${lab}${Math.round(v * 1000) / 10}%` : `${lab} ${Math.round(v)}`); });
+    return `${r.name}${r.auto || r.autoFx ? "*" : ""}${parts.length ? `（${parts.join(" / ")}）` : ""}`;
+  };
   function renderLr() {
     const L = LOSTRECORDS;
     // 枠: クリア → 属性 → 名前（徽章と同じ形）。属性だけ選んだ状態は画面の中だけで持つ
@@ -532,7 +540,7 @@
       const names = L.filter(x => !el || x.element === el);
       return `<div class="lr-line"><span class="lab">${lab}</span><button class="obtn" data-act="lrclear:${path}" style="min-height:30px">クリア</button>
         <select data-lrel="${path}"><option value="">属性</option>${ELS.map(e => `<option${e === el ? " selected" : ""}>${e}</option>`).join("")}</select>
-        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(lrName(x))}</option>`).join("")}</select>${rankSel(arr, cur)}</div>`;
+        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(lrOptName(x))}</option>`).join("")}</select>${rankSel(arr, cur)}</div>`;
     };
     const m = "lrManual";
     // 音符: ゲームと同じく、色と名前 → 数 → 効果 を縦に並べ、1行にする

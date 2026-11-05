@@ -334,7 +334,7 @@
   .decin .muted { width: 54px; text-align: right; font-size: 11px; }   /* 今の値と比べる値の幅をそろえ、◀▶が縦に並ぶように */
   .decin b.up { color: #C0392B; }
   .lr-line .obtn { padding: 0 4px; white-space: nowrap; font-size: 13px; }
-  .lr-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 0 24px; }   /* 狭いときはメインの下にサブ */
+  .lr-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; max-width: 900px; }   /* メイン3枚の下にサブ3枚。選ぶ欄の名前が長いので縦に6つ */
   .cnt-grid { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
   .cnt-grid .fld { grid-template-columns: 210px 1fr; }
   /* 音符（ゲームと同じく、色と名前の下に数、その下に効果） */
