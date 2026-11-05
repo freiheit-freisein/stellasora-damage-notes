@@ -283,8 +283,9 @@ window.SIM = window.SIM || {};
         if (roleList.size && !roleList.has(name)) return;
         const key = S.potKey(name);
         const lv0 = (cs.pots2 || {})[key] || 0;
-        if (!lv0) return;
-        const lv = lv0 + ((S.emblemExtra(cs.emb, cs.embOn).pot[name]) || 0);   // 徽章の素質レベル上昇（取得している素質だけ）
+        const ov = (G._potLv || {})[oid + ":" + name];   // ビルド確認の「比べる値」: 徽章込みのLvをこの値にする（Lv7〜9も）
+        if (ov != null ? !ov : !lv0) return;
+        const lv = ov != null ? ov : lv0 + ((S.emblemExtra(cs.emb, cs.embOn).pot[name]) || 0);   // 徽章の素質レベル上昇（取得している素質だけ）
         const sp = spec[name];
         const onSet = (cs.pon || {})[key];
         if (onSet == null ? sp.off : !onSet) return;

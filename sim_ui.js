@@ -423,7 +423,7 @@
   }
   // ---- 素質（コア素質と通常素質をカードで選ぶ）----
   // 計算は今までと同じ入力（pots2 / pots / sup）をそのまま使う。画面で選べるLvは0〜6（前の入力で7以上が入っているものは、そのまま残す）
-  const POT_LV_MAX = 6, CORE_MAX = 2;
+  const POT_LV_MAX = 6, POT_LV_EMB_MAX = 9, CORE_MAX = 2;   // 取得はLv6まで。徽章の素質レベル上昇でLv9まで
   // 1人分の素質の一覧: { name, en, core, lv, path, desc, tags, ctl, grp, bonus }
   function potItems(k) {
     const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`, ex = emx(id), out = [];
@@ -682,9 +682,12 @@
       const core = new Set();   // コア素質（取得するかどうかだけ。Lvは0か1）
       ((tk && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { if (p.type === 1) core.add(S.potKey(p.name)); }));
       const pot = (key, name, lv, max, set) => cmpItem("素質", `${c.jp}：${name}`, k, key, lv, 0, Math.max(max, lv), "Lv", set);   // 取得できるのはLv6まで（前の入力で7以上のものは、その値まで）
+      // 素質の選択（pots2）のコア以外は、徽章でLv9まで上げられるので、徽章込みのLvで0〜9を比べる
+      const bonus = emx(id).pot, potLvSet = en => (g, v) => { g._potLv = Object.assign({}, g._potLv, { [id + ":" + en]: v }); };
       Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
-        const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p;
-        pot(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], core.has(p) ? 1 : POT_LV_MAX, (g, v) => { g.chars[id].pots2[p] = v; });
+        const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p, b = bonus[en] || 0;
+        if (core.has(p)) pot(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], 1, (g, v) => { g.chars[id].pots2[p] = v; });
+        else pot(`p2:${id}:${p}`, JA(en, id) + (b ? `（徽章+${b}込み）` : ""), +cs.pots2[p] + b, POT_LV_EMB_MAX, potLvSet(en));
       });
       Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => {
         const x = (window.POTENTIALS || []).find(q => q.id === p) || {};
@@ -693,7 +696,7 @@
       Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, POT_LV_MAX, (g, v) => { g.chars[id].sup[p].lv = v; }));
       // 未取得の素質（Lv0）は、チェックしたときだけ出す（特化構築の違うものまで出ると、見分けにくいため）。計算に入らないものは出さない
       if (V.potAll) potItems(k).filter(x => !x.lv && !x.noeff && !x.tags.some(t => t.indexOf("計算に未対応") >= 0)).forEach(x =>
-        pot(`pa:${x.path}`, x.name + (x.grp ? ` (${x.grp.replace("特化構築", "特化")})` : ""), 0, x.core ? 1 : POT_LV_MAX, (g, v) => { const ks = x.path.split("."); let o = g; ks.slice(0, -1).forEach(q => { o[q] = o[q] || {}; o = o[q]; }); o[ks[ks.length - 1]] = v; }));
+        pot(`pa:${x.path}`, x.name + (x.grp ? ` (${x.grp.replace("特化構築", "特化")})` : ""), 0, x.core ? 1 : x.path.indexOf(".pots2.") >= 0 ? POT_LV_EMB_MAX : POT_LV_MAX, (!x.core && x.path.indexOf(".pots2.") >= 0) ? potLvSet(x.en) : (g, v) => { const ks = x.path.split("."); let o = g; ks.slice(0, -1).forEach(q => { o[q] = o[q] || {}; o = o[q]; }); o[ks[ks.length - 1]] = v; }));
       (cs.emb || []).forEach((e, i) => {
         if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
         e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}\n${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
@@ -974,7 +977,7 @@
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・寄与率は、この回数で合計したダメージで出します。`, "margin-top:4px;color:#33386A")}</div>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
-      ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 6px")}
+      ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。素質（コア以外）は、徽章の素質レベル上昇も込みのLvで、Lv9まで選べます（Lv7〜9の値は、ゲームの画面で確かめていないものは推定です）。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 6px")}
       <div class="grid-in decG">
         <div class="box"><div class="bx-h"><b>素質</b><label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="potall"${V.potAll ? " checked" : ""}>未取得の素質も表示</label></div>${rows("素質")}</div>
         <div class="box"><b>徽章</b>${rows("徽章")}</div>
