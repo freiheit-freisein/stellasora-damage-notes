@@ -6,3 +6,5 @@ NOTES.md
 dist/
 .wrangler/
 ocr_try/
+.discord-webhook
+.discord-last
