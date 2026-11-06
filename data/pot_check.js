@@ -136,6 +136,26 @@ window.POT_CHECK = {
    "st": "unk",
    "at": "2026-11-05",
    "memo": "鏡影はHPが70%未満の敵に与えるスキルダメージが138%増加する。"
+  },
+  "Unseen Aquatic Blade": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Water Edge": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Waterflow Blade": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Mirror Tide": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Shadow Cutter": {
+   "st": "ok",
+   "at": "2026-11-06"
   }
  },
  "Eleanor": {
