@@ -44,6 +44,16 @@
   const chkOf = (en, pot) => (chk[en] || {})[pot] || null;
   const CK_NAME = { ok: "合ってる", diff: "数字が違う", unk: "わからない" };
 
+  // スキルLv（巡遊者ごと・このブラウザに保存）。コア素質の追加ダメージは、つながるスキルのLvで伸びるので、ゲームの画面と同じLvの値で出す
+  const SLKEY = "stellasora-edit-skilllv";
+  let SL = {};
+  try { SL = JSON.parse(localStorage.getItem(SLKEY)) || {}; } catch (e) { SL = {}; }
+  const SKILLS = [["basic", "通常攻撃"], ["main", "主力スキル"], ["support", "支援スキル"], ["ult", "必殺技"]];
+  const slOf = (en, k) => +(((SL[en] || {})[k]) || 10);
+  // そのスキルのLvの倍率 ÷ Lv10の倍率（スキルの1つ目の数値で見る）
+  const lvRatio = (en, k, lv) => { const t = TREKKERS.find(x => x.en === en), i = { basic: 0, main: 1, support: 2, ult: 3 }[k], n = t && t.skills && t.skills[i] && t.skills[i].nums; if (!n || !n[9] || !n[lv - 1]) return 1; return n[lv - 1][0][0] / n[9][0][0]; };
+  // コア素質がどのスキルのLvで伸びるか: 入力済みの効果に lv があればそれ、なければ素質の役割（主力→主力スキル、支援→支援スキル）
+  const potSkill = (en, role, pot) => { const sp = (user[en] && user[en][pot]) || builtIn(en, pot) || {}; const e = (sp.e || []).find(x => x.lv); return e ? e.lv : role; };
   const trekkers = TREKKERS.slice().sort((a, b) => (b.rarity - a.rarity) || a.en.localeCompare(b.en));
   const S = { t: (JSON.parse(localStorage.getItem("stellasora-edit-t") || "null") || "Tilia"), role: "main", sel: null };
   if (!trekkers.some(x => x.en === S.t)) S.t = trekkers[0].en;
@@ -133,7 +143,9 @@
     const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
     const grid = (arr, c) => `<div class="pgrid" style="grid-template-columns:repeat(${c},minmax(0,1fr))">${arr.map(card).join("")}</div>`;
     const coreRow = `<div class="pgrid" style="grid-template-columns:repeat(${Math.max(1, builds.length)},minmax(0,1fr));gap:14px">${builds.map(g => `<div><div class="phead">コア：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1), 2)}</div>`).join("")}</div>`;
-    $("list").innerHTML = coreRow + builds.map(g => `<div class="phead">${S.role === "main" ? "主力" : "支援"}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("") + (gen ? `<div class="phead">汎用</div>${grid(gen.potentials, 3)}` : "");
+    const slRow = `<div class="sl"><b>スキルLv</b>${SKILLS.map(([k, nm]) => `<label>${nm} <select data-sl="${k}">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => `<option${v === slOf(S.t, k) ? " selected" : ""}>${v}</option>`).join("")}</select></label>`).join("")}
+      <div class="muted">ゲームの画面と同じLv（徽章なし）を入れてください。コア素質の追加ダメージの数字を、そのLvの値で出します。</div></div>`;
+    $("list").innerHTML = slRow + coreRow + builds.map(g => `<div class="phead">${S.role === "main" ? "主力" : "支援"}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("") + (gen ? `<div class="phead">汎用</div>${grid(gen.potentials, 3)}` : "");
   }
 
   // ---- 入力欄 ----
@@ -162,6 +174,17 @@
     // 日本語Wikiの文に出てくる数字（「27～107%」なら Lv1=27%・Lv6=107%）。無ければ、英語データの表
     const jn = (jpOf(S.t, S.role, p.name) || {}).nums;
     const nums = jn && jn.length ? jn.map(x => { const m = String(x).split(/[～~〜]/); const u = /%|％/.test(x) ? "%" : ""; return m.length > 1 ? [m[0].replace(/[%％]/g, "") + u, m[1].replace(/[%％]/g, "") + u] : [String(x)]; }) : (p.nums || []);
+    // コア素質で、英語Wikiの数値（Lv1のスキルの値）÷日本語Wikiの数値（Lv10の値）がスキルLvの比と同じものは、入れたスキルLvの値にする
+    let slNote = "";
+    if (p.type === 1 && jn && jn.length) {
+      const sk = potSkill(S.t, S.role, p.name), lv = slOf(S.t, sk), r1 = lvRatio(S.t, sk, 1), r = lvRatio(S.t, sk, lv);
+      nums.forEach((a, i) => {
+        const jv = parseFloat(a[0]), ev = ((p.nums || [])[i] || [])[0];
+        if (a.length !== 1 || !(jv > 0) || !(ev > 0) || Math.abs(ev / jv - r1) > 0.03) return;
+        const v = Math.round(jv * r * 10) / 10;
+        if (lv !== 10) { nums[i] = ["約" + String(a[0]).replace(/^[\d.]+/, String(v))]; slNote = `「約」の数字は、${(SKILLS.find(x => x[0] === sk) || [0, ""])[1]}Lv${lv}のときの目安です（Lv10は ${jv}）。ゲームの画面とは小数点のあたりで少しずれることがあります。`; }
+      });
+    }
     const lv6 = a => a.length > 1 ? a[a.length - 1] : null;
     // 入力欄の横に単位（%）を出す。入れるのは数字だけ
     const unit = a => /%|％/.test(String(a[0])) ? '<span class="ck-u">%</span>' : "";
@@ -172,7 +195,7 @@
     return `<div class="ck">
       <div class="ck-h">ゲームの素質の画面と比べてください</div>
       <div class="muted">上の文は日本語Wikiの文です。ゲームの画面（素質の説明、初期Lv＝Lv1、最大＝Lv6）と、文と数字が合っているかを見てください。</div>
-      ${nums.length ? `<table class="lv ck-t"><tr><th>文の中の数字</th><th>Wiki Lv1</th><th>Wiki Lv6</th><th>ゲーム Lv1</th><th>ゲーム Lv6</th></tr>${rowsH}</table>` : '<div class="muted">文の中に数字はありません。</div>'}
+      ${nums.length ? `<table class="lv ck-t"><tr><th>文の中の数字</th><th>Wiki Lv1</th><th>Wiki Lv6</th><th>ゲーム Lv1</th><th>ゲーム Lv6</th></tr>${rowsH}</table>${slNote ? `<div class="muted">${slNote}</div>` : ""}` : '<div class="muted">文の中に数字はありません。</div>'}
       <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・何に効くかわからない など）"></div>
       <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button>${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>
       <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}</div>
@@ -226,6 +249,7 @@
   document.addEventListener("change", ev => {
     const t = ev.target;
     if (t.getAttribute && t.getAttribute("data-ck")) { ckBuf[t.getAttribute("data-ck")] = t.value; return; }
+    if (t.getAttribute && t.getAttribute("data-sl")) { SL[S.t] = SL[S.t] || {}; SL[S.t][t.getAttribute("data-sl")] = +t.value; try { localStorage.setItem(SLKEY, JSON.stringify(SL)); } catch (e) { /* 無視 */ } renderList(); renderEditor(); return; }
     if (t.id === "selT") { S.t = t.value; S.sel = null; try { localStorage.setItem("stellasora-edit-t", JSON.stringify(S.t)); } catch (e) { /* 無視 */ } bar(); renderList(); renderEditor(); return; }
     const f = t.getAttribute && t.getAttribute("data-f");
     if (!f) return;
