@@ -315,7 +315,7 @@
     const v = qVal(o, sl.q);
     return `${o.label} ${q}${v != null ? " " + valTxt(o, v) : ""}${sl.t ? `（${JA(sl.t, id)}）` : ""}`;
   }
-  // ---- 徽章一覧のスクリーンショットから読み込む（テスト中。sim_ocr.js）----
+  // ---- 徽章一覧のスクリーンショットから読み込む（sim_ocr.js）----
   const OCR_KINDS = ["triangle", "circle", "star"], OCR_KJ = { triangle: "初級", circle: "中級", star: "上級" };
   function ocrPots(id) {
     const out = [];
@@ -339,7 +339,7 @@
         ${st.rows.some(r => r.nopot) ? `<p class="msg ng">素質のレベル上昇が、この巡遊者の素質に見つかりませんでした。巡遊者が異なるか、読み取りがうまく行かなかった可能性があります。読めなかった枠は空白になりますので、手動で選択してください。</p>` : ""}
         <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="ocr-apply:${id}">この内容で入れる</button><button class="btn-add" data-act="ocr-cancel">やめる</button></div>`;
     }
-    return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <span class="tag-ng">テスト中</span>
+    return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <span class="hint-tip" tabindex="0">撮影のヒント<span class="hint-pop">PCの場合は「Alt＋PrintScreen」で、いま選んでいるウィンドウのスクリーンショットを撮れます。<br>または「Windows＋Shift＋S」で、画面の一部だけを撮れます。</span></span>
       <p class="muted" style="margin:4px 0">「徽章一覧」を一番下までスクロールして撮った画像を、クリップボードから読み込むか、ファイルで選んでください（この画面で Ctrl+V もOK！）。画像はお使いのブラウザの中にてJavaScriptを使って処理されるため、どこにも送信されません。</p>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-add pri" data-act="ocr-clip:${id}"${st.busy ? " disabled" : ""}>クリップボードから読み込む</button><label class="btn-add ocr-pick${st.busy ? " dis" : ""}">画像ファイルを選ぶ<input type="file" accept="image/*" id="ocr-file" data-id="${id}"${st.busy ? " disabled" : ""}></label></div>
       ${st.msg ? `<p class="msg${st.ng ? " ng" : ""}">${esc(st.msg)}</p>` : ""}${res}</div>`;
