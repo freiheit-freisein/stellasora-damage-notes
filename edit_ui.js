@@ -35,7 +35,11 @@
   // 確認の結果: chk[巡遊者][素質] = { st: "ok"|"diff"|"unk", g: { 番号: { 1: "Lv1の値", 6: "Lv6の値" } }, memo }
   const CKEY = "stellasora-pot-check-v1";
   let chk = {};
-  try { chk = JSON.parse(localStorage.getItem(CKEY)) || {}; } catch (e) { chk = {}; }
+  // data/pot_check.js = 貼ってもらって反映済みの確認（どのブラウザでも確認済みに数える）。ブラウザで押した確認を、その上に重ねる
+  const CK_FILE = window.POT_CHECK || {};
+  chk = clone(CK_FILE);
+  try { const sv = JSON.parse(localStorage.getItem(CKEY)) || {}; Object.keys(sv).forEach(t => { chk[t] = Object.assign(chk[t] || {}, sv[t]); }); } catch (e) { /* 保存なしでも動く */ }
+  const ckDone = (en, pot) => !!(CK_FILE[en] && CK_FILE[en][pot]);
   const saveChk = () => { try { localStorage.setItem(CKEY, JSON.stringify(chk)); } catch (e) { /* 無視 */ } };
   const chkOf = (en, pot) => (chk[en] || {})[pot] || null;
   const CK_NAME = { ok: "合ってる", diff: "数字が違う", unk: "わからない" };
@@ -108,7 +112,7 @@
 
   // ---- 一覧 ----
   const bar = () => {
-    const done = (en, t) => { let n = 0, d = 0, dr = 0; Object.keys(t.potentials || {}).forEach(role => t.potentials[role].forEach(g => g.potentials.forEach(p => { n++; { const u = specOf(en, p.name); if ((u && !u.draft) || (!u && builtIn(en, p.name))) d++; else if ((u && u.draft) || draftOf(en, role, p.name)) dr++; } }))); return [d, n, dr]; };
+    const done = (en, t) => { let n = 0, d = 0, dr = 0; Object.keys(t.potentials || {}).forEach(role => t.potentials[role].forEach(g => g.potentials.forEach(p => { n++; { const u = specOf(en, p.name); if ((u && !u.draft) || (!u && builtIn(en, p.name)) || ckDone(en, p.name)) d++; else if ((u && u.draft) || draftOf(en, role, p.name)) dr++; } }))); return [d, n, dr]; };
     const t = TREKKERS.find(x => x.en === S.t), [d, n, dr] = done(S.t, t);
     $("bar").innerHTML = `<b>巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
       <button class="sbtn${S.role === "main" ? " on" : ""}" data-act="role:main">主力の素質</button><button class="sbtn${S.role === "support" ? " on" : ""}" data-act="role:support">支援の素質</button>
