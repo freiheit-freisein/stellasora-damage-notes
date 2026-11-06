@@ -72,6 +72,16 @@ window.SIM = window.SIM || {};
     // 主力スキルの3つ目（毎秒のヒット）は「鉄の牢獄」（肉を喰む鎖・緋色の私刑の対象）
     if (c.hits.main[2]) c.hits.main[2].tags = (c.hits.main[2].tags || []).concat("cage");
   });
+  // チトセ: 素質の対象を分けるタグ（2026-11-06、素質の確認を入れるため）
+  patchCh("chitose", c => {
+    // 通常攻撃: 1〜5撃目（影隠れの型の瞬刃）と、6撃目＝最終撃（蛟龍の剣舞）
+    c.hits.basic.forEach(h => { h.tags = (h.tags || []).concat(h.n >= 7 ? "final" : "s15"); });
+    // 主力スキル: 2つ目は流閃・鱗（滝斬の型で強化される）
+    const sc = c.hits.main.find(h => h.n === 1); if (sc) { sc.id = "mScale"; sc.tags = (sc.tags || []).concat("scale"); }
+    // 支援スキル: 連撃は「3回の連撃（1回 4ヒット）」なので 12ヒット（スキルの説明文。自動の読み取りは1回分の4になっていた）。2つ目は鏡影
+    const ru = c.hits.support.find(h => h.n === 0); if (ru) { ru.id = "sRush"; ru.c = 12; ru.name = "連撃（3回×4）"; ru.tags = (ru.tags || []).concat("rush"); }
+    const mi = c.hits.support.find(h => h.n === 1); if (mi) { mi.name = "鏡影"; mi.tags = (mi.tags || []).concat("mirror"); }
+  });
 
   // 敵。def=防御倍率、res=属性ごとの耐性（書いていない属性は resDefault、無ければ250）、weak=弱点（表示用）、weakMult=弱点補正。
   // extra は、実測に合わせるために入れた原因不明の倍率（「その他倍率」）。

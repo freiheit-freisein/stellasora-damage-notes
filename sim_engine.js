@@ -250,7 +250,7 @@
       const mh = (hid && ef.hit[hid]) || {};
       const tags = h.tags || [];
       // タグで指定された効果（長剣・光刃など）
-      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0;
+      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0, wAdd = 0;
       const man = st.man || {};
       ag.mods.forEach(mo => {
         if (mo.tags && !mo.tags.some(t => tags.indexOf(t) >= 0)) return;
@@ -262,13 +262,14 @@
         else if (mo.k === "critDmg") { if (!(man.critDmg && typeLevel)) cdAdd += mo.v; }
         else if (mo.k === "Bs" && type === "skill") bAdd += mo.v;
         else if (mo.k === "Bb" && type === "basic") bAdd += mo.v;
+        else if (mo.k === "W") wAdd += mo.v;   // 特定の攻撃だけの属性ダメージ（例: チトセの通常攻撃の6撃目だけ）
       });
       let refVal;
       if (c.ref === "hp") refVal = st.hp;
       else if (man.atk) refVal = st.atk * (1 + (mh.atkPctHit || 0));
       else if (st.mode === "auto") refVal = st.baseAtk * (1 + st.atkPct + ef.atkPct + (mh.atkPctHit || 0));   // 素質由来の攻撃力%を足す
       else refVal = st.atk * (1 + ef.atkPct + (mh.atkPctHit || 0));
-      const W = 1 + st.elemAdd + (man.elem ? 0 : ef.W) + (mh.W || 0);
+      const W = 1 + st.elemAdd + (man.elem ? 0 : ef.W) + (mh.W || 0) + wAdd;
       let B;
       if (type === "basic") B = 1 + st.basicAdd + (man.basic ? 0 : ef.Bb) + (mh.Bb || 0) + bAdd;
       else if (type === "skill") B = 1 + st.skillAdd + (man.skill ? 0 : ef.Bs) + (mh.Bs || 0) + bAdd;
