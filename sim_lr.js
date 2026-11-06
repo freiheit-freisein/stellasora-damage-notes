@@ -32,6 +32,27 @@
     { key: "merchen", label: "メルヘンなサンセット：追加の重複数", max: 3 },
     { key: "kaisetsu", label: "回折の数", max: 6 },
     { key: "shinwa", label: "惹かれ合う星：親和力の数", max: 99, noMax: true },   // 上限はゲームで未確認なので「最大」は出さない
+    // 以下も上限はゲームで未確認（Wikiに書かれていない）。共に航るの暗潮だけ、説明文に 1/2/3 とあるので最大3
+    { key: "unmei", label: "運命カードの枚数", max: 99, noMax: true },
+    { key: "gekiha", label: "レモネードと紅茶：4秒以内に撃破した数", max: 99, noMax: true },
+    { key: "keika8", label: "一撃必中：戦闘開始から8秒たった回数", max: 99, noMax: true },
+    { key: "gekiha10", label: "敵を10体撃破した回数", max: 99, noMax: true },
+    { key: "bakuen", label: "ハナビ：爆炎の数", max: 99, noMax: true },
+    { key: "yuuki", label: "迷いを断つ拳：勇気の数", max: 99, noMax: true },
+    { key: "yuukiEnd", label: "迷いを断つ拳：終了した勇気の数", max: 99, noMax: true },
+    { key: "keii", label: "ミルク色の夢：敬畏の数", max: 99, noMax: true },
+    { key: "toufuu", label: "雪解け告げる黎明：凍風の数", max: 99, noMax: true },
+    { key: "fuusen", label: "青空を越えて：ドキドキ風船の数", max: 99, noMax: true },
+    { key: "shihen", label: "風に舞う想い：紙片のエールの数", max: 99, noMax: true },
+    { key: "yozakura", label: "千変万花：夜桜の数", max: 99, noMax: true },
+    { key: "kasumi", label: "夜宴に踊る影：花霞の数", max: 99, noMax: true },
+    { key: "kouryuu", label: "似たもの同士：光粒の数", max: 99, noMax: true },
+    { key: "tide", label: "揺らめく光の向こう側：タイドフリースの数", max: 99, noMax: true },
+    { key: "ripple", label: "友との夏休み：リプルノートの数", max: 99, noMax: true },
+    { key: "anchou", label: "共に航る：暗潮の数", max: 3 },
+    { key: "bigwave", label: "サマーマーチ：ビッグウェーブの数", max: 99, noMax: true },
+    { key: "hane", label: "飛びたて、籠の鳥：自由の羽の数", max: 99, noMax: true },
+    { key: "eikou", label: "栄光の瞬間：栄光の数", max: 99, noMax: true },
   ];
 
   // e: { k, v(数 or Lv→数), to: main/sup/lux/all, n: 数の入力のキー, txt }。off=true は既定でオフの条件付き効果。
@@ -112,6 +133,105 @@
     if (i1) Object.assign(i1, { skip: false, n: "shinwa", e: [{ k: "critDmg", v: lv => pick([0.02, 0.02, 0.02, 0.02, 0.04], lv), to: "main" }] });
   })(S.LR_FX.w45);
 
+  // ---- Wikiの取り込みで外れていた効果を、名前と位置（c=コア、a0.1=アシストa0の2つ目）で入れる。値はWikiの説明文のまま（突破I〜VI／Lv1〜5の順） ----
+  // n = 数の入力（重複数など）、off = 既定でオフの条件付き効果。why = 計算に入れない理由（info は火力に関係しない文）
+  (() => {
+    const P = (...a) => a.map(x => x / 100);
+    const R6 = (a, b) => P(a, a, a, a, a, b);   // 突破I〜Vが同じ値、VIだけ違う（Wikiの表のまま）
+    const at = (a, lv) => a[Math.min(lv, a.length) - 1];
+    const itemOf = (name, path) => {
+      const r = L.find(x => x.name === name), fx = r && S.LR_FX[r.id];
+      if (!fx || !fx.auto) return null;
+      if (path[0] === "c") return fx.core[+path.slice(1)];
+      const [aid, i] = path.split("."), a = fx.assists.find(q => q.id === aid);
+      return a && a.items[+i];
+    };
+    const FIX = (name, path, o) => {
+      const it = itemOf(name, path);
+      if (!it) return;
+      Object.assign(it, o, { skip: false, e: o.e.map(e => { const a = e.v; return Object.assign({}, e, { v: lv => at(a, lv) }); }) });
+    };
+    const WHY = (name, paths, why) => paths.forEach(p => { const it = itemOf(name, p); if (it) it.why = why; });
+    const NA_SUMMON = "従者の与えるダメージは計算に未対応", NA_NONUM = "数値の書かれていない効果は計算に未対応", NA_ATKDOWN = "敵の攻撃力の低下は計算に未対応";
+
+    // A. 条件なし
+    FIX("寒煙", "c0", { e: [{ k: "Bu", to: "main", v: [0, 0, 0, 0, 0, 0.45] }], note: "Wikiに突破VIの値（45%）しかないため、突破I〜Vは0" });
+    FIX("千変万花", "c0", { e: [{ k: "W", to: "el", el: "闇", v: R6(24, 40) }] });
+    FIX("夜宴に踊る影", "c0", { e: [{ k: "W", to: "el", el: "闇", v: P(5, 6, 7, 8, 9, 10) }] });
+
+    // B. 条件付き（既定でオフ）
+    FIX("晴天の彩花", "a1.1", { off: true, e: [{ k: "Bs", to: "el", el: "水", v: P(4.8, 9.6, 14.4, 19.2, 24) }] });
+    FIX("自由自在", "a1.0", { off: true, e: [{ k: "atkPct", to: "main", el: "火", v: P(3, 6, 9, 12, 15) }] });
+    FIX("メメント×モリ", "c1", { off: true, e: [{ k: "Bs", to: "el", el: "地", v: R6(8.5, 8.5) }] });
+    [["『空白』の序章", "風", P(7.5, 15, 22.5, 30, 37.5), "el"], ["清浄なる祈り", "光", P(10, 20, 30, 40, 50), "el"], ["昼下がりの雨", "水", P(4, 8, 12, 16, 20), "el"],
+     ["見据える先に", "闇", P(6, 12, 18, 24, 30), "el"], ["白紙の航海図", "火", P(11, 22, 33, 44, 55), "main"], ["甘く咲く時間", "地", P(10, 20, 30, 40, 50), "el"]].forEach(([nm, el, v, to]) => {
+      FIX(nm, "a0.0", { off: true, e: [{ k: "W", to: "el", el, v: P(5, 10, 15, 20, 25) }] });   // シールド獲得から12秒
+      FIX(nm, "a1.0", { off: true, e: nm === "見据える先に" ? [{ k: "Bs", to, el, v }, { k: "Bu", to, el, v }] : [{ k: "Bs", to, el, v }] });
+    });
+    FIX("友と囲む新春の灯火", "c1", { off: true, e: [{ k: "Bu", to: "el", el: "地", v: P(20, 24, 28, 32, 36, 40) }] });
+    FIX("ジングルラール", "a1.0", { off: true, e: [{ k: "Bu", to: "el", el: "火", v: P(12, 24, 36, 48, 60) }] });
+    FIX("明日へと続く物語", "c2", { off: true, e: [{ k: "takenSkill", to: "el", el: "水", v: P(12, 14.4, 16.8, 19.2, 21.6, 24) }, { k: "takenMark", to: "el", el: "水", v: P(12, 14.4, 16.8, 19.2, 21.6, 24) }] });
+    ["アッシュ・アイ:火", "おやすみ:光", "憩いのひと時:風", "蒼梧城の休日:水", "星空に夜露死苦:闇", "騎士様の鍛冶師:地"].forEach(s => {
+      const [nm, el] = s.split(":");
+      FIX(nm, "c1", { off: true, e: [{ k: "Bs", to: "el", el, v: P(8, 9.6, 11.2, 12.8, 14.4, 16) }] });   // 主力のHPが80%超
+    });
+
+    // C. 数（重複数など）を入れて使うもの
+    [["レモネードと紅茶", "風"], ["一撃必中", "火"], ["かけがえのない時間", "光"], ["一期一会", "水"], ["真夜中の鈴", "闇"], ["虹を描こう", "地"]].forEach(([nm, el]) =>
+      FIX(nm, "c1", { n: "unmei", e: [{ k: "W", to: "el", el, v: R6(2, 2) }] }));
+    FIX("レモネードと紅茶", "a1.0", { n: "gekiha", e: [{ k: "atkPct", to: "el", el: "風", v: P(0.6, 1.2, 1.8, 2.4, 3) }] });
+    FIX("一撃必中", "a1.1", { n: "keika8", e: [{ k: "atkPct", to: "el", el: "火", v: P(1.36, 1.36, 1.36, 1.36, 1.36) }] });
+    FIX("一期一会", "a1.1", { n: "gekiha10", e: [{ k: "Bb", to: "el", el: "水", v: P(1.8, 1.8, 1.8, 1.8, 1.8) }, { k: "Bs", to: "el", el: "水", v: P(1.8, 1.8, 1.8, 1.8, 1.8) }] });
+    FIX("虹を描こう", "a1.1", { n: "gekiha10", e: [{ k: "Bs", to: "el", el: "地", v: P(1.8, 1.8, 1.8, 1.8, 1.8) }, { k: "Bu", to: "el", el: "地", v: P(1.8, 1.8, 1.8, 1.8, 1.8) }] });
+    FIX("ハナビ", "c2", { n: "bakuen", e: [{ k: "Bb", to: "main", el: "火", v: P(7, 8.4, 9.8, 11.2, 12.6, 14) }] });
+    FIX("ハナビ", "a1.0", { n: "bakuen", e: [{ k: "Bs", to: "main", el: "火", v: P(1.5, 3, 4.5, 6, 7.5) }] });
+    FIX("迷いを断つ拳", "c1", { n: "yuuki", e: [{ k: "Bu", to: "main", el: "火", v: P(4, 4.8, 5.6, 6.4, 7.2, 8) }] });
+    FIX("迷いを断つ拳", "a1.0", { n: "yuukiEnd", e: [{ k: "Bb", to: "main", el: "火", v: P(1.5, 3, 4.5, 6, 7.5) }] });   // 防御力の上昇は火力に関係しない
+    FIX("ミルク色の夢", "a1.1", { n: "keii", e: [{ k: "Bs", to: "main", el: "闇", v: P(5, 7.5, 10, 12.5, 15) }] });
+    FIX("雪解け告げる黎明", "a0.1", { n: "toufuu", e: [{ k: "atkPct", to: "main", el: "風", v: P(0.5, 1, 1.5, 2, 2.5) }] });
+    FIX("雪解け告げる黎明", "a1.0", { n: "toufuu", e: [{ k: "W", to: "main", el: "風", v: P(1, 1.5, 2, 2.5, 3) }] });
+    FIX("青空を越えて", "a0.1", { n: "fuusen", e: [{ k: "critDmg", to: "main", el: "水", v: P(0.8, 1, 1.2, 1.4, 1.6) }] });
+    FIX("青空を越えて", "a1.0", { n: "fuusen", e: [{ k: "Bs", to: "el", el: "水", v: P(0.4, 0.8, 1.2, 1.6, 2) }] });
+    FIX("風に舞う想い", "a0.1", { n: "shihen", e: [{ k: "Bb", to: "main", el: "水", v: P(0.4, 0.6, 0.8, 1, 1.2) }] });
+    FIX("風に舞う想い", "a1.0", { n: "shihen", e: [{ k: "Bu", to: "main", el: "水", v: P(0.7, 1.4, 2.1, 2.8, 3.5) }] });
+    FIX("千変万花", "a0.1", { n: "yozakura", e: [{ k: "takenUlt", to: "el", el: "闇", v: P(0.6, 0.7, 0.8, 0.9, 1) }] });
+    FIX("夜宴に踊る影", "a0.1", { n: "kasumi", e: [{ k: "Bs", to: "main", el: "闇", v: P(0.4, 0.5, 0.6, 0.7, 0.8) }, { k: "Bu", to: "main", el: "闇", v: P(0.4, 0.5, 0.6, 0.7, 0.8) }] });
+    FIX("似たもの同士", "c1", { n: "kouryuu", e: [{ k: "atkPct", to: "main", v: R6(1, 2) }] });
+    FIX("似たもの同士", "a0.1", { n: "kouryuu", e: [{ k: "Bs", to: "main", v: P(0.4, 0.8, 1.2, 1.6, 2) }] });
+    FIX("揺らめく光の向こう側", "a1.0", { n: "tide", e: [{ k: "W", to: "el", el: "水", v: P(2, 2, 2, 2, 10) }] });
+    FIX("揺らめく光の向こう側", "a1.1", { n: "tide", e: [{ k: "atkPct", to: "role:サポーター", el: "水", v: P(2, 2, 2, 2, 10) }] });
+    FIX("友との夏休み", "c0", { n: "ripple", e: [{ k: "W", to: "el", el: "水", v: R6(2.5, 5) }] });
+    FIX("友との夏休み", "a0.1", { n: "ripple", e: [{ k: "W", to: "el", el: "水", v: P(1, 1, 1, 1, 5) }] });
+    FIX("共に航る", "c1", { n: "anchou", e: [{ k: "takenBasic", to: "el", el: "闇", v: R6(5, 10) }] });
+    FIX("共に航る", "c2", { n: "anchou", e: [{ k: "takenUlt", to: "el", el: "闇", v: R6(3, 6) }] });
+    FIX("共に航る", "a0.1", { n: "anchou", e: [{ k: "Bu", to: "main", el: "闇", v: P(4, 8, 12, 16, 20) }] });
+    FIX("サマーマーチ", "a1.0", { n: "bigwave", e: [{ k: "atkPct", to: "main", el: "闇", v: P(2.4, 4.8, 7.2, 9.6, 12) }] });
+    FIX("飛びたて、籠の鳥", "a0.1", { n: "hane", e: [{ k: "critDmgSkill", to: "main", v: P(1.5, 2, 2.5, 3, 3.5) }] });
+    FIX("栄光の瞬間", "a0.1", { n: "eikou", e: [{ k: "Bs", to: "main", el: "風", v: P(0.1, 0.2, 0.3, 0.4, 0.5) }] });
+
+    // D. 計算に未対応（理由を出す）
+    WHY("魔女の秘薬", ["a0.1", "a1.2"], NA_SUMMON);
+    WHY("ジングルラール", ["c1", "a0.1"], NA_SUMMON);
+    WHY("ミルク色の夢", ["c2", "c3"], NA_SUMMON);
+    WHY("革命の萌芽", ["c0", "c1", "a0.0", "a1.1"], NA_SUMMON);
+    WHY("鹿の声", ["c1"], NA_NONUM);
+    WHY("メリーサプライズ", ["c1", "c2"], NA_NONUM);
+    WHY("メリーサプライズ", ["a1.0"], NA_ATKDOWN);
+    WHY("千変万花", ["a1.0"], NA_NONUM);
+    WHY("惹かれ合う星", ["c2"], NA_NONUM);
+    WHY("明日へと続く物語", ["a0.1"], NA_NONUM);
+    // 火力に関係しない文（被ダメージの減少・シールド・SP・重複を得る条件の説明）
+    L.forEach(r => {
+      const fx = S.LR_FX[r.id];
+      if (!fx || !fx.auto) return;
+      [...fx.core, ...fx.assists.flatMap(a => a.items)].forEach(it => {
+        if (!it.skip || it.why) return;
+        const t = it.txt(6) || "";
+        if (/被ダメージが[\d.]+%減少|シールドを|SPを|獲得する$|付与する$|リセットされる$|追加効果を得る$|^チーム内の水属性巡遊者のスキルダメージを与えた時/.test(t)) it.why = "info";
+      });
+    });
+  })();
+
   // 音符のレベルから、アシストの発動Lv（0=未発動）を決める。Lv n の条件は 全ての音符が base + 15×(n−1) 以上
   S.lrAssistLv = (notes, a) => {
     for (let n = 5; n >= 1; n--) {
@@ -186,6 +306,8 @@
       else if (e.k === "critDmgSkill") a.mods.push({ k: "critDmg", v, tags: null, ht: "skill", cond: null });
       else if (e.k === "takenSkill") a.takenSkill *= 1 + v;
       else if (e.k === "takenBasic") a.takenBasic = (a.takenBasic || 1) * (1 + v);
+      else if (e.k === "takenUlt") a.takenUlt = (a.takenUlt || 1) * (1 + v);
+      else if (e.k === "takenMark") a.takenMark = (a.takenMark || 1) * (1 + v);
       else if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; }
       else if (e.k === "mark") a.markAdd += v;
       else if (a[e.k] != null) a[e.k] += v;

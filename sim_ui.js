@@ -574,11 +574,11 @@
       const item = (key, it, lv, mul) => {
         let txt = typeof it.txt === "function" ? it.txt(lv) : it.txt;
         if (mul && mul !== 1) txt = txt.replace(/\+([0-9.]+)%/g, (m0, n) => "+" + Math.round(+n * mul * 100) / 100 + "%");   // 手で入れたロスレコの突破
-        if (it.skip) return `<div style="margin:3px 0;color:var(--muted)">${esc(txt)} <span class="tag-ng">計算に未対応</span></div>`;
+        if (it.skip) return `<div style="margin:3px 0;color:var(--muted)">${esc(txt)} ${it.why === "info" ? '<span class="muted">（火力に関係しない）</span>' : `<span class="tag-ng"${it.why ? ` title="${esc(it.why)}"` : ""}>計算に未対応</span>`}</div>`;
         const stk = (it.e || []).find(e => e.stk > 1);
         const isOn = (G.lrOn || {})[key] == null ? !it.off : (G.lrOn || {})[key];
         const tog = it.off ? ` 反映 <input type="checkbox" data-p="lrOn.${key}" data-t="b"${isOn ? " checked" : ""}>` : (it.need ? ` <span class="muted">条件: ${(S.LR_COUNTS.find(c => c.key === it.need[0]) || {}).label} が ${it.need[1]} 以上</span>` : (it.n ? ` <span class="muted">数: ${(S.LR_COUNTS.find(c => c.key === it.n) || {}).label}</span>` : ` <span class="tag-ok">常時</span>`));
-        return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}</div>`;
+        return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}${it.note ? ` <span class="muted">（${esc(it.note)}）</span>` : ""}</div>`;
       };
       const rk = S.lrRankOf(G, id);
       const rankSel = rk.can ? ` <span class="muted">突破${S.lrRoman(rk.rank)}${rk.r0 ? `（画面で確かめた値は突破${S.lrRoman(rk.r0)}。ほかの突破はWikiの伸び方で計算）` : ""}</span>` : "";

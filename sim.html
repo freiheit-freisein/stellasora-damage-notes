@@ -79,6 +79,9 @@
   .hint-tip::before { content: "？"; margin-right: 2px; opacity: .7; }
   .hint-pop { display: none; position: absolute; left: 0; top: calc(100% + 6px); z-index: 50; width: 360px; padding: 8px 10px; font-size: 12px; font-weight: 400; line-height: 1.6; color: #fff; background: #333a4d; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
   .hint-tip:hover .hint-pop, .hint-tip:focus .hint-pop { display: block; }
+  .beta { position: relative; }
+  .beta .hint-pop { width: 400px; }
+  .beta:hover .hint-pop, .beta:focus .hint-pop { display: block; }
   .tag-ng { font-size: 11px; background: var(--pink-soft); color: var(--text); border-radius: 999px; padding: 0 8px; font-weight: 700; margin-left: 4px; }
   /* 結果 */
   .res-row { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 10px; margin-bottom: 10px; }
@@ -472,7 +475,7 @@
 </div></nav>
 <header class="site-header"><div class="wrap">
   <svg class="logo-star" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 1.5C12.8 8 16 11.2 22.5 12 16 12.8 12.8 16 12 22.5 11.2 16 8 12.8 1.5 12 8 11.2 11.2 8 12 1.5z"></path></svg>
-  <h1 class="logo-h1"><span class="logo-ja">巡遊者の計算ノート</span><span class="logo-en">FOR STELLA SORA</span></h1><span class="beta" title="β版：データや計算が間違っている可能性があります。気づいたことは「報告」から教えてください">β版</span>
+  <h1 class="logo-h1"><span class="logo-ja">巡遊者の計算ノート</span><span class="logo-en">FOR STELLA SORA</span></h1><span class="beta" tabindex="0">β版<span class="hint-pop">データや計算が間違っている可能性があります。気づいたことは「報告」から教えてください。<br><b>計算に未対応のもの</b><br>・ロスレコの従者ダメージアップ<br>・数値の書かれていないロスレコの効果（斥力・賛歌・残り香・花宴・冒険心など）<br>・敵の攻撃力の低下</span></span>
   <span style="flex:1"></span>
   <div class="topbar" id="topbar"></div>
 </div></header>

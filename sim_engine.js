@@ -281,6 +281,7 @@
       if (type === "mark") taken *= ag.takenMark * (ag.markMult || 1);
       if (type === "skill") taken *= ag.takenSkill;
       if (type === "basic") taken *= ag.takenBasic || 1;
+      if (type === "ult") taken *= ag.takenUlt || 1;
       (S.DEFAULT_ENEMY_TRAITS[G.enemy] || []).forEach(tr => { if (traits[tr.id] && tr.ht.indexOf(type) >= 0) taken *= tr.x; });   // 敵の特性
       const dd = enemyD(en, c.el, st.pen, G);
       const markX = type === "mark" && c.id === "noya" ? (en.markX || 1) : 1;   // セイナ(原点)の印だけの別枠。ほかの印にはかからない（グレイの地の印で実測）
