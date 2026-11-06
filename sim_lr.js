@@ -31,6 +31,7 @@
     { key: "yuuzu", label: "夕涼みの光属性ダメージの重複数（印の発動回数）", max: 5 },
     { key: "merchen", label: "メルヘンなサンセット：追加の重複数", max: 3 },
     { key: "kaisetsu", label: "回折の数", max: 6 },
+    { key: "shinwa", label: "惹かれ合う星：親和力の数", max: 99, noMax: true },   // 上限はゲームで未確認なので「最大」は出さない
   ];
 
   // e: { k, v(数 or Lv→数), to: main/sup/lux/all, n: 数の入力のキー, txt }。off=true は既定でオフの条件付き効果。
@@ -102,6 +103,14 @@
     addRec({ id: r.id, name: r.name, rarity: r.rarity, element: r.element, level: 90, levelMax: 90, stats: r.stats, core: { name: r.coreName, rank: "?" }, sub: { startNotes: r.sub }, auto: true });
     S.LR_FX[r.id] = autoFx(r);
   });
+  // 惹かれ合う星（w45）: Wikiの取り込みで外れていた「親和力1につき」の2つを、親和力の数の入力で入れる（値はWikiの説明文のまま）
+  (fx => {
+    if (!fx) return;
+    const pick = (arr, lv) => arr[Math.min(lv, arr.length) - 1];
+    const c1 = fx.core[1], a0 = fx.assists.find(a => a.id === "a0"), i1 = a0 && a0.items[1];
+    if (c1) Object.assign(c1, { skip: false, n: "shinwa", e: [{ k: "W", v: lv => pick([0.03, 0.03, 0.03, 0.03, 0.03, 0.06], lv), to: "main" }] });
+    if (i1) Object.assign(i1, { skip: false, n: "shinwa", e: [{ k: "critDmg", v: lv => pick([0.02, 0.02, 0.02, 0.02, 0.04], lv), to: "main" }] });
+  })(S.LR_FX.w45);
 
   // 音符のレベルから、アシストの発動Lv（0=未発動）を決める。Lv n の条件は 全ての音符が base + 15×(n−1) 以上
   S.lrAssistLv = (notes, a) => {
