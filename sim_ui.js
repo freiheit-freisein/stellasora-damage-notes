@@ -214,6 +214,7 @@
         <div class="stp-list">${lvRow(id, "basic", "通常攻撃")}${lvRow(id, "main", "主力スキル")}${lvRow(id, "support", "支援スキル")}${lvRow(id, "ult", "必殺技", "11〜は推定")}
           <div class="stp-row"><span class="stp-lab">信頼ボーナス</span>${stepper(`${p}.trustLv`, 0, 99, 0)}</div></div>
         <div class="ch-btns">${nb("heart", "心相", sm.heart)}${nb("emb", "徽章", sm.emb)}${nb("pot", "素質", sm.pot)}${nb("add", "その他", sm.add)}</div>
+        <div class="ch-clr">${V.clrSure === id ? `<span class="muted">${esc(c.jp)}の入力を初期値に戻します</span><button class="btn-add" data-act="chclr-no">やめる</button><button class="btn-add pri" data-act="chclr-ok:${id}">クリアする</button>` : `<button class="btn-add" data-act="chclr:${id}" title="スキルLv・信頼・心相・徽章・素質・その他・直接入力を、初期値に戻します">この巡遊者の入力をクリア</button>`}</div>
         ${cardsHtml(id)}
       </div>`;
     };
@@ -1181,6 +1182,15 @@
     if (!t) return;
     const a = t.getAttribute("data-act");
     if (a.indexOf("panel:") === 0) { V.panel = a.slice(6); V.pick = null; V.lrPick = null; renderAll(); return; }
+    // 巡遊者の入力をクリア（2回押し）。保存されていた値がおかしいとき用
+    if (a.indexOf("chclr:") === 0) { V.clrSure = a.slice(6); renderAll(); return; }
+    if (a === "chclr-no") { V.clrSure = null; renderAll(); return; }
+    if (a.indexOf("chclr-ok:") === 0) {
+      const id = a.slice(9);
+      G.chars[id] = defChar(id);
+      if (G.skOn) Object.keys(G.skOn).forEach(k => { if (k.indexOf(id + ":") === 0) delete G.skOn[k]; });
+      V.clrSure = null; renderAll(); return;
+    }
     if (a.indexOf("tf:") === 0) { V.tilesFor = a.slice(3); renderAll(); return; }
     if (a.indexOf("drill:") === 0) {
       const k = a.slice(6), phone = window.matchMedia("(max-width: 860px)").matches;
