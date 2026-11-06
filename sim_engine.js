@@ -203,7 +203,8 @@
       e.applied.push("ウィローの素質");
     }
     if (c.id === "nazuka" || c.id === "eleanor") {
-      const ctx = { sup: { nazuka: inTeam("nazuka") ? (G.chars.nazuka.sup || {}) : {}, eleanor: inTeam("eleanor") ? (G.chars.eleanor.sup || {}) : {} }, willowPots: {} };
+      // エレノアの素質は data/spec_user.js（素質の表）で計算する。ここでは、ナツカの素質と、エレノアに乗るナツカのチーム効果だけ
+      const ctx = { sup: { nazuka: inTeam("nazuka") ? (G.chars.nazuka.sup || {}) : {}, eleanor: {} }, willowPots: {} };
       const md = supMods(c.id, ctx);
       e.atkPct += md.atkPct; e.W += md.W; e.Bs += md.Bs; e.taken *= md.taken; e.hit = Object.assign(e.hit, md.hit); e.count = md.count; e.extras = md.extras;
       e.applied.push("素質(検証済み分)");
@@ -250,7 +251,7 @@
       const mh = (hid && ef.hit[hid]) || {};
       const tags = h.tags || [];
       // タグで指定された効果（長剣・光刃など）
-      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0, wAdd = 0;
+      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0, wAdd = 0, aAdd = 0;
       const man = st.man || {};
       ag.mods.forEach(mo => {
         if (mo.tags && !mo.tags.some(t => tags.indexOf(t) >= 0)) return;
@@ -262,13 +263,14 @@
         else if (mo.k === "critDmg") { if (!(man.critDmg && typeLevel)) cdAdd += mo.v; }
         else if (mo.k === "Bs" && type === "skill") bAdd += mo.v;
         else if (mo.k === "Bb" && type === "basic") bAdd += mo.v;
-        else if (mo.k === "W") wAdd += mo.v;   // 特定の攻撃だけの属性ダメージ（例: チトセの通常攻撃の6撃目だけ）
+        else if (mo.k === "W") wAdd += mo.v;
+        else if (mo.k === "atkPctHit") aAdd += mo.v;   // そのヒットだけの攻撃力%（例: エレノアのドローン）   // 特定の攻撃だけの属性ダメージ（例: チトセの通常攻撃の6撃目だけ）
       });
       let refVal;
       if (c.ref === "hp") refVal = st.hp;
-      else if (man.atk) refVal = st.atk * (1 + (mh.atkPctHit || 0));
-      else if (st.mode === "auto") refVal = st.baseAtk * (1 + st.atkPct + ef.atkPct + (mh.atkPctHit || 0));   // 素質由来の攻撃力%を足す
-      else refVal = st.atk * (1 + ef.atkPct + (mh.atkPctHit || 0));
+      else if (man.atk) refVal = st.atk * (1 + (mh.atkPctHit || 0) + aAdd);
+      else if (st.mode === "auto") refVal = st.baseAtk * (1 + st.atkPct + ef.atkPct + (mh.atkPctHit || 0) + aAdd);   // 素質由来の攻撃力%を足す
+      else refVal = st.atk * (1 + ef.atkPct + (mh.atkPctHit || 0) + aAdd);
       const W = 1 + st.elemAdd + (man.elem ? 0 : ef.W) + (mh.W || 0) + wAdd;
       let B;
       if (type === "basic") B = 1 + st.basicAdd + (man.basic ? 0 : ef.Bb) + (mh.Bb || 0) + bAdd;
@@ -301,6 +303,7 @@
   // ---- 全体 ----
   // G = { team:{main,s1,s2}, recordLv, enemy, traits, notes, lrMain, lrSub, lrManual, other, chars:{id:cs} }
   function calcTeam(G) {
+    if (S.migrateSup) S.migrateSup(G);   // エレノアの前の入力（sup）を読み替える
     G.enemyObj = mergeEnemy(S.ENEMIES.find(x => x.id === G.enemy) || S.ENEMIES[0], G.enemyOv);
     const team = [G.team.main, G.team.s1, G.team.s2];
     const out = { team: {}, G };

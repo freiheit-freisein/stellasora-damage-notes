@@ -147,6 +147,22 @@ window.SIM = window.SIM || {};
     if (!sp.txt) sp.txt = sp.e && sp.e.length ? summary(sp.e) : "火力に影響しない";
   }));
   S.POT_SPEC = SPEC;
+  // エレノアの素質は、以前は支援用の別の表（data_sup.js の SUP_POTS・入力は chars.eleanor.sup）で計算していた。
+  // 今はほかの巡遊者と同じ表（data/spec_user.js・入力は pots2）なので、前の入力（保存・共有コード）を読み替える（2026-11-06）
+  S.migrateSup = G => {
+    const cs = G && G.chars && G.chars.eleanor;
+    if (!cs || !cs.sup || !Object.keys(cs.sup).length) return;
+    cs.pots2 = cs.pots2 || {}; cs.pon = cs.pon || {}; cs.pstk = cs.pstk || {};
+    ((window.SUP_POTS || {}).eleanor || []).forEach(x => {
+      const s = cs.sup[x.id];
+      if (!s) return;
+      const key = S.potKey(x.en);
+      if (+s.lv > 0 && !(+cs.pots2[key] > 0)) cs.pots2[key] = x.core ? 1 : +s.lv;
+      if (s.on != null && cs.pon[key] == null) cs.pon[key] = !!s.on;
+      if (s.stk != null && s.stk !== "" && cs.pstk[key] == null) cs.pstk[key] = +s.stk;
+    });
+    cs.sup = {};
+  };
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
 
   const last = a => a[a.length - 1];
@@ -270,7 +286,7 @@ window.SIM = window.SIM || {};
         if (e.k === "markMult") { a.markMult *= 1 + v; return; }   // 印ダメージの別枠（印ダメージ+の足し算とは別に掛ける）
         if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
         if (e.k === "takenBasic") { a.takenBasic = (a.takenBasic || 1) * (1 + v); return; }
-        if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || ((e.tags || e.grp) && (e.k === "Bs" || e.k === "Bb" || e.k === "W"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: e.cond || null }); return; }
+        if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || ((e.tags || e.grp) && (e.k === "Bs" || e.k === "Bb" || e.k === "W" || e.k === "atkPctHit"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: e.cond || null }); return; }
         if (e.k === "mark") { a.markAdd += v; return; }
         if (a[e.k] != null) a[e.k] += v;
       });
@@ -329,10 +345,11 @@ window.SIM = window.SIM || {};
   S.potNums = numsOf;
   // 計算に使っている中身を、そのLvの値つきの短い文にする（素質カードの「計算: …」）
   const KJ = { W: el => el + "属性ダメージ", Bs: "スキルダメージ", Bb: "通常攻撃ダメージ", Bu: "必殺技ダメージ", mark: "印ダメージ", markMult: "印ダメージ（別枠の掛け算）",
-    atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ",
+    atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）" };
-  const TAGJ = { wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃" };
-  const TOJ = { all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー" };
+  const TAGJ = { wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
+    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射" };
+  const TOJ = { all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", sup: "支援の2人" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
   S.TAGJ = TAGJ; S.HTJ = HTJ;

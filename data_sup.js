@@ -27,6 +27,7 @@ window.SUP_POTS = {
     { id: "aeolus", en: "Aeolus's Blessing", jp: "禊の風", effects: [{ k: "W", num: 0 }], on: false, note: "必殺技を使った後18秒、風ダメージ上昇" },
     { id: "maelstrom", en: "Maelstrom", jp: "一陣の雄風", effects: [{ k: "taken", num: 1, stk: 8, team: true }], on: false, note: "必殺技の竜巻が当たるごとに敵の風被ダメージ（18秒・8重）" },
   ],
+  // エレノア: 計算ページ（/sim）は 2026-11-06 から data/spec_user.js の表で計算する。この表は、前の入力（chars.eleanor.sup）の読み替え（sim_pots.js の migrateSup）と、古い計算ページ（calc.js）で使う
   eleanor: [
     { id: "chain", en: "Chain Detonation", jp: "ペイントバースト", core: true, effects: [{ k: "critRate", num: 0, hit: "jump" }], note: "爆発の会心率+20%。爆発回数の増加は未反映" },
     { id: "seismic", en: "Seismic Spread", jp: "キャンバス拡張", core: true, effects: [{ k: "critDmg", num: 0, hit: "jump" }, { k: "mult", fixed: 0.12, stk: 9, hit: "jump" }], verified: "会心ダメージ+24%・爆発ごとの倍率+12%×9（冒険の彩りと同じ枠で加算）を実測確認", note: "爆発のたびに、後続の爆発の倍率+12%（最大9重）。範囲拡大は支援が1人のときだけ" },

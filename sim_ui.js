@@ -430,7 +430,7 @@
     const tg = (t, ok) => `<span class="${ok ? "tag-ok" : "tag-ng"}">${t}</span>`;
     if (id === "willow") {
       POTENTIALS.forEach(x => out.push({ name: x.jp, en: x.jp, core: !!x.core, lv: +((cs.pots || {})[x.id] || 0), path: `${p}.pots.${x.id}`, desc: x.text, tags: [], ctl: "", grp: "", bonus: 0 }));
-    } else if (id === "nazuka" || id === "eleanor") {
+    } else if (id === "nazuka") {
       SUP_POTS[id].forEach(x => out.push({ name: x.jp, en: x.jp, core: !!x.core, lv: +(((cs.sup || {})[x.id] || {}).lv || 0), path: `${p}.sup.${x.id}.lv`, desc: x.note || x.verified || "",
         tags: [x.verified ? tg("実測一致", 1) : tg("未検証")], ctl: x.on === false ? `<label class="pz-c">条件を満たす ${inp(`${p}.sup.${x.id}.on`, { chk: 1 })}</label>` : "", grp: "", bonus: 0 }));
     } else {
@@ -497,7 +497,7 @@
     const normSec = `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
       ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
     const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「重複数が最大のとき」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（重複数は最大）も乗ります。"
-      : (id === "nazuka" || id === "eleanor") ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
+      : id === "nazuka" ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
       : S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「エネミー」で切り替えます。"
       : "この巡遊者の素質の効果は、まだ計算に入れていません。反映したい効果は「その他」に手で入れられます。";
     return `<div class="pz">

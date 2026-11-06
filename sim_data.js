@@ -25,8 +25,8 @@ window.SIM = window.SIM || {};
     { id: "eleanor", en: "Eleanor", jp: "エレノア", el: "風", ref: "atk", role: "バランサー", trust0: 20, talent0: 0, talentBonus: {},
       hits: {
         basic: [H(0, 0, 1, "basic", "1撃目"), H(0, 1, 5, "basic", "2撃目"), H(0, 2, 5, "basic", "3撃目"), H(0, 3, 6, "basic", "4撃目"), H(0, 4, 7, "basic", "5撃目")],
-        main: [H(1, 0, 2, "skill", "回転"), H(1, 1, 1, "skill", "歩哨（1回分）")],
-        support: [H(2, 0, 9, "skill", "跳びはね爆発", "jump"), H(2, 1, 1, "basic", "ドローンの弾（通常攻撃扱い・1発）", "drone")],
+        main: [H(1, 0, 2, "skill", "回転"), H(1, 1, 1, "skill", "歩哨（1回分）", "vigil", ["vigil"])],   // 歩哨＝警戒（ワイドブルーム・令嬢戦術：嵐花の対象）
+        support: [H(2, 0, 9, "skill", "跳びはね爆発", "jump", ["jump"]), H(2, 1, 1, "basic", "ドローンの弾（通常攻撃扱い・1発）", "drone", ["drone"])],
         ult: [H(3, 0, 14, "ult", "ロケット弾")],
       } },
     { id: "noya", en: "Firstlight Noya", jp: "セイナ(原点)", el: "光", ref: "hp", role: "ヴァンガード", trust0: 18, talent0: 20, talentBonus: { basic: 0.021, skill: 0.021, elem: 0.015, crit: 0.03 },
