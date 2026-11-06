@@ -237,6 +237,7 @@ window.SIM = window.SIM || {};
       if (to === "lux") return team.filter((id, i) => chs[i].el === el);
       if (to === "all") return team.slice();
       if (to === "main") return [team[0]];
+      if (to === "sup") return team.slice(1);   // 支援の巡遊者（2人）
       if (to === "luxVers") return team.filter((id, i) => chs[i].el === el && chs[i].role === "バランサー");
       if (to === "enemy") return e && e.k !== "taken" ? team.slice() : team.filter((id, i) => chs[i].el === ((e && e.el) || el));   // 属性の被ダメージ(taken)はその属性の味方だけ、スキル・通常・印の被ダメージは全員
       return [oid];

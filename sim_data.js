@@ -72,6 +72,12 @@ window.SIM = window.SIM || {};
     // 主力スキルの3つ目（毎秒のヒット）は「鉄の牢獄」（肉を喰む鎖・緋色の私刑の対象）
     if (c.hits.main[2]) c.hits.main[2].tags = (c.hits.main[2].tags || []).concat("cage");
   });
+  // ナズナ: 素質の対象を分けるタグ（2026-11-06、素質の確認を入れるため）。主力スキル＝ぬいぐるみペンギン、支援スキル＝ペンギン像・ハートアロー・掃射（スキルの説明文）
+  patchCh("nazuna", c => {
+    c.hits.main.forEach(h => { if (h.n === 0) { h.name = "ぬいぐるみペンギン"; h.tags = (h.tags || []).concat("penguin"); } });
+    const nm = { 0: ["ペンギン像（×7）", "statue", "sStatue"], 2: ["ハートアロー", "heart", "sHeart"], 3: ["掃射（×6）", "sweep", "sSweep"] };
+    c.hits.support.forEach(h => { const x = nm[h.n]; if (x) { h.name = x[0]; h.tags = (h.tags || []).concat(x[1]); h.id = x[2]; } });
+  });
   // チトセ: 素質の対象を分けるタグ（2026-11-06、素質の確認を入れるため）
   patchCh("chitose", c => {
     // 通常攻撃: 1〜5撃目（影隠れの型の瞬刃）と、6撃目＝最終撃（蛟龍の剣舞）

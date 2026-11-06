@@ -9,6 +9,123 @@ window.POT_CHECK = {
   "Wobble Dance": {
    "st": "ok",
    "at": "2026-10-29"
+  },
+  "Roll the Dice": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Cuddle of Terror": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Cutie's Rally": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Beat Maestro": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Clean Sweep": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Fill the Gap": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Focus Fire": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Swiftstep": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Wily Wonder": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Operation: Pandemonium": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Balloonado": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Rocket Cart": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Bold Assertion": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Feel the Beat": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Arrow of Affection": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Jubilant Spin": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Feather Frenzy": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Twinkle Toss": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Rain of Passion": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Love's True Strike": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Honeyed Arrow": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Lucky Drop": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Progressive Jackpot": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Double Delight": {
+   "st": "ok",
+   "at": "2026-11-06"
+  },
+  "Graceful Turn": {
+   "st": "diff",
+   "at": "2026-11-06",
+   "g": {
+    "0": {
+     "1": "14.4"
+    },
+    "1": {
+     "1": "10"
+    }
+   }
+  },
+  "Sweetheart Bloom": {
+   "st": "diff",
+   "at": "2026-11-06",
+   "g": {
+    "0": {
+     "1": "32"
+    }
+   }
   }
  },
  "Chitose": {
