@@ -17,6 +17,7 @@
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "巡遊者の計算ノート", "alternateName": "巡遊者の計算ノート FOR STELLA SORA", "url": "https://sim.stella-tool.com/sim", "description": "ステラソラ（Stella Sora）の巡遊者のダメージを、素質・徽章・ロスレコ・音符まで入れて計算する非公式ツール。ビルドを短いURLで共有できます。", "applicationCategory": "GameApplication", "operatingSystem": "Web", "inLanguage": "ja", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"}}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="theme.js"></script>
 <link rel="stylesheet" href="common.css">
 <style>
   body { padding-bottom: 20px; }
@@ -43,10 +44,10 @@
   .sel-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0; }
   .sbtn { min-height: 38px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--pink-line); background: var(--pink-soft); font-weight: 700; color: var(--text); cursor: pointer; }
   .sbtn:hover { background: #f8d3db; }
-  .sbtn.on { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+  .sbtn.on { background: var(--indigo-fill); color: #fff; border-color: var(--indigo-fill); }
   .obtn { min-height: 34px; padding: 0 12px; border-radius: 10px; border: 2px solid #E3B27A; background: #FDEBD3; font-weight: 700; cursor: pointer; width: 100%; }
   .obtn:hover { background: #fbddb4; }
-  .obtn.on { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+  .obtn.on { background: var(--indigo-fill); color: #fff; border-color: var(--indigo-fill); }
   /* 表示エリア */
   .cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }   /* 幅が足りないときは折り返す（ステータスの表が切れないように） */
   .chcol { border: 2px solid var(--border); border-radius: 14px; padding: 10px; }
@@ -214,7 +215,7 @@
 
   /* ---- 見た目は素質ノート（プリセット共有サイト）に合わせる: 方眼の背景・白いカード・2pxの薄い枠。面は少しだけ透かす ---- */
   /* 巡遊者ノートの帯（素質ノートの style.css と同じ見た目） */
-  .notes-bar { background: var(--text); font-size: 12px; line-height: 1; }
+  .notes-bar { background: var(--ink); font-size: 12px; line-height: 1; }
   .notes-bar .wrap { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
   .notes-bar a { flex: none; display: block; padding: 8px 10px; color: #C5CAE3; font-weight: 700; text-decoration: none; white-space: nowrap; }
   .notes-bar a:hover { color: #fff; }
@@ -251,7 +252,7 @@
   .tab-grp { flex: none; align-self: center; font-size: 11px; font-weight: 700; color: var(--muted); padding: 0 4px; }
   .tab-sep ~ .tab { opacity: .75; font-size: 13px; }   /* 実測合わせの画面は、控えめに */
   .tab-sep ~ .tab[aria-selected="true"] { opacity: 1; }
-  .tab[aria-selected="true"] { background: var(--indigo); color: #fff; }
+  .tab[aria-selected="true"] { background: var(--indigo-fill); color: #fff; }
   .tab[aria-selected="true"] .te { color: var(--border); }
   .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .subnav .tabs { border: 0; padding: 0; }
@@ -416,6 +417,51 @@
   .about .fine { grid-column: 1 / -1; color: #C5CAE3; font-size: 12px; }
   .about .fine a { color: #fff; }
   @media (max-width: 860px) { .about .wrap { grid-template-columns: 1fr; gap: 16px; } }
+  /* ===== ダークモード（色の名前で書けていない所を、暗い色に置き換える） ===== */
+  /* ダメージのタイルは、ダークでは隣のタイルと同じ色にする（赤みの背景は濁って見えるため） */
+  :root[data-theme="dark"] { --dmg-soft: var(--surface-soft); --dmg-line: var(--border-strong); }
+  [data-theme="dark"] .notes-bar a:not([aria-current]):not(.nb-home):not(:hover) { color: #DADDF0; }
+  [data-theme="dark"] .cmp.up { color: var(--ok); }
+  [data-theme="dark"] [style*="#33386A"] { color: var(--text) !important; }
+  [data-theme="dark"] [style*="#C0392B"] { color: var(--danger) !important; }
+  [data-theme="dark"] .site-header { background: rgba(19,21,43,.92); }
+  [data-theme="dark"] .panel { background: rgba(27,30,56,.94); box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+  [data-theme="dark"] .mstrip { background: rgba(19,21,43,.95); }
+  [data-theme="dark"] .dlg { background: var(--surface); box-shadow: 0 16px 48px rgba(0,0,0,.5); }
+  [data-theme="dark"] .dlg::backdrop { background: rgba(0,0,0,.55); }
+  [data-theme="dark"] .unitbar button, [data-theme="dark"] .chcol, [data-theme="dark"] .btn-add,
+  [data-theme="dark"] select, [data-theme="dark"] input[type=number], [data-theme="dark"] input[type=text],
+  [data-theme="dark"] .pz-core, [data-theme="dark"] .pz-norm, [data-theme="dark"] .pz-lv, [data-theme="dark"] .stp,
+  [data-theme="dark"] .help-btn, [data-theme="dark"] .pk, [data-theme="dark"] .note-cell, [data-theme="dark"] .mbar,
+  [data-theme="dark"] .topbar input[type=text], [data-theme="dark"] .topbar select, [data-theme="dark"] .ld-line input[type=text], [data-theme="dark"] .ld-row input[type=text] { background: var(--surface); color: var(--text); }
+  [data-theme="dark"] .pz-lv { color: var(--indigo); }
+  [data-theme="dark"] .pz-lv.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  [data-theme="dark"] .unitbar button.on, [data-theme="dark"] .pz-cnt.full, [data-theme="dark"] .pz-sw.on, [data-theme="dark"] .pk-slot, [data-theme="dark"] .cmp-on,
+  [data-theme="dark"] .sbtn.on, [data-theme="dark"] .obtn.on { background: var(--indigo-fill); color: #fff; border-color: var(--indigo-fill); }
+  [data-theme="dark"] .pz-cnt { background: var(--surface-soft); color: var(--indigo); }
+  [data-theme="dark"] .pz-desc { color: #E4E6F6; }
+  [data-theme="dark"] .pz-core.on { background: #352C12; border-color: #E0AE2E; }
+  [data-theme="dark"] .pz-core.on .pz-desc { border-top-color: #5C4E22; }
+  [data-theme="dark"] .pz-calc { background: #262C55; }
+  [data-theme="dark"] .pz-sw span { background: #F8F9FF; }
+  [data-theme="dark"] .pk.on, [data-theme="dark"] .pk-ch.on { background: var(--surface-on); }
+  [data-theme="dark"] .tile.pink:hover { background: var(--border); }
+  [data-theme="dark"] .sbtn:hover, [data-theme="dark"] .slotbtn.on, [data-theme="dark"] .slotbtn:hover { background: #4A2638; }
+  [data-theme="dark"] .obtn { background: #3A2A16; border-color: #A9783E; color: var(--text); }
+  [data-theme="dark"] .obtn:hover { background: #4A3519; }
+  [data-theme="dark"] .stp-b:hover { background: var(--border); }
+  [data-theme="dark"] .tab[aria-selected="true"] .tn { background: var(--surface); }
+  [data-theme="dark"] .tab[aria-selected="true"] .te { color: #E4E6F6; }
+  [data-theme="dark"] .pot.core { background: #2E1B28; }
+  [data-theme="dark"] .betabar { background: #3A3214; }
+  [data-theme="dark"] .betabar .closebtn:hover { background: rgba(255,255,255,.08); }
+  [data-theme="dark"] .xbtn { background: #F8F9FF !important; color: #1E2250 !important; border-color: #F8F9FF !important; }
+  [data-theme="dark"] .log-c.log-pot, [data-theme="dark"] .log-c.log-lr { background: #3A3214; color: #F2D98A; }
+  [data-theme="dark"] .decin b.up, [data-theme="dark"] .wide .msg.ng { color: var(--danger); }
+  [data-theme="dark"] .wide .msg.ok { color: var(--link); }
+  [data-theme="dark"] .drill-hint { color: var(--pink-line); }
+  [data-theme="dark"] .hint-pop { background: #2A2F55; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+  [data-theme="dark"] .box[style*="#FFF4F2"] { background: #3A1E22 !important; }
 </style>
 </head>
 <body class="m-in">
