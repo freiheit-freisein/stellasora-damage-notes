@@ -100,6 +100,7 @@
           cs.pots2[S.potKey(x.name)] = x.core ? (p.lv === 0 ? 0 : 1) : Math.max(0, Math.round(+(p.lv != null ? p.lv : 1)));
           n++;
         });
+        if (c.id === "willow" && i === 0) { cs.pots = {}; S.willowFromPots2(cs, true); }   // ウィローの主力の素質は pots で計算する
         if (n) got.push("素質 " + n + "件");
       }
       if (Array.isArray(m.emblems) && m.emblems.length) {

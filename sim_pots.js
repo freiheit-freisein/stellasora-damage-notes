@@ -164,6 +164,31 @@ window.SIM = window.SIM || {};
     cs.sup = {};
   };
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
+  // ウィロー（水着）の主力の素質は、前からの入力（chars.willow.pots・data.js の POTENTIALS。ゲームの画面と合わせて確かめた計算）を使う。
+  // プリセットコード・ビルドの読み込みは pots2（英語名のキー）に入るので、pots に読み替える。pots2 と両方を計算に入れると2重になる（2026-11-07）
+  const willowMap = () => {
+    const t = TREKKERS.find(x => x.en === "Suntide Willow"), ja = (window.POTENTIAL_JA || {})["Suntide Willow"] || {};
+    return ((t && t.potentials.main) || []).flatMap(g => g.potentials).map(p => ({ en: p.name, x: (window.POTENTIALS || []).find(q => q.jp === ja[p.name]) })).filter(m => m.x);
+  };
+  // over=true: 読み込んだ値で上書き（プリセット・ビルドの読み込み）。false: 前の入力にない（0の）ものだけ埋める（保存・共有コードに両方入っていたとき）
+  S.willowFromPots2 = (cs, over) => {
+    if (!cs || !cs.pots2) return;
+    cs.pots = cs.pots || {};
+    willowMap().forEach(({ en, x }) => {
+      const key = S.potKey(en), v = cs.pots2[key];
+      if (v == null) return;
+      const lv = x.core ? (+v > 0 ? 1 : 0) : Math.max(0, Math.round(+v || 0));
+      if (over || !(+cs.pots[x.id] > 0)) cs.pots[x.id] = lv;
+      delete cs.pots2[key];
+    });
+  };
+  S.migrateWillow = G => S.willowFromPots2(G && G.chars && G.chars.willow, false);
+  // プリセットコードを作るとき用: pots → pots2 のキー
+  S.willowPots2 = cs => {
+    const o = Object.assign({}, (cs && cs.pots2) || {});
+    willowMap().forEach(({ en, x }) => { o[S.potKey(en)] = +(((cs && cs.pots) || {})[x.id] || 0); });
+    return o;
+  };
 
   const last = a => a[a.length - 1];
   const numsOf = (c, name) => {
@@ -293,7 +318,7 @@ window.SIM = window.SIM || {};
     };
     team.forEach((oid, oi) => {
       const c = chs[oi], cs = G.chars[oid], spec = SPEC[oid];
-      if (!spec) return;
+      if (!spec || oid === "willow") return;   // ウィローは前からの入力（pots）で計算する（sim_engine.js）。ここでも足すと2重になる
       const roleT = TREKKERS.find(x => x.en === c.en), roleList = new Set();
       ((roleT && roleT.potentials && roleT.potentials[oi === 0 ? "main" : "support"]) || []).forEach(g => g.potentials.forEach(x => roleList.add(x.name)));   // 主力のときは主力の素質だけ、支援のときは支援の素質だけ
       Object.keys(spec).forEach(name => {

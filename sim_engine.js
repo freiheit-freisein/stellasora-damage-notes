@@ -305,6 +305,7 @@
   // G = { team:{main,s1,s2}, recordLv, enemy, traits, notes, lrMain, lrSub, lrManual, other, chars:{id:cs} }
   function calcTeam(G) {
     if (S.migrateSup) S.migrateSup(G);   // エレノアの前の入力（sup）を読み替える
+    if (S.migrateWillow) S.migrateWillow(G);   // ウィローの pots2（読み込みで入った分）を pots に読み替える
     G.enemyObj = mergeEnemy(S.ENEMIES.find(x => x.id === G.enemy) || S.ENEMIES[0], G.enemyOv);
     const team = [G.team.main, G.team.s1, G.team.s2];
     const out = { team: {}, G };
