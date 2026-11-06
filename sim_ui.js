@@ -209,7 +209,8 @@
       const id = G.team[k], c = chOf(id), p = `chars.${id}`, sm = charSummary(k);
       const nb = (pn, label, v) => `<button class="obtn ch-btn" data-act="panel:${pn}:${k}"><b>${label}</b><span>${v}</span></button>`;
       return `<div class="chcol${mHide(k)}" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="ch-h">${l}：${esc(c.jp)}${c.auto ? "*" : ""}</h3>
-        ${fld("巡遊者", inp(`team.${k}`, { sel: S.CH.map(x => [x.id, x.jp + (x.auto ? "*" : "")]), str: true }))}
+        ${fld("属性", `<select data-chel="${k}">${EL_ORDER.filter(el => chOfEl(el).length).map(el => `<option${el === c.el ? " selected" : ""}>${el}</option>`).join("")}</select>`)}
+        ${fld("巡遊者", inp(`team.${k}`, { sel: chOfEl(c.el).map(x => [x.id, x.jp + (x.auto ? "*" : "")]), str: true }))}
         <div class="stp-list">${lvRow(id, "basic", "通常攻撃")}${lvRow(id, "main", "主力スキル")}${lvRow(id, "support", "支援スキル")}${lvRow(id, "ult", "必殺技", "11〜は推定")}
           <div class="stp-row"><span class="stp-lab">信頼ボーナス</span>${stepper(`${p}.trustLv`, 0, 99, 0)}</div></div>
         <div class="ch-btns">${nb("heart", "心相", sm.heart)}${nb("emb", "徽章", sm.emb)}${nb("pot", "素質", sm.pot)}${nb("add", "その他", sm.add)}</div>
@@ -835,6 +836,8 @@
   // ---- ① 読込: 新しく作る（巡遊者を一覧から3人）・プリセットコード・共有コード・保存したビルド ----
   // 巡遊者の一覧は、素質ノートと同じ並び（属性ごと、その中は ★5 → ★4、それぞれ実装の新しい順）
   const EL_ORDER = ["水", "火", "風", "地", "光", "闇"];
+  // 巡遊者のドロップダウン用: その属性の巡遊者を、あいうえお順で
+  const chOfEl = el => S.CH.filter(c => c.el === el).sort((a, b) => a.jp.localeCompare(b.jp, "ja"));
   function pickList() {
     const info = c => { const t = TK(c.en) || {}; return { c, rar: t.rarity || 0, rel: t.release || "" }; };
     return EL_ORDER.map(el => ({ el, list: S.CH.filter(c => c.el === el).map(info).sort((a, b) => (b.rar - a.rar) || String(b.rel).localeCompare(String(a.rel))).map(x => x.c) })).filter(g => g.list.length);
@@ -1123,6 +1126,13 @@
     if (t.id === "enemy-cat") {
       const e = enemiesOf(t.value)[0];
       if (e) { setPath("enemy", e.id); renderAll(); }
+      return;
+    }
+    // 巡遊者の属性を変えたら、その属性の最初の巡遊者にする
+    const chel = t.getAttribute && t.getAttribute("data-chel");
+    if (chel) {
+      const x = chOfEl(t.value)[0];
+      if (x) { setPath(`team.${chel}`, x.id); renderAll(); }
       return;
     }
     // ロスレコの枠: 属性を変えたら、違う属性のロスレコは外す
