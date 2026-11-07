@@ -179,28 +179,13 @@
     const e = { atkPct: 0, W: 0, Bb: 0, Bs: 0, Bu: 0, taken: 1, takenSkill: 1, hit: {}, count: {}, extras: [], applied: [] };
     const inTeam = id => team.indexOf(id) >= 0;
     // ウィローがいるとき: チーム効果（風属性の味方に乗るもの）
-    if (c.id !== "willow" && inTeam("willow") && G.chars.willow && G.chars.willow.pots) {
+    if (c.id !== "willow" && inTeam("willow") && G.chars.willow) {   // 主力スキル・必殺技の攻撃力アップ（素質は data/spec_user.js の表で計算）
       const wc = S.CH.find(x => x.id === "willow"), wcs = G.chars.willow, wlb = S.emblemExtra(wcs.emb, wcs.embOn).lv;
-      const ctx = { willowPots: G.chars.willow.pots, willowStk: G.willowStk != null ? G.willowStk : 1, willowN: G.willowN || {}, willowFrog: G.willowFrog || 0, willowUlt: G.willowUlt || 0,
+      const ctx = { willowPots: {}, willowStk: G.willowStk != null ? G.willowStk : 1, willowN: G.willowN || {}, willowFrog: G.willowFrog || 0, willowUlt: G.willowUlt || 0,
         frogV: skillVal(wc, 1, 1, ((wcs.skillLv || {}).main || 10) + wlb.main) / 100, ultV: skillVal(wc, 3, 2, ((wcs.skillLv || {}).ult || 10) + wlb.ult) / 100 };   // バフの値はスキルLvで変わる
       const wt = willowTeam(ctx);
       e.atkPct += wt.atkPct; e.Bs += wt.skillB; e.taken *= wt.taken;
       e.applied.push("ウィローのチーム効果");
-    }
-    if (c.id === "willow") {
-      const pa = { atkPct: 0, skillB: 0, ultB: 0, frogB: 0, waterAdd: 0 };
-      const tk = { v: 1 };
-      (POTENTIALS || []).forEach(p => {
-        const lv = ((cs.pots || {})[p.id]) || 0;
-        if (!lv) return;
-        p.effects.forEach(x => {
-          const v = x.fixed != null ? x.fixed : potVal(x.vals, lv);
-          if (x.k === "taken") tk.v *= 1 + v; else pa[x.k] = (pa[x.k] || 0) + v;
-        });
-      });
-      e.atkPct += pa.atkPct; e.Bs += pa.skillB; e.Bu += pa.ultB; e.W += pa.waterAdd; e.taken *= tk.v;
-      e.hit.frog = { Bs: pa.frogB };
-      e.applied.push("ウィローの素質");
     }
     if (c.id === "nazuka" || c.id === "eleanor") {
       // エレノアの素質は data/spec_user.js（素質の表）で計算する。ここでは、ナツカの素質と、エレノアに乗るナツカのチーム効果だけ
@@ -305,7 +290,7 @@
   // G = { team:{main,s1,s2}, recordLv, enemy, traits, notes, lrMain, lrSub, lrManual, other, chars:{id:cs} }
   function calcTeam(G) {
     if (S.migrateSup) S.migrateSup(G);   // エレノアの前の入力（sup）を読み替える
-    if (S.migrateWillow) S.migrateWillow(G);   // ウィローの pots2（読み込みで入った分）を pots に読み替える
+    if (S.migrateWillow) S.migrateWillow(G);   // ウィローの前の入力（pots）を pots2 に読み替える
     G.enemyObj = mergeEnemy(S.ENEMIES.find(x => x.id === G.enemy) || S.ENEMIES[0], G.enemyOv);
     const team = [G.team.main, G.team.s1, G.team.s2];
     const out = { team: {}, G };

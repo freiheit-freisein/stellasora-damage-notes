@@ -11,7 +11,7 @@ window.SIM = window.SIM || {};
     { id: "willow", en: "Suntide Willow", jp: "ウィロー（水着）", el: "水", ref: "atk", role: "サポーター", trust0: 26, talent0: 50, talentBonus: { skill: 0.021, ult: 0.043 },
       hits: {
         basic: [H(0, 0, 3, "basic", "バブルガン 1〜3撃目"), H(0, 1, 1, "basic", "バブルガン 4撃目")],
-        main: [H(1, 0, 1, "skill", "バブルフロッグ（着地ごと）", "frog")],
+        main: [H(1, 0, 1, "skill", "バブルフロッグ（着地ごと）", "frog", ["frog"])],
         support: [H(2, 0, 1, "skill", "海上の戯れ 初撃"), H(2, 1, 1, "skill", "バブルエリア（3秒ごと・1回分）"), H(2, 2, 1, "skill", "追従バブル（1発）")],
         ult: [H(3, 0, 7, "ult", "必殺 連続攻撃"), H(3, 1, 1, "ult", "必殺 フィニッシュ")],
       } },

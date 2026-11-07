@@ -47,9 +47,9 @@
       G.team[SLOTS[i]] = c.id;
       const cs = G.chars[c.id];
       cs.pots2 = cs.pots2 || {};
+      if (c.id === "willow") cs.pots = {};   // ウィローの前の入力（pots）が残っていると、読み替えで上書きされるため消す
       map.core.forEach((name, k) => { if (name) cs.pots2[S.potKey(name)] = m.core[k] ? 1 : 0; });
       map.sub.forEach((name, k) => { if (name) cs.pots2[S.potKey(name)] = m.sub[k]; });
-      if (c.id === "willow" && i === 0) S.willowFromPots2(cs, true);   // ウィローの主力の素質は pots で計算する
       names.push(c.jp);
     });
     return names;
@@ -62,7 +62,7 @@
     const members = ids.map((id, i) => {
       const c = S.CH.find(x => x.id === id), map = (M().slots[c.en] || {})[i === 0 ? "main" : "support"], sid = idOf(c.en);
       if (!map || !sid) throw new Error("素質の対応表がない巡遊者です（" + c.jp + "）");
-      const p2 = id === "willow" && i === 0 ? S.willowPots2(G.chars[id]) : (G.chars[id].pots2 || {});
+      const p2 = G.chars[id].pots2 || {};
       const core = map.core.map(name => (name && +(p2[S.potKey(name)] || 0) > 0) ? 1 : 0);
       const sub = map.sub.map(name => Math.round(+(name && p2[S.potKey(name)]) || 0));
       const role = i === 0 ? "主力" : "支援";

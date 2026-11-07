@@ -430,9 +430,7 @@
   function potItems(k) {
     const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`, ex = emx(id), out = [];
     const tg = (t, ok) => `<span class="${ok ? "tag-ok" : "tag-ng"}">${t}</span>`;
-    if (id === "willow") {
-      POTENTIALS.forEach(x => out.push({ name: x.jp, en: x.jp, core: !!x.core, lv: +((cs.pots || {})[x.id] || 0), path: `${p}.pots.${x.id}`, desc: x.text, tags: [], ctl: "", grp: "", bonus: 0 }));
-    } else if (id === "nazuka") {
+    if (id === "nazuka") {
       SUP_POTS[id].forEach(x => out.push({ name: x.jp, en: x.jp, core: !!x.core, lv: +(((cs.sup || {})[x.id] || {}).lv || 0), path: `${p}.sup.${x.id}.lv`, desc: x.note || x.verified || "",
         tags: [x.verified ? tg("実測一致", 1) : tg("未検証")], ctl: x.on === false ? `<label class="pz-c">条件を満たす ${inp(`${p}.sup.${x.id}.on`, { chk: 1 })}</label>` : "", grp: "", bonus: 0 }));
     } else {

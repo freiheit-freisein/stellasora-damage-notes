@@ -164,30 +164,20 @@ window.SIM = window.SIM || {};
     cs.sup = {};
   };
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
-  // ウィロー（水着）の主力の素質は、前からの入力（chars.willow.pots・data.js の POTENTIALS。ゲームの画面と合わせて確かめた計算）を使う。
-  // プリセットコード・ビルドの読み込みは pots2（英語名のキー）に入るので、pots に読み替える。pots2 と両方を計算に入れると2重になる（2026-11-07）
-  const willowMap = () => {
+  // ウィロー（水着）の素質は、以前は別の表（data.js の POTENTIALS・入力は chars.willow.pots）で計算していた。
+  // 今はほかの巡遊者と同じ表（data/spec_user.js・入力は pots2）なので、前の入力（保存・共有コード）を読み替える。両方に値があれば前の入力を使う（2026-11-07）
+  S.migrateWillow = G => {
+    const cs = G && G.chars && G.chars.willow;
+    if (!cs || !cs.pots || !Object.keys(cs.pots).length) return;
     const t = TREKKERS.find(x => x.en === "Suntide Willow"), ja = (window.POTENTIAL_JA || {})["Suntide Willow"] || {};
-    return ((t && t.potentials.main) || []).flatMap(g => g.potentials).map(p => ({ en: p.name, x: (window.POTENTIALS || []).find(q => q.jp === ja[p.name]) })).filter(m => m.x);
-  };
-  // over=true: 読み込んだ値で上書き（プリセット・ビルドの読み込み）。false: 前の入力にない（0の）ものだけ埋める（保存・共有コードに両方入っていたとき）
-  S.willowFromPots2 = (cs, over) => {
-    if (!cs || !cs.pots2) return;
-    cs.pots = cs.pots || {};
-    willowMap().forEach(({ en, x }) => {
-      const key = S.potKey(en), v = cs.pots2[key];
-      if (v == null) return;
-      const lv = x.core ? (+v > 0 ? 1 : 0) : Math.max(0, Math.round(+v || 0));
-      if (over || !(+cs.pots[x.id] > 0)) cs.pots[x.id] = lv;
-      delete cs.pots2[key];
+    cs.pots2 = cs.pots2 || {};
+    ((t && t.potentials.main) || []).flatMap(g => g.potentials).forEach(p => {
+      const x = (window.POTENTIALS || []).find(q => q.jp === ja[p.name]);
+      if (!x || cs.pots[x.id] == null) return;
+      const key = S.potKey(p.name);
+      if (+cs.pots[x.id] > 0 || !(+cs.pots2[key] > 0)) cs.pots2[key] = x.core ? (+cs.pots[x.id] > 0 ? 1 : 0) : +cs.pots[x.id];
     });
-  };
-  S.migrateWillow = G => S.willowFromPots2(G && G.chars && G.chars.willow, false);
-  // プリセットコードを作るとき用: pots → pots2 のキー
-  S.willowPots2 = cs => {
-    const o = Object.assign({}, (cs && cs.pots2) || {});
-    willowMap().forEach(({ en, x }) => { o[S.potKey(en)] = +(((cs && cs.pots) || {})[x.id] || 0); });
-    return o;
+    cs.pots = {};
   };
 
   const last = a => a[a.length - 1];
@@ -279,6 +269,8 @@ window.SIM = window.SIM || {};
       if (to === "all") return team.slice();
       if (to === "main") return [team[0]];
       if (to === "sup") return team.slice(1);   // 支援の巡遊者（2人）
+      if (to === "selfNonEl") return team.filter((id, i) => id === oid || chs[i].el !== el);   // 自分と、自分と違う属性の味方（例: ウィローの砕沫の余韻）
+      if (to === "nonEl") return team.filter((id, i) => id !== oid && chs[i].el !== el);   // 自分と違う属性の味方だけ
       if (to === "luxVers") return team.filter((id, i) => chs[i].el === el && chs[i].role === "バランサー");
       if (to === "enemy") return e && e.k !== "taken" ? team.slice() : team.filter((id, i) => chs[i].el === ((e && e.el) || el));   // 属性の被ダメージ(taken)はその属性の味方だけ、スキル・通常・印の被ダメージは全員
       return [oid];
@@ -318,7 +310,7 @@ window.SIM = window.SIM || {};
     };
     team.forEach((oid, oi) => {
       const c = chs[oi], cs = G.chars[oid], spec = SPEC[oid];
-      if (!spec || oid === "willow") return;   // ウィローは前からの入力（pots）で計算する（sim_engine.js）。ここでも足すと2重になる
+      if (!spec) return;
       const roleT = TREKKERS.find(x => x.en === c.en), roleList = new Set();
       ((roleT && roleT.potentials && roleT.potentials[oi === 0 ? "main" : "support"]) || []).forEach(g => g.potentials.forEach(x => roleList.add(x.name)));   // 主力のときは主力の素質だけ、支援のときは支援の素質だけ
       Object.keys(spec).forEach(name => {
@@ -372,9 +364,9 @@ window.SIM = window.SIM || {};
   const KJ = { W: el => el + "属性ダメージ", Bs: "スキルダメージ", Bb: "通常攻撃ダメージ", Bu: "必殺技ダメージ", mark: "印ダメージ", markMult: "印ダメージ（別枠の掛け算）",
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）" };
-  const TAGJ = { wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
+  const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
     jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射" };
-  const TOJ = { all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", sup: "支援の2人" };
+  const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", sup: "支援の2人" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
   S.TAGJ = TAGJ; S.HTJ = HTJ;

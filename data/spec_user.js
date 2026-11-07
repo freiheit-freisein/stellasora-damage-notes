@@ -377,56 +377,58 @@ window.SPEC_USER = {
    "e": [
     {
      "k": "Bs",
-     "raw": 0.05
+     "n": 1,
+     "stk": 10,
+     "tags": [
+      "frog"
+     ]
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "バブル吸収ごとにフロッグのスキルダメージ +5%（最大10重＝+50%）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Rippling Radiance": {
    "done": true,
    "e": [
     {
-     "k": "extra",
-     "group": "main",
-     "name": "微震する流光",
-     "t": "skill",
-     "c": 1,
-     "edit": true,
-     "m": 146
-    },
-    {
      "k": "taken",
-     "raw": 0.04,
+     "n": 1,
      "to": "enemy",
      "stk": 4
     }
    ],
-   "txt": ""
+   "txt": "敵の水属性被ダメージ +4%（最大4重）。フロッグの周囲への水ダメージ（攻撃力146%）は計算に入れていない（前の計算と同じ）。ほかの被ダメージの効果とは足し算で計算（足し算か掛け算かはゲームで未確認）",
+   "draft": false
   },
   "Rhythmic Bubbles": {
    "done": true,
    "e": [
     {
      "k": "Bs",
-     "raw": 0.5
+     "n": 1,
+     "tags": [
+      "frog"
+     ]
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "フロッグのスキルダメージ +50%",
+   "verified": "確認済み",
+   "draft": false
   },
   "Rainbow Rebound": {
    "done": true,
    "e": [
     {
      "k": "taken",
-     "raw": 0.018000000000000002,
-     "to": "enemy",
+     "n": 2,
+     "to": "all",
      "stk": 8
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "敵の全属性被ダメージ +1.8%（最大8重。全員の攻撃に乗る）。ほかの被ダメージの効果とは足し算で計算（足し算か掛け算かはゲームで未確認）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Clustered Foam": {
    "done": true,
@@ -434,11 +436,12 @@ window.SPEC_USER = {
     {
      "k": "W",
      "n": 1,
-     "to": "all"
+     "to": "lux"
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "バブルマーク付きの敵への水属性ダメージ（水属性の全員）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Enduring Bubble": {
    "done": true,
@@ -450,8 +453,9 @@ window.SPEC_USER = {
      "stk": 5
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "敵の水属性被ダメージ（最大5重）。ほかの被ダメージの効果とは足し算で計算（足し算か掛け算かはゲームで未確認）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Dreamlike Illusion": {
    "done": true,
@@ -463,8 +467,9 @@ window.SPEC_USER = {
      "stk": 6
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "水属性の全員のスキルダメージ（最大6重）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Wavering Glow": {
    "done": true,
@@ -472,12 +477,13 @@ window.SPEC_USER = {
     {
      "k": "taken",
      "n": 1,
-     "to": "enemy",
+     "to": "all",
      "stk": 4
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "敵の全属性被ダメージ（最大4重。全員の攻撃に乗る）。ほかの被ダメージの効果とは足し算で計算（足し算か掛け算かはゲームで未確認）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Foam Echo": {
    "done": true,
@@ -485,11 +491,13 @@ window.SPEC_USER = {
     {
      "k": "atkPct",
      "n": 0,
+     "to": "selfNonEl",
      "stk": 8
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "ウィローと水属性以外の味方の攻撃力（最大8重）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Touch 'n' Bounce": {
    "done": true,
@@ -497,22 +505,33 @@ window.SPEC_USER = {
     {
      "k": "Bs",
      "n": 0,
+     "to": "all",
      "stk": 8
+    },
+    {
+     "k": "Bs",
+     "n": 1,
+     "to": "nonEl",
+     "stk": 8,
+     "sk": "b"
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "全員のスキルダメージ（最大8重）。水属性以外の味方はさらに加算（最大8重）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Cumulus Drift": {
    "done": true,
    "e": [
     {
      "k": "atkPct",
-     "n": 0
+     "n": 0,
+     "to": "all"
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "フロッグがいる間、全員の攻撃力",
+   "verified": "確認済み",
+   "draft": false
   },
   "Singing Shores": {
    "done": true,
@@ -522,14 +541,16 @@ window.SPEC_USER = {
      "n": 0
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "回避後、ウィロー自身の攻撃力",
+   "verified": "確認済み",
+   "draft": false
   },
   "Ocean Wanderer": {
    "done": true,
    "e": [],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "シールド（火力に影響しない）",
+   "verified": "確認済み",
+   "draft": false
   },
   "Tidal Warning": {
    "done": true,
@@ -539,8 +560,9 @@ window.SPEC_USER = {
      "n": 0
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "必殺技ダメージ",
+   "verified": "確認済み",
+   "draft": false
   },
   "Shore Regulation": {
    "done": true,
@@ -551,8 +573,9 @@ window.SPEC_USER = {
      "to": "all"
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "必殺技の後25秒、全員の攻撃力",
+   "verified": "確認済み",
+   "draft": false
   },
   "Marine Justice": {
    "done": true,
@@ -564,8 +587,9 @@ window.SPEC_USER = {
      "stk": 5
     }
    ],
-   "txt": "",
-   "verified": "確認済み"
+   "txt": "敵の水属性被ダメージ（最大5重）。ほかの被ダメージの効果とは足し算で計算（足し算か掛け算かはゲームで未確認）",
+   "verified": "確認済み",
+   "draft": false
   }
  },
  "Shia": {
