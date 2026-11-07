@@ -48,6 +48,7 @@
       const cs = G.chars[c.id];
       cs.pots2 = cs.pots2 || {};
       if (c.id === "willow") cs.pots = {};   // ウィローの前の入力（pots）が残っていると、読み替えで上書きされるため消す
+      cs.sup = {};   // ナツカ・エレノアの前の入力（sup）も同じ
       map.core.forEach((name, k) => { if (name) cs.pots2[S.potKey(name)] = m.core[k] ? 1 : 0; });
       map.sub.forEach((name, k) => { if (name) cs.pots2[S.potKey(name)] = m.sub[k]; });
       names.push(c.jp);

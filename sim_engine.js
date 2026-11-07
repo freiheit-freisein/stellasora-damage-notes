@@ -187,13 +187,7 @@
       e.atkPct += wt.atkPct; e.Bs += wt.skillB; e.taken *= wt.taken;
       e.applied.push("ウィローのチーム効果");
     }
-    if (c.id === "nazuka" || c.id === "eleanor") {
-      // エレノアの素質は data/spec_user.js（素質の表）で計算する。ここでは、ナツカの素質と、エレノアに乗るナツカのチーム効果だけ
-      const ctx = { sup: { nazuka: inTeam("nazuka") ? (G.chars.nazuka.sup || {}) : {}, eleanor: {} }, willowPots: {} };
-      const md = supMods(c.id, ctx);
-      e.atkPct += md.atkPct; e.W += md.W; e.Bs += md.Bs; e.taken *= md.taken; e.hit = Object.assign(e.hit, md.hit); e.count = md.count; e.extras = md.extras;
-      e.applied.push("素質(検証済み分)");
-    }
+    // ナツカ・エレノアの素質も、ほかの巡遊者と同じ data/spec_user.js（素質の表）で計算する（ナツカは 2026-11-07 から）
     if (ag) {
       e.atkPct += ag.atkPct; e.W += ag.W; e.Bs += ag.Bs; e.Bb += ag.Bb; e.Bu += ag.Bu; e.taken *= ag.taken; e.ag = ag;
       if (ag.applied.length) e.applied.push("素質など " + ag.applied.length + "件");
@@ -236,7 +230,7 @@
       const mh = (hid && ef.hit[hid]) || {};
       const tags = h.tags || [];
       // タグで指定された効果（長剣・光刃など）
-      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0, wAdd = 0, aAdd = 0;
+      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0, wAdd = 0, aAdd = 0, tAdd = 0;
       const man = st.man || {};
       ag.mods.forEach(mo => {
         if (mo.tags && !mo.tags.some(t => tags.indexOf(t) >= 0)) return;
@@ -249,6 +243,7 @@
         else if (mo.k === "Bs" && type === "skill") bAdd += mo.v;
         else if (mo.k === "Bb" && type === "basic") bAdd += mo.v;
         else if (mo.k === "W") wAdd += mo.v;
+        else if (mo.k === "taken") tAdd += mo.v;   // その攻撃だけに乗る敵の被ダメージ（被ダメージの足し算に入れる）
         else if (mo.k === "atkPctHit") aAdd += mo.v;   // そのヒットだけの攻撃力%（例: エレノアのドローン）   // 特定の攻撃だけの属性ダメージ（例: チトセの通常攻撃の6撃目だけ）
       });
       let refVal;
@@ -262,7 +257,7 @@
       else if (type === "skill") B = 1 + st.skillAdd + (man.skill ? 0 : ef.Bs) + (mh.Bs || 0) + bAdd;
       else if (type === "ult") B = 1 + st.ultAdd + (man.ult ? 0 : ef.Bu);
       else B = 1 + st.markAdd + (man.mark ? 0 : ag.markAdd);
-      let taken = ef.taken * (mh.taken || 1) * (other.taken || 1);
+      let taken = (ef.taken + tAdd) * (mh.taken || 1) * (other.taken || 1);
       if (type === "mark") taken *= ag.takenMark * (ag.markMult || 1);
       if (type === "skill") taken *= ag.takenSkill;
       if (type === "basic") taken *= ag.takenBasic || 1;

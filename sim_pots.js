@@ -149,11 +149,12 @@ window.SIM = window.SIM || {};
   S.POT_SPEC = SPEC;
   // エレノアの素質は、以前は支援用の別の表（data_sup.js の SUP_POTS・入力は chars.eleanor.sup）で計算していた。
   // 今はほかの巡遊者と同じ表（data/spec_user.js・入力は pots2）なので、前の入力（保存・共有コード）を読み替える（2026-11-06）
-  S.migrateSup = G => {
-    const cs = G && G.chars && G.chars.eleanor;
+  // ナツカも同じ（2026-11-07）
+  S.migrateSup = G => ["eleanor", "nazuka"].forEach(id => {
+    const cs = G && G.chars && G.chars[id];
     if (!cs || !cs.sup || !Object.keys(cs.sup).length) return;
     cs.pots2 = cs.pots2 || {}; cs.pon = cs.pon || {}; cs.pstk = cs.pstk || {};
-    ((window.SUP_POTS || {}).eleanor || []).forEach(x => {
+    ((window.SUP_POTS || {})[id] || []).forEach(x => {
       const s = cs.sup[x.id];
       if (!s) return;
       const key = S.potKey(x.en);
@@ -162,7 +163,7 @@ window.SIM = window.SIM || {};
       if (s.stk != null && s.stk !== "" && cs.pstk[key] == null) cs.pstk[key] = +s.stk;
     });
     cs.sup = {};
-  };
+  });
   S.potKey = name => name.replace(/[^A-Za-z0-9]/g, "_");
   // ウィロー（水着）の素質は、以前は別の表（data.js の POTENTIALS・入力は chars.willow.pots）で計算していた。
   // 今はほかの巡遊者と同じ表（data/spec_user.js・入力は pots2）なので、前の入力（保存・共有コード）を読み替える。両方に値があれば前の入力を使う（2026-11-07）
@@ -271,6 +272,7 @@ window.SIM = window.SIM || {};
       if (to === "sup") return team.slice(1);   // 支援の巡遊者（2人）
       if (to === "selfNonEl") return team.filter((id, i) => id === oid || chs[i].el !== el);   // 自分と、自分と違う属性の味方（例: ウィローの砕沫の余韻）
       if (to === "nonEl") return team.filter((id, i) => id !== oid && chs[i].el !== el);   // 自分と違う属性の味方だけ
+      if (to === "luxAB") return team.filter((id, i) => chs[i].el === el && (chs[i].role === "アタッカー" || chs[i].role === "バランサー"));   // 同じ属性のアタッカー・バランサー（例: ナツカの嵐の目）
       if (to === "luxVers") return team.filter((id, i) => chs[i].el === el && chs[i].role === "バランサー");
       if (to === "enemy") return e && e.k !== "taken" ? team.slice() : team.filter((id, i) => chs[i].el === ((e && e.el) || el));   // 属性の被ダメージ(taken)はその属性の味方だけ、スキル・通常・印の被ダメージは全員
       return [oid];
@@ -298,6 +300,7 @@ window.SIM = window.SIM || {};
           a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m: e.m != null ? e.m : v, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, lvOf: e.lv || null, owner: oid, key: key + "#" + ei });
           return;
         }
+        if (e.k === "taken" && e.tags) { a.mods.push({ k: "taken", v, tags: e.tags, ht: null, grp: null, cond: null }); return; }   // 特定の攻撃だけに乗る被ダメージ（例: ナツカの花の海・波紋）。同じ被ダメージの足し算に入る
         if (e.k === "taken") { a.takenAdd += v; a.taken = 1 + a.takenAdd; return; }
         if (e.k === "takenMark") { if (G.markDebuff !== false) a.takenMark *= 1 + v; return; }
         if (e.k === "markMult") { a.markMult *= 1 + v; return; }   // 印ダメージの別枠（印ダメージ+の足し算とは別に掛ける）
@@ -365,8 +368,8 @@ window.SIM = window.SIM || {};
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）" };
   const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
-    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射" };
-  const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", sup: "支援の2人" };
+    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃" };
+  const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
   S.TAGJ = TAGJ; S.HTJ = HTJ;

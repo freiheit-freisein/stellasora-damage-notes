@@ -19,7 +19,7 @@ window.SIM = window.SIM || {};
       hits: {
         basic: [H(0, 0, 1, "basic", "1撃目"), H(0, 1, 1, "basic", "2撃目"), H(0, 2, 3, "basic", "3撃目")],
         main: [H(1, 0, 7, "skill", "風車の風")],
-        support: [H(2, 0, 1, "skill", "花のオーブ（追撃の1発）", "orb"), H(2, 1, 6, "skill", "花の海（毎秒・6秒間）", "sea"), H(2, 2, 6, "skill", "花びら（6枚）", "petal")],
+        support: [H(2, 0, 1, "skill", "花のオーブ（追撃の1発）", "orb", ["orb"]), H(2, 1, 6, "skill", "花の海（毎秒・6秒間）", "sea", ["sea"]), H(2, 2, 6, "skill", "花びら（6枚）", "petal", ["petal"])],
         ult: [H(3, 0, 3, "ult", "竜巻（3つ・3秒ごと1回分）")],
       } },
     { id: "eleanor", en: "Eleanor", jp: "エレノア", el: "風", ref: "atk", role: "バランサー", trust0: 20, talent0: 0, talentBonus: {},

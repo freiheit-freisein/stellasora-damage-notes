@@ -2843,5 +2843,264 @@ window.SPEC_USER = {
    "note": "以前の計算（data_sup.js）の実測の確認: Lv7=5.75%/重（最大の重複数の実測から逆算・仮置き）（画面の確認 2026-11-06）",
    "off": true
   }
+ },
+ "Nazuka": {
+  "Youth: Dazzling": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "花びら（花びらの詩・18枚）",
+     "t": "skill",
+     "c": 18,
+     "m": 11,
+     "tags": [
+      "petal"
+     ]
+    }
+   ],
+   "txt": "支援スキルのとき、主力の足元に花びら18枚（各11%）。花びらの素質が乗る。どのスキルのLvで伸びるかは未確認なので、前の計算と同じ固定の値（既定は反映しない）",
+   "draft": false,
+   "off": true
+  },
+  "Youth: Hunting": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 0,
+     "tags": [
+      "petal"
+     ]
+    }
+   ],
+   "txt": "花びらの風属性ダメージ＋",
+   "draft": false
+  },
+  "Youth: Blooming": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "tags": [
+      "petal"
+     ]
+    },
+    {
+     "k": "W",
+     "n": 1,
+     "stk": 12
+    }
+   ],
+   "txt": "花びらのダメージ＋／花びら1枚ごとに風属性ダメージ＋（最大12重）",
+   "draft": false
+  },
+  "Youth: Weakness": {
+   "done": true,
+   "e": [
+    {
+     "k": "taken",
+     "n": 0,
+     "stk": 10,
+     "tags": [
+      "sea",
+      "seaEnd"
+     ]
+    }
+   ],
+   "txt": "花びらが当たるごとに、敵の風属性被ダメージ＋（3秒・最大10重）。前の計算と同じく、後から当たる花の海だけに乗せる",
+   "draft": false
+  },
+  "Youth: Annihilation": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "tags": [
+      "petal"
+     ]
+    }
+   ],
+   "txt": "花びらのダメージ＋（ノーマルの敵の即撃破は火力に関係しない）",
+   "draft": false
+  },
+  "Flower Formation: Waves": {
+   "done": true,
+   "e": [
+    {
+     "k": "count",
+     "hit": "sea",
+     "add": 3
+    }
+   ],
+   "txt": "花の海の持続+50%（毎秒のヒットが6回→9回）",
+   "draft": false
+  },
+  "Flower Formation: Turbulent": {
+   "done": true,
+   "e": [
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "逆波の追撃（味方の風属性が花の海に当てた時・毎秒）",
+     "t": "skill",
+     "c": 6,
+     "m": 182,
+     "tags": [
+      "sea"
+     ]
+    }
+   ],
+   "txt": "自分以外の風属性の味方が花の海の中の敵に当てた時、毎秒 182% の追撃（6回）。どのスキルのLvで伸びるかは未確認なので、前の計算と同じ固定の値（既定は反映しない）",
+   "draft": false,
+   "off": true
+  },
+  "Flower Formation: Blast": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 0,
+     "tags": [
+      "sea"
+     ]
+    },
+    {
+     "k": "extra",
+     "group": "support",
+     "name": "花の海の消滅時の追撃",
+     "t": "skill",
+     "c": 1,
+     "n": 1,
+     "tags": [
+      "seaEnd"
+     ]
+    }
+   ],
+   "txt": "花の海の風属性ダメージ＋／花の海の消滅時に追撃（スキル・1回）",
+   "draft": false
+  },
+  "Flower Formation: Convergence": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "tags": [
+      "sea",
+      "seaEnd"
+     ]
+    }
+   ],
+   "txt": "花の海のダメージ＋（敵2体以上のときの追加分は未反映。ボス戦は1体）",
+   "draft": false
+  },
+  "Flower Formation: Erosion": {
+   "done": true,
+   "e": [
+    {
+     "k": "taken",
+     "n": 0,
+     "stk": 10,
+     "tags": [
+      "sea",
+      "seaEnd",
+      "petal"
+     ]
+    }
+   ],
+   "txt": "花の海が当たるごとに、敵の風属性被ダメージ＋（2秒・最大10重）。前の計算と同じく、ナツカの花の海・花びらだけに乗せる",
+   "draft": false,
+   "verified": "以前の計算（data_sup.js）の実測の確認: 1重の差=6%（171,663→181,962）"
+  },
+  "Almighty Leader": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 0,
+     "to": "luxAB"
+    }
+   ],
+   "txt": "風属性のアタッカー・バランサーの全員の風属性ダメージ＋",
+   "draft": false,
+   "verified": "以前の計算（data_sup.js）の実測の確認: 実測一致（常時・加算）"
+  },
+  "Wind Demon Seed": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPct",
+     "n": 0
+    }
+   ],
+   "txt": "ナツカの攻撃力%（必殺技の風の印は未反映）",
+   "draft": false,
+   "verified": "以前の計算（data_sup.js）の実測の確認: 実測一致（攻撃力%に加算）"
+  },
+  "Self-Improvement": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bs",
+     "n": 0,
+     "over": {
+      "8": 125
+     },
+     "tags": [
+      "petal",
+      "sea",
+      "seaEnd"
+     ]
+    }
+   ],
+   "txt": "花の海がある間、ナツカのスキルダメージ＋（花のオーブには乗らない）",
+   "draft": false,
+   "verified": "以前の計算（data_sup.js）の実測の確認: 実測一致（Lv6+2=125%・花の海がある間・オーブには入らない）"
+  },
+  "Multi-Hurricane": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bu",
+     "n": 0
+    }
+   ],
+   "txt": "ナツカの必殺技ダメージ＋（竜巻の数の増加は未反映）",
+   "draft": false
+  },
+  "Aeolus's Blessing": {
+   "done": true,
+   "e": [
+    {
+     "k": "W",
+     "n": 0
+    }
+   ],
+   "txt": "必殺技の後18秒、風属性ダメージ＋（既定は反映しない）",
+   "draft": false,
+   "off": true
+  },
+  "Maelstrom": {
+   "done": true,
+   "e": [
+    {
+     "k": "Bu",
+     "n": 0
+    },
+    {
+     "k": "taken",
+     "n": 1,
+     "stk": 8,
+     "to": "enemy"
+    }
+   ],
+   "txt": "ナツカの必殺技ダメージ＋／必殺技の竜巻が当たるごとに、敵の風属性被ダメージ＋（18秒・最大8重。風属性の全員の攻撃に乗る）（既定は反映しない）",
+   "draft": false,
+   "off": true
+  }
  }
 };

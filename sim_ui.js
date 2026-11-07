@@ -430,37 +430,32 @@
   function potItems(k) {
     const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`, ex = emx(id), out = [];
     const tg = (t, ok) => `<span class="${ok ? "tag-ok" : "tag-ng"}">${t}</span>`;
-    if (id === "nazuka") {
-      SUP_POTS[id].forEach(x => out.push({ name: x.jp, en: x.jp, core: !!x.core, lv: +(((cs.sup || {})[x.id] || {}).lv || 0), path: `${p}.sup.${x.id}.lv`, desc: x.note || x.verified || "",
-        tags: [x.verified ? tg("実測一致", 1) : tg("未検証")], ctl: x.on === false ? `<label class="pz-c">条件を満たす ${inp(`${p}.sup.${x.id}.on`, { chk: 1 })}</label>` : "", grp: "", bonus: 0 }));
-    } else {
-      const t = TK(c.en), spec = S.POT_SPEC[id], role = k === "main" ? "main" : "support";
-      const groups = (t && t.potentials[role]) || [];
-      const bn = g => { const m = /Build (\d)/i.exec(g.title); return /Generic/i.test(g.title) ? "汎用" : "特化構築" + (m ? m[1] : "?"); };
-      groups.forEach(g => g.potentials.forEach(x => {
-        const sp = spec && spec[x.name], key = spec ? S.potKey(x.name) : x.name.replace(/[^A-Za-z0-9]/g, "_"), core = x.type === 1;
-        const it = { name: JA(x.name, id) + (sp && (sp.st === "auto" || sp.st === "draft") ? "*" : ""), en: x.name, core, lv: +((cs.pots2 || {})[key] || 0), path: `${p}.pots2.${key}`,
-          desc: sp ? sp.txt : "効果がまだ入っていません", tags: [], ctl: "", grp: bn(g), bonus: ex.pot[x.name] || 0 };
-        if (sp && it.lv > 0 && S.potCalcText) {   // 計算に使っている中身（そのLvの値）。「反映」を外しているときは、そう書く
-          it.calc = S.potCalcText(id, x.name, it.lv + it.bonus);
-          it.calcLv = core ? "" : `Lv${it.lv + it.bonus}${it.bonus ? `・徽章+${it.bonus}込み` : ""}${it.lv + it.bonus > POT_LV_MAX ? "・推定" : ""}`;
-          const onv = (cs.pon || {})[key];
-          if (it.calc && !(onv == null ? !sp.off : onv)) it.calc += "　※反映を外しているので、今は計算に入っていません";
-        }
-        if (!sp) it.tags.push(tg("計算に未対応"));
-        else {
-          const ctl = [];
-          if (!sp.e.length) it.noeff = tg("火力に影響なし");   // 「反映」と同じ場所に出す
-          else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
-          if (sp.off) it.tags.push(tg("条件付き（既定はオフ）"));
-          const seen = {};
-          sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${stepper(`${p}.pstk.${sk}`, 0, e.stk, e.stk, "sm")}<span class="muted">/${e.stk}</span></span>`); } });
-          sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${stepper(`${p}.pcnt.${key}#${ei}`, 0, 99, e.c, "sm")}</span>`); });
-          it.ctl = ctl.join("");
-        }
-        out.push(it);
-      }));
-    }
+    const t = TK(c.en), spec = S.POT_SPEC[id], role = k === "main" ? "main" : "support";
+    const groups = (t && t.potentials[role]) || [];
+    const bn = g => { const m = /Build (\d)/i.exec(g.title); return /Generic/i.test(g.title) ? "汎用" : "特化構築" + (m ? m[1] : "?"); };
+    groups.forEach(g => g.potentials.forEach(x => {
+      const sp = spec && spec[x.name], key = spec ? S.potKey(x.name) : x.name.replace(/[^A-Za-z0-9]/g, "_"), core = x.type === 1;
+      const it = { name: JA(x.name, id) + (sp && (sp.st === "auto" || sp.st === "draft") ? "*" : ""), en: x.name, core, lv: +((cs.pots2 || {})[key] || 0), path: `${p}.pots2.${key}`,
+        desc: sp ? sp.txt : "効果がまだ入っていません", tags: [], ctl: "", grp: bn(g), bonus: ex.pot[x.name] || 0 };
+      if (sp && it.lv > 0 && S.potCalcText) {   // 計算に使っている中身（そのLvの値）。「反映」を外しているときは、そう書く
+        it.calc = S.potCalcText(id, x.name, it.lv + it.bonus);
+        it.calcLv = core ? "" : `Lv${it.lv + it.bonus}${it.bonus ? `・徽章+${it.bonus}込み` : ""}${it.lv + it.bonus > POT_LV_MAX ? "・推定" : ""}`;
+        const onv = (cs.pon || {})[key];
+        if (it.calc && !(onv == null ? !sp.off : onv)) it.calc += "　※反映を外しているので、今は計算に入っていません";
+      }
+      if (!sp) it.tags.push(tg("計算に未対応"));
+      else {
+        const ctl = [];
+        if (!sp.e.length) it.noeff = tg("火力に影響なし");   // 「反映」と同じ場所に出す
+        else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
+        if (sp.off) it.tags.push(tg("条件付き（既定はオフ）"));
+        const seen = {};
+        sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${stepper(`${p}.pstk.${sk}`, 0, e.stk, e.stk, "sm")}<span class="muted">/${e.stk}</span></span>`); } });
+        sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${stepper(`${p}.pcnt.${key}#${ei}`, 0, 99, e.c, "sm")}</span>`); });
+        it.ctl = ctl.join("");
+      }
+      out.push(it);
+    }));
     return out;
   }
   const potCount = list => ({ core: list.filter(x => x.core && x.lv > 0).length, normal: list.filter(x => !x.core && x.lv > 0).length });
@@ -496,9 +491,7 @@
       ${cores.length ? `<div class="pz-cgrid">${cores.map(coreCard).join("")}</div>` : '<p class="muted">ありません</p>'}</section>`;
     const normSec = `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
       ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
-    const note = id === "willow" ? "ウィローの素質（主力のとき検証済み）。値は「重複数が最大のとき」の合計です。ウィローが編成にいると、ナツカ・エレノアにはチーム効果（重複数は最大）も乗ります。"
-      : id === "nazuka" ? "支援として出場したときの素質（検証済みの分だけ効果を反映）。"
-      : S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「エネミー」で切り替えます。"
+    const note = S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「エネミー」で切り替えます。"
       : "この巡遊者の素質の効果は、まだ計算に入れていません。反映したい効果は「その他」に手で入れられます。";
     return `<div class="pz">
       <div class="pz-main">

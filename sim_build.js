@@ -101,6 +101,7 @@
           n++;
         });
         if (c.id === "willow") cs.pots = {};   // 前の入力（pots）が残っていると、読み替えで上書きされるため消す
+        cs.sup = {};   // ナツカ・エレノアの前の入力（sup）も同じ
         if (n) got.push("素質 " + n + "件");
       }
       if (Array.isArray(m.emblems) && m.emblems.length) {
