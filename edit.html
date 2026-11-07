@@ -46,6 +46,15 @@
   .sl select { min-height: 30px; border-radius: 8px; border: 2px solid var(--border); }
   .sl .muted { flex-basis: 100%; }
   .ck-ok { background: #CFF3E8; } .ck-diff { background: #FFD6D6; } .ck-unk { background: #FFE3B0; }
+  .cx-t input { width: 50px; }
+  .cx-t td { padding: 1px 4px; }
+  .cx-t tr.cx-top td { border-top: 2px solid var(--border-strong); }
+  .cx-k { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .cx-ref { color: #6A5ACD; }
+  .cx-fix { font-weight: 700; color: #1F7A5C; background: #E6F7F0; } .cx-est { font-style: italic; color: #5B8F7E; }
+  .cx-j { font-size: 12px; }
+  .cx-good { color: #1F7A5C; font-weight: 700; } .cx-bad { color: #C0392B; font-weight: 700; }
+  input.cx-ok { background: #D4F5E6; border-color: #57B894 !important; } input.cx-ng { background: #FFD6D6; border-color: #E07070 !important; } input.cx-new { background: #DCEBFF; border-color: #7FA8E0 !important; }
   .steps { margin: 6px 12px 0; padding: 8px 12px; border-radius: 12px; background: var(--surface-soft); font-size: 13px; }
 </style>
 </head>
@@ -87,7 +96,9 @@
 <script src="data/lr_auto.js"></script>
 <script src="data/skill_ct.js"></script>
 <script src="sim_lr.js"></script>
+<script src="edit_cmp.js"></script>
 <script src="edit_lr.js"></script>
+<script src="edit_sk.js"></script>
 <script src="edit_ui.js"></script>
 </body>
 </html>

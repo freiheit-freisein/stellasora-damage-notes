@@ -123,22 +123,25 @@
   // ---- 一覧 ----
   // 「素質の確認」と「ロスレコの確認」（edit_lr.js）の切り替え
   let MODE = "pot";
-  try { MODE = localStorage.getItem("stellasora-edit-mode") === "lr" && window.EDIT_LR ? "lr" : "pot"; } catch (e) { /* 無視 */ }
+  const modeOk = m => m === "lr" ? !!window.EDIT_LR : (m === "sk" || m === "tr") ? !!window.EDIT_SK : m === "pot";
+  try { const m = localStorage.getItem("stellasora-edit-mode"); MODE = modeOk(m) ? m : "pot"; } catch (e) { /* 無視 */ }
   const STEPS = {
     pot: "<b>手順</b>　① 巡遊者を選ぶ　② 素質をクリック　③ ゲームの素質の画面と比べて「合ってる／数字が違う／わからない」を押す　④ 終わったら右下の「確認の結果を書き出す」→「コピー」→ Claude に貼り付ける",
+    sk: "<b>手順</b>　① 巡遊者をクリック　② ゲームのスキルの画面（Lvごと）と比べて、分かった数字を「ゲーム」に入れる。Discord などでもらった数字は「報告」に入れる　③「確定する」を押す　④ 終わったら右下の「確認の結果を書き出す」→「コピー」→ Claude に貼り付ける",
+    tr: "<b>手順</b>　① 巡遊者をクリック　② ゲームの信頼の画面（Lvごと）と比べて、分かった数字を「ゲーム」に入れる。もらった数字は「報告」に入れる　③「確定する」を押す　④ 終わったら右下の「確認の結果を書き出す」→「コピー」→ Claude に貼り付ける",
     lr: "<b>手順</b>　① 属性を選ぶ　② ロスレコをクリック　③ ゲームのロスレコの画面（突破・アシスト効果のLvは ◀▶ で切り替え）と比べて「合ってる／数字が違う／わからない」を押す　④ 終わったら右下の「確認の結果を書き出す」→「コピー」→ Claude に貼り付ける",
   };
   const bar = () => {
-    if (MODE === "lr") return;
+    if (MODE !== "pot") return;
     const done = (en, t) => { let n = 0, d = 0, dr = 0; Object.keys(t.potentials || {}).forEach(role => t.potentials[role].forEach(g => g.potentials.forEach(p => { n++; { const u = specOf(en, p.name); if ((u && !u.draft) || (!u && builtIn(en, p.name)) || ckDone(en, p.name)) d++; else if ((u && u.draft) || draftOf(en, role, p.name)) dr++; } }))); return [d, n, dr]; };
     const t = TREKKERS.find(x => x.en === S.t), [d, n, dr] = done(S.t, t);
-    $("bar").innerHTML = `${window.EDIT_LR ? '<button class="sbtn on" data-act="mode:pot">素質の確認</button><button class="sbtn" data-act="mode:lr">ロスレコの確認</button>' : ""}<b style="margin-left:8px">巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
+    $("bar").innerHTML = `${CMP.modeBar("pot")}<b style="margin-left:8px">巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
       <button class="sbtn${S.role === "main" ? " on" : ""}" data-act="role:main">主力の素質</button><button class="sbtn${S.role === "support" ? " on" : ""}" data-act="role:support">支援の素質</button>
       <span class="muted">${esc(TJ(S.t))}：確認済み ${d} ／ 全 ${n} 件（このブラウザで「合ってる」などを押したもの ${Object.keys(chk[S.t] || {}).length} 件）</span>
       <label class="muted" style="margin-left:auto"><input type="checkbox" data-act="adv"${S.adv ? " checked" : ""}> 詳しい入力を出す（通常は使いません）</label>`;
   };
   function renderList() {
-    if (MODE === "lr") return;
+    if (MODE !== "pot") return;
     const t = TREKKERS.find(x => x.en === S.t);
     const groups = (t.potentials || {})[S.role] || [];
     const card = p => {
@@ -203,6 +206,29 @@
     // Lvで変わらない数字（コア素質など）は Lv1 の欄だけ
     const rowsH = nums.map((a, i) => `<tr><td>${i + 1}つ目${unit(a)}</td><td>${a[0]}</td><td>${lv6(a) == null ? "—" : lv6(a)}</td>
       ${LVS.map(lv => `<td${key(lv)}>${lv6(a) == null && lv !== 1 ? "—" : inp(i, lv)}</td>`).join("")}</tr>`).join("");
+    // 比べる表（登録・控え・報告・ゲーム）。控えは手元のときだけ
+    const rf = ((window.REF_LOCAL || {})[S.t] || {})[p.name], used = new Set();
+    const cxRows = nums.map((a, i) => {
+      const cst = lv6(a) == null, lvs = cst ? [1] : LVS;
+      const reg = cst ? { 1: a[0] } : { 1: a[0], 6: lv6(a) };
+      const k = rf ? CMP.matchParam(rf.params.map(x => Array.isArray(x) ? x : String(x).split("/")), reg, cst ? [1] : [1, 6], used) : -1;
+      const pr = k >= 0 ? (Array.isArray(rf.params[k]) ? rf.params[k] : String(rf.params[k]).split("/")) : null;
+      return { i, label: `${i + 1}つ目`, reg, ref: pr ? CMP.toLv(pr.length === 1 ? [pr[0]] : pr, lvs) : null, lvs, groups: cst ? [{ lvs: [1], ends: [1], mid: 0 }] : POT_GROUPS };
+    });
+    const cxGet = (kd, i, lv) => kd === "g" ? (ckBuf[i + ":" + lv] != null ? ckBuf[i + ":" + lv] : (g[i] || {})[lv]) : (ckBuf["r:" + i + ":" + lv] != null ? ckBuf["r:" + i + ":" + lv] : ((ck.r || {})[i] || {})[lv]);
+    if (window.CMP && nums.length) {
+      CK_ROWS = { rows: cxRows, get: cxGet };
+      const fx = ck.fix || {};
+      return `<div class="ck">
+      <div class="ck-h">ゲームの素質の画面と比べてください</div>
+      <div class="muted">上の文は日本語Wikiの文です。登録＝サイトの今の値（Wiki）、控え＝手元の照合用データ、報告＝Discord などでもらった値、ゲーム＝自分で画面を見た値です。</div>
+      ${CMP.table({ lvs: LVS, head: lv => "Lv" + lv, rows: cxRows, groups: POT_GROUPS, get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"`, fix: i => fx[i] })}
+      <div class="muted">報告・ゲームの数字は、分かったところだけ入れてください。緑＝控え（無ければ登録）と同じ、赤＝違う、青＝比べる相手が無い。確定のきまり：Lv1とLv6＋Lv2〜5のどれか1つ／Lv7〜9は2つ。</div>${slNote ? `<div class="muted">${slNote}</div>` : ""}
+      <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・何に効くかわからない・報告した人 など）"></div>
+      <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button><button class="btn-add" data-act="ck:fix" style="background:#2E9E7A;color:#fff">確定する（そろった範囲）</button>${ck.fix ? `<button class="btn-add" data-act="ck:unfix">確定を消す</button>` : ""}${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>
+      <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}${ck.fix ? `・確定済み（${esc(ck.fixAt || "")}）` : ""}</div>
+    </div>`;
+    }
     return `<div class="ck">
       <div class="ck-h">ゲームの素質の画面と比べてください</div>
       <div class="muted">上の文は日本語Wikiの文です。ゲームの画面（素質の説明、初期Lv＝Lv1、最大＝Lv6）と、文と数字が合っているかを見てください。</div>
@@ -213,6 +239,9 @@
       <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}</div>
     </div>`;
   }
+  // 素質の確定のきまり（2026-11-08 ユーザー）: Lv1とLv6＋Lv2〜5のどれか1つ、Lv7〜9は2つ
+  const POT_GROUPS = [{ lvs: [1, 2, 3, 4, 5, 6], ends: [1, 6], mid: 1 }, { lvs: [7, 8, 9], ends: [], mid: 2 }];
+  let CK_ROWS = null;   // 今開いている素質の比べる表（確定ボタンで使う）
   // 手元だけの照合用データ（data/ref.local.js があれば、localhost のときだけ読む）。公開サイトには出ない
   function refHtml(p) {
     const r = ((window.REF_LOCAL || {})[S.t] || {})[p.name];
@@ -234,7 +263,7 @@
   }
 
   function renderEditor() {
-    if (MODE === "lr") return;
+    if (MODE !== "pot") return;
     const t = TREKKERS.find(x => x.en === S.t);
     let p = null;
     ["main", "support"].forEach(r => (t.potentials[r] || []).forEach(g => g.potentials.forEach(x => { if (x.name === S.sel && r === S.role) p = x; })));
@@ -303,7 +332,7 @@
     if (!el) return;
     const a = el.getAttribute("data-act");
     if (a.indexOf("mode:") === 0) { setMode(a.slice(5)); return; }
-    if (MODE === "lr") { if (a !== "ckexport" && a !== "copy") return; }
+    if (MODE !== "pot") { if (a !== "ckexport" && a !== "copy") return; }
     if (a === "adv") { S.adv = el.checked; bar(); renderList(); renderEditor(); return; }
     if (/^ck:/.test(a)) {
       const st = a.slice(3), name = S.sel;
@@ -314,10 +343,19 @@
         const vals = {};
         document.querySelectorAll("[data-ck]").forEach(x => { const k = x.getAttribute("data-ck"); vals[k] = ckBuf[k] != null ? ckBuf[k] : x.value; });
         const g = {};
-        Object.keys(vals).filter(k => k !== "memo").forEach(k => { const [i, lv] = k.split(":"); const v = String(vals[k]).replace(/[%％\s]/g, ""); if (v) { g[i] = g[i] || {}; g[i][lv] = v; } });
+        const rp = {};
+        Object.keys(vals).filter(k => k !== "memo").forEach(k => { const ks = k.split(":"), isR = ks[0] === "r", i = isR ? ks[1] : ks[0], lv = isR ? ks[2] : ks[1], v = String(vals[k]).replace(/[%％\s]/g, ""); const m = isR ? rp : g; if (v) { m[i] = m[i] || {}; m[i][lv] = v; } });
         if (st === "diff" && !Object.keys(g).length) { const m = $("ckmsg"); if (m) m.textContent = "ゲームの数字を、違うところだけ入れてから押してください"; return; }
-        const o = { st, at: new Date().toLocaleDateString("sv") };
+        const prev = (chk[S.t] || {})[name] || {};
+        if ((st === "fix" || st === "unfix") && !prev.st && st === "unfix") return;
+        const o = { st: st === "fix" || st === "unfix" ? (prev.st || "ok") : st, at: new Date().toLocaleDateString("sv") };
         if (Object.keys(g).length) o.g = g;   // Lv2〜5・7〜9 を集めるので、「合ってる」「わからない」でも入れた数字は残す
+        if (Object.keys(rp).length) o.r = rp;
+        if (st === "fix") {
+          const f = CK_ROWS ? CMP.fixAll(CK_ROWS.rows, POT_GROUPS, (kd, i, lv) => ((kd === "g" ? g : rp)[i] || {})[lv]) : {};
+          if (!Object.keys(f).length) { const m = $("ckmsg"); if (m) m.textContent = "確定できる範囲がまだありません（判定の行を見てください）"; return; }
+          o.fix = f; o.fixAt = o.at;
+        } else if (st !== "unfix" && prev.fix) { o.fix = prev.fix; o.fixAt = prev.fixAt; }
         if (vals.memo && String(vals.memo).trim()) o.memo = String(vals.memo).trim();
         chk[S.t][name] = o;
       }
@@ -325,7 +363,7 @@
       saveChk(); bar(); renderList(); renderEditor();
       return;
     }
-    if (a === "ckexport") { $("io").value = "// 素質の確認（edit.html で作成）。ゲームの画面と比べた結果\nwindow.POT_CHECK = " + JSON.stringify(chk, null, 1) + ";\n" + (window.EDIT_LR ? window.EDIT_LR.exportText() : ""); $("iomsg").textContent = "書き出しました。「コピー」を押して、Claude に貼り付けてください。"; return; }
+    if (a === "ckexport") { $("io").value = "// 素質の確認（edit.html で作成）。ゲームの画面と比べた結果\nwindow.POT_CHECK = " + JSON.stringify(chk, null, 1) + ";\n" + (window.EDIT_LR ? window.EDIT_LR.exportText() : "") + (window.EDIT_SK ? window.EDIT_SK.exportText() : ""); $("iomsg").textContent = "書き出しました。「コピー」を押して、Claude に貼り付けてください。"; return; }
     if (a.indexOf("role:") === 0) { S.role = a.slice(5); S.sel = null; bar(); renderList(); renderEditor(); return; }
     if (a.indexOf("pick:") === 0) { Object.keys(ckBuf).forEach(k => delete ckBuf[k]); openPot(a.slice(5)); renderList(); return; }
     if (a === "ok") { const e = meta.none ? [] : rows.map(toEngine); user[S.t] = user[S.t] || {}; const o = { done: true, e, txt: meta.txt || "", verified: "確認済み" }; if (meta.off) o.off = true; if (meta.ext) o.ext = meta.ext; if (meta.note) o.note = meta.note; user[S.t][S.sel] = o; save(); meta.fromDraft = false; meta.unk = null; bar(); renderList(); renderEditor(); return; }
@@ -358,16 +396,16 @@
     if (a === "clear") { if (confirm(TJ(S.t) + " の入力を消します。よいですか？")) { delete user[S.t]; save(); S.sel = null; bar(); renderList(); renderEditor(); } }
   });
   function setMode(m) {
-    MODE = m === "lr" && window.EDIT_LR ? "lr" : "pot";
+    MODE = modeOk(m) ? m : "pot";
     try { localStorage.setItem("stellasora-edit-mode", MODE); } catch (e) { /* 無視 */ }
     $("steps").innerHTML = STEPS[MODE];
-    if (MODE === "lr") window.EDIT_LR.render(); else { bar(); renderList(); renderEditor(); }
+    if (MODE === "lr") window.EDIT_LR.render(); else if (MODE === "sk" || MODE === "tr") window.EDIT_SK.render(MODE); else { bar(); renderList(); renderEditor(); }
   }
   setMode(MODE);
   if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {   // 手元で開いたときだけ、照合用の控えを読む（無ければ何もしない）
     const s = document.createElement("script");
     s.src = "data/ref.local.js?t=" + Date.now();
-    s.onload = () => renderEditor();
+    s.onload = () => setMode(MODE);
     document.head.appendChild(s);
   }
 })();
