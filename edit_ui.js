@@ -201,6 +201,26 @@
       <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}</div>
     </div>`;
   }
+  // 手元だけの照合用データ（data/ref.local.js があれば、localhost のときだけ読む）。公開サイトには出ない
+  function refHtml(p) {
+    const r = ((window.REF_LOCAL || {})[S.t] || {})[p.name];
+    if (!window.REF_LOCAL) return "";
+    if (!r) return `<div class="eff" style="border-style:dashed"><b>照合用の控え</b> <span class="muted">（この素質は控えにありません）</span></div>`;
+    const pv = v => Array.isArray(v) ? v.join(" ／ ") : String(v);
+    const desc = esc(String(r.desc || "").replace(/<\/?color[^>]*>/g, "").replace(/##([^#]+)#\d+#/g, "$1").replace(/\u000b/g, "\n"))
+      .replace(/&amp;Param(\d+)&amp;/g, (m, i) => `<b style="color:var(--indigo)">［${esc(pv(r.params[i - 1] != null ? r.params[i - 1] : "?"))}］</b>`).replace(/\n/g, "<br>");
+    const prm = r.params.map((v, i) => `Param${i + 1}: ${esc(pv(v))}`).join("<br>");
+    const tip = (r.tips || []).map((t, i) => {
+      const a = [t.damageType, t.effectType, t.buffDuration != null ? t.buffDuration + "秒" : "", t.buffStacks != null ? "最大" + t.buffStacks + "重" : "", (t.damageTag || []).join(",")].filter(Boolean);
+      return a.length ? `Param${i + 1}: ${esc(a.join(" ・ "))}` : "";
+    }).filter(Boolean).join("<br>");
+    const line = (k, v) => v && v.length ? `<div><span class="muted">${k}：</span>${esc(v.join(" ／ "))}</div>` : "";
+    return `<div class="eff" style="border-style:dashed;overflow-wrap:anywhere"><b>照合用の控え</b> <span class="muted">（手元だけ・答え合わせ用。ここの値を計算に写さない）</span>
+      <div class="txt" style="margin:4px 0">${esc(r.jp || "")}<br>${desc}</div>
+      ${line("ダメージの扱い", r.dmg)}${line("効果の種類", r.eff)}${line("加算の種類", r.attr)}
+      <details><summary class="muted">数値の詳細</summary><div class="muted" style="font-size:12px">${prm}${tip ? "<br>" + tip : ""}</div></details></div>`;
+  }
+
   function renderEditor() {
     const t = TREKKERS.find(x => x.en === S.t);
     let p = null;
@@ -208,7 +228,7 @@
     if (!p) { $("editor").innerHTML = "<h2>素質の確認</h2><p class=\"muted\">左の素質を選んでください。</p>"; return; }
     if (!S.adv) {
       $("editor").innerHTML = `<h2>${esc(PJ(S.t, p.name))} <span class="muted">${esc(p.name)}</span></h2>
-        <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>${checkHtml(p)}`;
+        <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>${checkHtml(p)}${refHtml(p)}`;
       return;
     }
     const nOpts = (p.nums || []).map((a, i) => [i, `番号${i}（Lv1=${a[0]}${a.length > 1 ? " … Lv6=" + a[a.length - 1] : ""}）`]);
@@ -228,7 +248,7 @@
       return `<div class="eff"><div class="fld"><label>効果${i + 1}</label><div>${sel("k", KINDS.map(k => [k[0], k[1]]), r.k).replace("data-f=", `data-i="${i}" data-f=`)} <button class="btn-add" data-act="del:${i}" style="min-height:28px">削除</button></div></div>${valHtml}${capHtml}${overHtml}${extraHtml}${common}${tags}</div>`;
     };
     $("editor").innerHTML = `<h2>${esc(PJ(S.t, p.name))} <span class="muted">${esc(p.name)}</span></h2>
-      <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>${checkHtml(p)}
+      <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>${checkHtml(p)}${refHtml(p)}
       ${((jpOf(S.t, S.role, p.name) || {}).terms || []).map(x => `<div class="muted" style="margin:2px 0">用語「${esc(x.term)}」：${esc(x.text)}</div>`).join("")}
       ${(jpOf(S.t, S.role, p.name) || {}).text ? '<div class="muted">↑ 日本語Wikiの文章。ゲーム内の文章と数値が違うことがあります（例：テレサ「絶流・波紋」はWiki 77%・ゲーム 60%）。' + (meta.fromDraft ? "下の効果は、この文章から自動で作った下書きです。" : "") + '</div>' : ""}
       ${meta.fromDraft ? `<div class="eff" style="border-color:#E3B27A"><b>下書きの内容</b><br>${rows.length ? rows.map(r => "・" + esc(describe(toEngine(r), p))).join("<br>") : "（効果なし／火力に影響しない、と判断）"}${meta.unk ? `<br><span style="color:var(--danger)">自動で分類できなかった文：</span>${meta.unk.map(esc).join(" ／ ")}` : ""}<div style="margin-top:6px"><button class="btn-add" data-act="ok" style="background:var(--indigo);color:#fff">この内容でOK（確認済みにする）</button></div></div>` : ""}
@@ -323,4 +343,10 @@
     if (a === "clear") { if (confirm(TJ(S.t) + " の入力を消します。よいですか？")) { delete user[S.t]; save(); S.sel = null; bar(); renderList(); renderEditor(); } }
   });
   bar(); renderList();
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {   // 手元で開いたときだけ、照合用の控えを読む（無ければ何もしない）
+    const s = document.createElement("script");
+    s.src = "data/ref.local.js?t=" + Date.now();
+    s.onload = () => renderEditor();
+    document.head.appendChild(s);
+  }
 })();
