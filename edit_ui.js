@@ -229,7 +229,8 @@
     });
     const cxGet = (kd, i, lv) => kd === "g" ? (ckBuf[i + ":" + lv] != null ? ckBuf[i + ":" + lv] : (g[i] || {})[lv]) : (ckBuf["r:" + i + ":" + lv] != null ? ckBuf["r:" + i + ":" + lv] : ((ck.r || {})[i] || {})[lv]);
     if (window.CMP && nums.length) {
-      CK_ROWS = { rows: cxRows, get: cxGet };
+      // コア素質はスキルLvで数字が変わるので、確定するときに、そのときのスキルLvも残す
+      CK_ROWS = { rows: cxRows, get: cxGet, sl: p.type === 1 ? (k => ({ k, lv: slOf(S.t, k) }))(potSkill(S.t, S.role, p.name)) : null };
       const fx = ck.fix || {};
       return `<div class="ck">
       <div class="ck-h">ゲームの素質の画面と比べてください</div>
@@ -238,7 +239,7 @@
       <div class="muted">報告・ゲームの数字は、分かったところだけ入れてください。緑＝控え（無ければ登録）と同じ、赤＝違う、青＝比べる相手が無い。確定のきまり：Lv1とLv6＋Lv2〜5のどれか1つ／Lv7〜9は2つ。</div>${slNote ? `<div class="muted">${slNote}</div>` : ""}
       <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・何に効くかわからない・報告した人 など）"></div>
       <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button><button class="btn-add" data-act="ck:fix" style="background:#2E9E7A;color:#fff">確定する（そろった範囲）</button>${ck.fix ? `<button class="btn-add" data-act="ck:unfix">確定を消す</button>` : ""}${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>
-      <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}${ck.fix ? `・確定済み（${esc(ck.fixAt || "")}）` : ""}</div>
+      <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}${ck.fix ? `・確定済み（${esc(ck.fixAt || "")}${ck.sl ? `、${esc((SKILLS.find(x => x[0] === ck.sl.k) || [0, ck.sl.k])[1])}Lv${ck.sl.lv}のときの数字` : ""}）` : ""}</div>
     </div>`;
     }
     return `<div class="ck">
@@ -367,6 +368,7 @@
           const f = CK_ROWS ? CMP.fixAll(CK_ROWS.rows, POT_GROUPS, (kd, i, lv) => ((kd === "g" ? g : rp)[i] || {})[lv]) : {};
           if (!Object.keys(f).length) { const m = $("ckmsg"); if (m) m.textContent = "確定できる範囲がまだありません（判定の行を見てください）"; return; }
           o.fix = f; o.fixAt = o.at;
+          if (CK_ROWS && CK_ROWS.sl) o.sl = CK_ROWS.sl;
         } else if (st !== "unfix" && prev.fix) { o.fix = prev.fix; o.fixAt = prev.fixAt; }
         if (vals.memo && String(vals.memo).trim()) o.memo = String(vals.memo).trim();
         chk[S.t][name] = o;
