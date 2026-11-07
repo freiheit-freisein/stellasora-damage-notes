@@ -256,6 +256,19 @@ window.SIM = window.SIM || {};
     if (!nm || nm === pn || nm === "追加ヒット") return ja;
     return nm.replace(/（[\x20-\x7e]+）/, "（" + ja + "）");
   };
+  // コア素質の追加ヒットで、スキルLvで伸びるもの（data/core_lv.js）。値（Lv10のとき）が表にあれば、そのスキルのLvで伸ばす
+  // 組み込みの効果には、英語Wikiの値（スキルLv1のとき）で入れてあるものがある。その値なら、Lv10の値に直してから伸ばす
+  const SKI = { basic: 0, main: 1, support: 2, ult: 3 };
+  const lv1Ratio = (en, k) => { const t = (window.TREKKERS || []).find(x => x.en === en), n = t && t.skills && t.skills[SKI[k]] && t.skills[SKI[k]].nums; return n && n[0] && n[9] ? n[0][0][0] / n[9][0][0] : null; };
+  const coreLvHit = (en, pn, m) => {
+    const c = ((window.CORE_LV || {})[en] || {})[pn];
+    if (!c || !(m > 0)) return null;
+    const v10 = c.vals.find(v => Math.abs(v - m) < 0.05);
+    if (v10 != null) return { k: c.k, m: m };
+    const r1 = lv1Ratio(en, c.k), v1 = r1 && c.vals.find(v => Math.abs(v * r1 - m) <= Math.max(0.1, 0.02 * m));
+    return v1 != null ? { k: c.k, m: v1 } : null;
+  };
+  const coreLvOf = (en, pn, m) => { const h = coreLvHit(en, pn, m); return h ? h.k : null; };
   function collect(G, team) {
     const chs = team.map(id => S.CH.find(c => c.id === id));
     // 「光属性の全員」などは、効果を持つ巡遊者と同じ属性の全員として扱う（光チーム以外にも使えるようにした）
@@ -297,7 +310,9 @@ window.SIM = window.SIM || {};
           let cnt = e.c;
           const cc = (cs.pcnt || {})[key + "#" + ei];
           if (cc != null && cc !== "") cnt = +cc;
-          a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m: e.m != null ? e.m : v, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, lvOf: e.lv || null, owner: oid, key: key + "#" + ei });
+          let m = e.m != null ? e.m : v, lvOf = e.lv || null;
+          if (!lvOf) { const h = coreLvHit(chs[team.indexOf(oid)].en, info.pn, m); if (h) { lvOf = h.k; m = h.m; } }   // m はスキルLv10の値、計算のときに今のスキルLvに直す
+          a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, lvOf, owner: oid, key: key + "#" + ei });
           return;
         }
         if (e.k === "taken" && e.tags) { a.mods.push({ k: "taken", v, tags: e.tags, ht: null, grp: null, cond: null }); return; }   // 特定の攻撃だけに乗る被ダメージ（例: ナツカの花の海・波紋）。同じ被ダメージの足し算に入る
@@ -383,7 +398,8 @@ window.SIM = window.SIM || {};
       if (e.raw != null) v = e.raw;
       else if (e.arr) v = lvVal(e.arr, lv, e.over, e.ext || ext) / (e.k === "extra" ? 1 : 100);
       else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || ext) / (e.flat || e.k === "extra" ? 1 : 100);
-      if (e.k === "extra") return `追加ヒット ${r1(e.m != null ? e.m : v)}%${e.lv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[e.lv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）×${e.c || 1}`;
+      const xh = e.k === "extra" && !e.lv ? coreLvHit(c && c.en, name, e.m != null ? e.m : v) : null, xlv = e.k === "extra" ? (e.lv || (xh && xh.k)) : null;
+      if (e.k === "extra") return `追加ヒット ${r1(xh ? xh.m : (e.m != null ? e.m : v))}%${xlv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[xlv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）×${e.c || 1}`;
       if (e.k === "count") return `ヒット回数 +${e.add}`;
       if (e.k === "drop") return "";
       const kn = typeof KJ[e.k] === "function" ? KJ[e.k](e.el || c.el) : (KJ[e.k] || e.k);

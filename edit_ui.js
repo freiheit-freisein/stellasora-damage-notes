@@ -65,7 +65,9 @@
   // そのスキルのLvの倍率 ÷ Lv10の倍率（スキルの1つ目の数値で見る）
   const lvRatio = (en, k, lv) => { const t = TREKKERS.find(x => x.en === en), i = { basic: 0, main: 1, support: 2, ult: 3 }[k], n = t && t.skills && t.skills[i] && t.skills[i].nums; if (!n || !n[9] || !n[lv - 1]) return 1; return n[lv - 1][0][0] / n[9][0][0]; };
   // コア素質がどのスキルのLvで伸びるか: 入力済みの効果に lv があればそれ、なければ素質の役割（主力→主力スキル、支援→支援スキル）
-  const potSkill = (en, role, pot) => { const sp = (user[en] && user[en][pot]) || builtIn(en, pot) || {}; const e = (sp.e || []).find(x => x.lv); return e ? e.lv : role; };
+  const potSkill = (en, role, pot) => { const cl = ((window.CORE_LV || {})[en] || {})[pot]; if (cl) return cl.k; const sp = (user[en] && user[en][pot]) || builtIn(en, pot) || {}; const e = (sp.e || []).find(x => x.lv); return e ? e.lv : role; };
+  // スキルLvで伸びるコア素質（data/core_lv.js）
+  const coreLv = (en, pot) => ((window.CORE_LV || {})[en] || {})[pot] || null;
   const trekkers = TREKKERS.slice().sort((a, b) => (b.rarity - a.rarity) || a.en.localeCompare(b.en));
   const S = { t: (JSON.parse(localStorage.getItem("stellasora-edit-t") || "null") || "Tilia"), role: "main", sel: null };
   if (!trekkers.some(x => x.en === S.t)) S.t = trekkers[0].en;
@@ -161,7 +163,7 @@
       const tag = (!u && !b && dr) ? `<span class="tag t-draft">下書き（自動）${dr.review ? "・要確認" : ""}</span>` : u ? (u.draft ? `<span class="tag t-draft">下書き（未確認）</span>` : `<span class="tag t-user">入力済み${u.e && u.e.length ? "" : "（影響なし）"}</span>`) : b ? `<span class="tag t-built">組み込み（検証済み）</span>` : `<span class="tag t-none">未入力</span>`;
       const ck = chkOf(S.t, p.name);
       const ckTag = ck ? `<span class="tag ck-${ck.st}">${CK_NAME[ck.st]}</span>` : ((u && !u.draft) || (!u && b)) ? '<span class="tag ck-ok">確認済み</span>' : '<span class="tag t-none">未確認</span>';
-      return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${ckTag}${S.adv ? tag : ""}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || ""))}</span></div>`;
+      return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${p.type === 1 && coreLv(S.t, p.name) ? `<span class="tag t-built">${esc((SKILLS.find(x => x[0] === coreLv(S.t, p.name).k) || [0, ""])[1])}Lvで伸びる</span>` : ""}${ckTag}${S.adv ? tag : ""}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || ""))}</span></div>`;
     };
     const builds = groups.filter(g => !/Generic/i.test(g.title)), gen = groups.find(g => /Generic/i.test(g.title));
     const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
@@ -230,12 +232,19 @@
     const cxGet = (kd, i, lv) => kd === "g" ? (ckBuf[i + ":" + lv] != null ? ckBuf[i + ":" + lv] : (g[i] || {})[lv]) : (ckBuf["r:" + i + ":" + lv] != null ? ckBuf["r:" + i + ":" + lv] : ((ck.r || {})[i] || {})[lv]);
     if (window.CMP && nums.length) {
       // コア素質はスキルLvで数字が変わるので、確定するときに、そのときのスキルLvも残す
+      // スキルLvで伸びる数字は、スキルLv1〜10の目安と、ゲーム・報告の数字を比べる（2つそろえば伸び方が合っている）
+      const cl = p.type === 1 ? coreLv(S.t, p.name) : null;
+      const SLV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const slRows = cl ? (jn || []).map((x, i) => { const f = String(x).match(/\d+(?:\.\d+)?/), jv = f ? parseFloat(f[0]) : null; if (jv == null || !cl.vals.some(v => Math.abs(v - jv) < 0.05)) return null; const reg = {}; SLV.forEach(lv => { reg[lv] = String(Math.round(jv * lvRatio(S.t, cl.k, lv) * 10) / 10); }); return { i: "s" + i, label: `${i + 1}つ目`, reg, ref: reg, selfRef: true, regName: "目安", okText: "伸び方が合っている", tol: 0.01 }; }).filter(Boolean) : [];
+      const slTable = slRows.length ? `<div class="phead" style="font-size:13px">スキルLvで伸びる数字（${esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1])}のLv）</div>
+        <div class="muted">計算機は、この数字を${esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1])}のLvで伸ばしています（Lv10の値 × そのスキルの倍率の伸び方）。目安＝計算機が使う値。ゲームの画面で見た数字を、そのときのスキルLvの欄に入れてください。2つそろえば、伸び方が合っているか分かります（目安は計算で出した値なので、1%までのずれは合っているとみなします）。</div>
+        ${CMP.table({ lvs: SLV, head: lv => "スキルLv" + lv, rows: slRows, groups: [{ lvs: SLV, ends: [], mid: 2 }], get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"` })}` : "";
       CK_ROWS = { rows: cxRows, get: cxGet, sl: p.type === 1 ? (k => ({ k, lv: slOf(S.t, k) }))(potSkill(S.t, S.role, p.name)) : null };
       const fx = ck.fix || {};
       return `<div class="ck">
       <div class="ck-h">ゲームの素質の画面と比べてください</div>
       <div class="muted">上の文は日本語Wikiの文です。登録＝サイトの今の値（Wiki）、控え＝手元の照合用データ、報告＝Discord などでもらった値、ゲーム＝自分で画面を見た値です。</div>
-      ${CMP.table({ lvs: LVS, head: lv => "Lv" + lv, rows: cxRows, groups: POT_GROUPS, get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"`, fix: i => fx[i] })}
+      ${CMP.table({ lvs: LVS, head: lv => "Lv" + lv, rows: cxRows, groups: POT_GROUPS, get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"`, fix: i => fx[i] })}${slTable}
       <div class="muted">報告・ゲームの数字は、分かったところだけ入れてください。緑＝控え（無ければ登録）と同じ、赤＝違う、青＝比べる相手が無い。確定のきまり：Lv1とLv6＋Lv2〜5のどれか1つ／Lv7〜9は2つ。</div>${slNote ? `<div class="muted">${slNote}</div>` : ""}
       <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・何に効くかわからない・報告した人 など）"></div>
       <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button><button class="btn-add" data-act="ck:fix" style="background:#2E9E7A;color:#fff">確定する（そろった範囲）</button>${ck.fix ? `<button class="btn-add" data-act="ck:unfix">確定を消す</button>` : ""}${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>

@@ -9,6 +9,8 @@
   const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const num = v => { if (v == null || v === "") return null; const n = parseFloat(String(v).replace(/[%％,\s約]/g, "")); return isFinite(n) ? n : null; };
   const eq = (a, b) => { const x = num(a), y = num(b); return x != null && y != null && Math.abs(x - y) < 1e-6 * Math.max(1, Math.abs(y)); };
+  // 目安（計算で出した値）と比べる行は、ゲームの丸めの分だけずれてよい（row.tol = 割合。例 0.01 = 1%、最低 0.1）
+  const near = (a, b, tol) => { if (!tol) return eq(a, b); const x = num(a), y = num(b); return x != null && y != null && Math.abs(x - y) <= Math.max(0.1, tol * Math.abs(y)); };
   const hasRef = () => !!window.REF_LOCAL;
   const rng = a => a.length > 1 ? `Lv${a[0]}〜${a[a.length - 1]}` : `Lv${a[0]}`;
 
@@ -22,8 +24,8 @@
         const gv = get("g", lv), rv = get("r", lv), f = row.ref ? row.ref[lv] : null, e = row.reg[lv];
         const t = f != null ? f : e;   // 控えがあれば控えと比べる。無ければ登録と比べる
         let s = "none";
-        if (gv != null && gv !== "") s = t == null ? "g-new" : eq(gv, t) ? "g-ok" : "g-ng";
-        else if (rv != null && rv !== "") s = t == null ? "r-new" : eq(rv, t) ? "r-ok" : "r-ng";
+        if (gv != null && gv !== "") s = t == null ? "g-new" : near(gv, t, row.tol) ? "g-ok" : "g-ng";
+        else if (rv != null && rv !== "") s = t == null ? "r-new" : near(rv, t, row.tol) ? "r-ok" : "r-ng";
         else if (f != null && e != null && eq(e, f)) s = "reg-ok";
         if (gv != null && gv !== "" && rv != null && rv !== "" && !eq(gv, rv)) s = "g-ng";   // ゲームと報告が食い違う
         cell[lv] = s;
@@ -51,7 +53,7 @@
       });
       let text;
       if (ng.length) text = `<span class="cx-bad">${rng(lvs)}：控え・登録と違う数字があります（Lv${ng.join("・")}）</span>`;
-      else if (ok) text = `<span class="cx-good">${rng(lvs)}：確定できる</span>（${g + r ? `ゲーム${g}・報告${r}` : "登録と控えが同じ"}）`;
+      else if (ok) text = `<span class="cx-good">${rng(lvs)}：${row.okText || "確定できる"}</span>（${g + r ? `ゲーム${g}・報告${r}` : "登録と控えが同じ"}）`;
       else {
         const lack = [];
         gr.ends.filter(lv => !(isEv(cell[lv]) || cell[lv] === "reg-ok")).forEach(lv => lack.push(`Lv${lv}`));
@@ -78,10 +80,11 @@
       const td = (lv, h) => lvsOf.indexOf(lv) >= 0 ? h : `<td class="muted" style="text-align:center">—</td>`;
       const v = (m, lv) => m && m[lv] != null ? esc(m[lv]) : "";
       const tgt = lv => row.ref && row.ref[lv] != null ? row.ref[lv] : (row.reg[lv] != null ? row.reg[lv] : "");
-      const inp = (k, lv) => `<td class="ck-in${key(lv)}"><input type="text" inputmode="decimal" ${o.attr(k, row.i, lv)} data-t="${esc(tgt(lv))}" class="${String(o.get(k, row.i, lv) || "").trim() && new RegExp("^" + k + "-").test(st[lv] || "") ? cls(st[lv]) : ""}" value="${esc(o.get(k, row.i, lv) || "")}"></td>`;
-      const n = 2 + (ref ? 1 : 0) + 2 + (fx ? 1 : 0);
-      return `<tr class="cx-top"><td rowspan="${n}"><b>${esc(row.label)}</b></td><td class="cx-k">登録</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center">${v(row.reg, lv)}</td>`)).join("")}</tr>` +
-        (ref ? `<tr><td class="cx-k">控え</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="cx-ref">${row.ref ? v(row.ref, lv) : ""}</td>`)).join("")}</tr>` : "") +
+      const inp = (k, lv) => `<td class="ck-in${key(lv)}"><input type="text" inputmode="decimal" ${o.attr(k, row.i, lv)} data-t="${esc(tgt(lv))}"${row.tol ? ` data-tol="${row.tol}"` : ""} class="${String(o.get(k, row.i, lv) || "").trim() && new RegExp("^" + k + "-").test(st[lv] || "") ? cls(st[lv]) : ""}" value="${esc(o.get(k, row.i, lv) || "")}"></td>`;
+      const showRef = ref && !row.selfRef;   // selfRef = 登録（目安）を比べる相手にする行。控えの段は出さない
+      const n = 2 + (showRef ? 1 : 0) + 2 + (fx ? 1 : 0);
+      return `<tr class="cx-top"><td rowspan="${n}"><b>${esc(row.label)}</b></td><td class="cx-k">${esc(row.regName || "登録")}</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center">${v(row.reg, lv)}</td>`)).join("")}</tr>` +
+        (showRef ? `<tr><td class="cx-k">控え</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="cx-ref">${row.ref ? v(row.ref, lv) : ""}</td>`)).join("")}</tr>` : "") +
         `<tr><td class="cx-k">報告</td>${o.lvs.map(lv => td(lv, inp("r", lv))).join("")}</tr>` +
         `<tr><td class="cx-k">ゲーム</td>${o.lvs.map(lv => td(lv, inp("g", lv))).join("")}</tr>` +
         (fx ? `<tr><td class="cx-k">確定</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="cx-fix${fx[lv] && fx[lv].by === "est" ? " cx-est" : ""}">${fx[lv] ? esc(fx[lv].v) : ""}</td>`)).join("")}</tr>` : "") +
@@ -121,7 +124,7 @@
     if (!x.closest || !x.closest(".cx-t") || !x.hasAttribute("data-t")) return;
     const t = x.getAttribute("data-t");
     x.classList.remove("cx-ok", "cx-ng", "cx-new");
-    if (x.value.trim()) x.classList.add(!t ? "cx-new" : eq(x.value, t) ? "cx-ok" : "cx-ng");
+    if (x.value.trim()) x.classList.add(!t ? "cx-new" : near(x.value, t, +x.getAttribute("data-tol") || 0) ? "cx-ok" : "cx-ng");
   });
 
   // 上の帯の切り替えボタン（素質・ロスレコ・スキル・信頼ボーナス）
