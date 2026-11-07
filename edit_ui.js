@@ -142,10 +142,10 @@
     const builds = groups.filter(g => !/Generic/i.test(g.title)), gen = groups.find(g => /Generic/i.test(g.title));
     const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
     const grid = (arr, c) => `<div class="pgrid" style="grid-template-columns:repeat(${c},minmax(0,1fr))">${arr.map(card).join("")}</div>`;
-    const coreRow = `<div class="pgrid" style="grid-template-columns:repeat(${Math.max(1, builds.length)},minmax(0,1fr));gap:14px">${builds.map(g => `<div><div class="phead">コア：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1), 2)}</div>`).join("")}</div>`;
     const slRow = `<div class="sl"><b>スキルLv</b>${SKILLS.map(([k, nm]) => `<label>${nm} <select data-sl="${k}">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => `<option${v === slOf(S.t, k) ? " selected" : ""}>${v}</option>`).join("")}</select></label>`).join("")}
       <div class="muted">ゲームの画面と同じLv（徽章なし）を入れてください。コア素質の追加ダメージの数字を、そのLvの値で出します。</div></div>`;
-    $("list").innerHTML = slRow + coreRow + builds.map(g => `<div class="phead">${S.role === "main" ? "主力" : "支援"}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("") + (gen ? `<div class="phead">汎用</div>${grid(gen.potentials, 3)}` : "");
+    // 並び（3列）: 特化構築ごとに「コア2つ」→「素質」、最後に汎用（2026-11-07 ユーザー指定）
+    $("list").innerHTML = slRow + builds.map(g => `<div class="phead">コア：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1), 3)}<div class="phead">${S.role === "main" ? "主力" : "支援"}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("") + (gen ? `<div class="phead">汎用</div>${grid(gen.potentials, 3)}` : "");
   }
 
   // ---- 入力欄 ----
@@ -186,16 +186,19 @@
       });
     }
     const lv6 = a => a.length > 1 ? a[a.length - 1] : null;
-    // 入力欄の横に単位（%）を出す。入れるのは数字だけ
-    const unit = a => /%|％/.test(String(a[0])) ? '<span class="ck-u">%</span>' : "";
-    const inp = (i, lv, a) => `<input type="text" inputmode="decimal" data-ck="${i}:${lv}" value="${esc((g[i] || {})[lv] || "")}" placeholder="違うときだけ">${unit(a)}`;
-    const rowsH = nums.map((a, i) => `<tr><td>${i + 1}つ目</td><td>${a[0]}</td><td>${lv6(a) == null ? "—" : lv6(a)}</td>
-      <td class="ck-in">${inp(i, 1, a)}</td>
-      <td class="ck-in">${lv6(a) == null ? "—" : inp(i, 6, a)}</td></tr>`).join("");
+    // 単位（%）は行の名前の横に出す。入れるのは数字だけ
+    const unit = a => /%|％/.test(String(a[0])) ? '<span class="ck-u">（%）</span>' : "";
+    const LVS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const key = lv => lv === 1 || lv === 6 ? ' class="ck-in ck-key"' : ' class="ck-in"';
+    const inp = (i, lv) => `<input type="text" inputmode="decimal" data-ck="${i}:${lv}" value="${esc((g[i] || {})[lv] || "")}">`;
+    // Lvで変わらない数字（コア素質など）は Lv1 の欄だけ
+    const rowsH = nums.map((a, i) => `<tr><td>${i + 1}つ目${unit(a)}</td><td>${a[0]}</td><td>${lv6(a) == null ? "—" : lv6(a)}</td>
+      ${LVS.map(lv => `<td${key(lv)}>${lv6(a) == null && lv !== 1 ? "—" : inp(i, lv)}</td>`).join("")}</tr>`).join("");
     return `<div class="ck">
       <div class="ck-h">ゲームの素質の画面と比べてください</div>
       <div class="muted">上の文は日本語Wikiの文です。ゲームの画面（素質の説明、初期Lv＝Lv1、最大＝Lv6）と、文と数字が合っているかを見てください。</div>
-      ${nums.length ? `<table class="lv ck-t"><tr><th>文の中の数字</th><th>Wiki Lv1</th><th>Wiki Lv6</th><th>ゲーム Lv1</th><th>ゲーム Lv6</th></tr>${rowsH}</table>${slNote ? `<div class="muted">${slNote}</div>` : ""}` : '<div class="muted">文の中に数字はありません。</div>'}
+      ${nums.length ? `<table class="lv ck-t"><tr><th rowspan="2">文の中の数字</th><th rowspan="2">Wiki Lv1</th><th rowspan="2">Wiki Lv6</th><th colspan="9">ゲーム</th></tr><tr>${LVS.map(lv => `<th${key(lv)}>Lv${lv}</th>`).join("")}</tr>${rowsH}</table>
+      <div class="muted">ゲームの数字は、違うときだけ入れてください（Wikiに無いLvは、分かった数字を入れてください）。</div>${slNote ? `<div class="muted">${slNote}</div>` : ""}` : '<div class="muted">文の中に数字はありません。</div>'}
       <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・何に効くかわからない など）"></div>
       <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button>${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>
       <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}</div>
@@ -302,7 +305,7 @@
         Object.keys(vals).filter(k => k !== "memo").forEach(k => { const [i, lv] = k.split(":"); const v = String(vals[k]).replace(/[%％\s]/g, ""); if (v) { g[i] = g[i] || {}; g[i][lv] = v; } });
         if (st === "diff" && !Object.keys(g).length) { const m = $("ckmsg"); if (m) m.textContent = "ゲームの数字を、違うところだけ入れてから押してください"; return; }
         const o = { st, at: new Date().toISOString().slice(0, 10) };
-        if (st === "diff") o.g = g;
+        if (Object.keys(g).length) o.g = g;   // Lv2〜5・7〜9 を集めるので、「合ってる」「わからない」でも入れた数字は残す
         if (vals.memo && String(vals.memo).trim()) o.memo = String(vals.memo).trim();
         chk[S.t][name] = o;
       }
