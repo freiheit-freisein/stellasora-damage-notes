@@ -78,7 +78,7 @@
       const td = (lv, h) => lvsOf.indexOf(lv) >= 0 ? h : `<td class="muted" style="text-align:center">—</td>`;
       const v = (m, lv) => m && m[lv] != null ? esc(m[lv]) : "";
       const tgt = lv => row.ref && row.ref[lv] != null ? row.ref[lv] : (row.reg[lv] != null ? row.reg[lv] : "");
-      const inp = (k, lv) => `<td class="ck-in${key(lv)}"><input type="text" inputmode="decimal" ${o.attr(k, row.i, lv)} data-t="${esc(tgt(lv))}" class="${k === "g" ? cls(st[lv]) : (/^r-/.test(st[lv]) ? cls(st[lv]) : "")}" value="${esc(o.get(k, row.i, lv) || "")}"></td>`;
+      const inp = (k, lv) => `<td class="ck-in${key(lv)}"><input type="text" inputmode="decimal" ${o.attr(k, row.i, lv)} data-t="${esc(tgt(lv))}" class="${String(o.get(k, row.i, lv) || "").trim() && new RegExp("^" + k + "-").test(st[lv] || "") ? cls(st[lv]) : ""}" value="${esc(o.get(k, row.i, lv) || "")}"></td>`;
       const n = 2 + (ref ? 1 : 0) + 2 + (fx ? 1 : 0);
       return `<tr class="cx-top"><td rowspan="${n}"><b>${esc(row.label)}</b></td><td class="cx-k">登録</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center">${v(row.reg, lv)}</td>`)).join("")}</tr>` +
         (ref ? `<tr><td class="cx-k">控え</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="cx-ref">${row.ref ? v(row.ref, lv) : ""}</td>`)).join("")}</tr>` : "") +

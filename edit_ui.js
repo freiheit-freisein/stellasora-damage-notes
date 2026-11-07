@@ -38,7 +38,9 @@
   // data/pot_check.js = 貼ってもらって反映済みの確認（どのブラウザでも確認済みに数える）。ブラウザで押した確認を、その上に重ねる
   const CK_FILE = window.POT_CHECK || {};
   chk = clone(CK_FILE);
-  try { const sv = JSON.parse(localStorage.getItem(CKEY)) || {}; Object.keys(sv).forEach(t => { chk[t] = Object.assign(chk[t] || {}, sv[t]); }); } catch (e) { /* 保存なしでも動く */ }
+  // ブラウザに残っている確認のうち、ファイルで「報告」に移したもの（前の Edit で報告をゲームの欄に入れていた分）は、ファイルの方を使う
+  const sameG = (a, b) => JSON.stringify(a || null) === JSON.stringify(b || null);
+  try { const sv = JSON.parse(localStorage.getItem(CKEY)) || {}; Object.keys(sv).forEach(t => { Object.keys(sv[t] || {}).forEach(p => { const f = (CK_FILE[t] || {})[p]; if (f && f.r && !f.g && sameG(sv[t][p].g, f.r) && !sv[t][p].r && !sv[t][p].fix) delete sv[t][p]; }); chk[t] = Object.assign(chk[t] || {}, sv[t]); }); } catch (e) { /* 保存なしでも動く */ }
   const ckDone = (en, pot) => !!(CK_FILE[en] && CK_FILE[en][pot]);
   const saveChk = () => { try { localStorage.setItem(CKEY, JSON.stringify(chk)); } catch (e) { /* 無視 */ } };
   const chkOf = (en, pot) => (chk[en] || {})[pot] || null;
