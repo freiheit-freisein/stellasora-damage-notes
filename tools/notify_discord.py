@@ -29,7 +29,8 @@ def main():
         m = re.search(r'c:\s*"(\w+)".*?t:\s*"((?:[^"\\]|\\.)*)"', ln)
         if m:
             add = re.search(r"add:\s*true", ln)
-            items.append(f"・【{CAT.get(m.group(1), m.group(1))}{'・追加' if add else ''}】{m.group(2)}")
+            txt = m.group(2).replace("`", "'")   # 1件ずつコードブロックで囲む（見分けやすいように。ユーザーの希望）
+            items.append(f"```\n【{CAT.get(m.group(1), m.group(1))}{'・追加' if add else ''}】{txt}\n```")
     if not items:
         print("増えた更新履歴の行がありません"); LAST.write_text(head, encoding="utf-8"); return
     head_txt = "**巡遊者の計算ノートを更新しました**"
