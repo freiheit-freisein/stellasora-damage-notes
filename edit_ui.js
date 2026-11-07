@@ -40,6 +40,16 @@
   chk = clone(CK_FILE);
   // ブラウザに残っている確認のうち、ファイルで「報告」に移したもの（前の Edit で報告をゲームの欄に入れていた分）は、ファイルの方を使う
   const sameG = (a, b) => JSON.stringify(a || null) === JSON.stringify(b || null);
+  // ファイルの版（POT_CHECK_REV）が変わったら、ブラウザに残っている確認のうちファイルにある素質の分は消して、ファイルを使う
+  //（貼ってもらった書き出しは、ブラウザの確認を全部含んでいるので、取り込んだあとはファイルが新しい）
+  try {
+    const rev = window.POT_CHECK_REV || "", RKEY = "stellasora-pot-check-rev";
+    if (rev && localStorage.getItem(RKEY) !== rev) {
+      const sv = JSON.parse(localStorage.getItem(CKEY)) || {};
+      Object.keys(sv).forEach(t => { Object.keys(sv[t] || {}).forEach(p => { if ((CK_FILE[t] || {})[p]) delete sv[t][p]; }); if (!Object.keys(sv[t] || {}).length) delete sv[t]; });
+      localStorage.setItem(CKEY, JSON.stringify(sv)); localStorage.setItem(RKEY, rev);
+    }
+  } catch (e) { /* 保存なしでも動く */ }
   try { const sv = JSON.parse(localStorage.getItem(CKEY)) || {}; Object.keys(sv).forEach(t => { Object.keys(sv[t] || {}).forEach(p => { const f = (CK_FILE[t] || {})[p]; if (f && f.r && !f.g && sameG(sv[t][p].g, f.r) && !sv[t][p].r && !sv[t][p].fix) delete sv[t][p]; }); chk[t] = Object.assign(chk[t] || {}, sv[t]); }); } catch (e) { /* 保存なしでも動く */ }
   const ckDone = (en, pot) => !!(CK_FILE[en] && CK_FILE[en][pot]);
   const saveChk = () => { try { localStorage.setItem(CKEY, JSON.stringify(chk)); } catch (e) { /* 無視 */ } };
