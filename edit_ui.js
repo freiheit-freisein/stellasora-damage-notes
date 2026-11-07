@@ -121,15 +121,24 @@
   }
 
   // ---- 一覧 ----
+  // 「素質の確認」と「ロスレコの確認」（edit_lr.js）の切り替え
+  let MODE = "pot";
+  try { MODE = localStorage.getItem("stellasora-edit-mode") === "lr" && window.EDIT_LR ? "lr" : "pot"; } catch (e) { /* 無視 */ }
+  const STEPS = {
+    pot: "<b>手順</b>　① 巡遊者を選ぶ　② 素質をクリック　③ ゲームの素質の画面と比べて「合ってる／数字が違う／わからない」を押す　④ 終わったら右下の「確認の結果を書き出す」→「コピー」→ Claude に貼り付ける",
+    lr: "<b>手順</b>　① 属性を選ぶ　② ロスレコをクリック　③ ゲームのロスレコの画面（突破・アシスト効果のLvは ◀▶ で切り替え）と比べて「合ってる／数字が違う／わからない」を押す　④ 終わったら右下の「確認の結果を書き出す」→「コピー」→ Claude に貼り付ける",
+  };
   const bar = () => {
+    if (MODE === "lr") return;
     const done = (en, t) => { let n = 0, d = 0, dr = 0; Object.keys(t.potentials || {}).forEach(role => t.potentials[role].forEach(g => g.potentials.forEach(p => { n++; { const u = specOf(en, p.name); if ((u && !u.draft) || (!u && builtIn(en, p.name)) || ckDone(en, p.name)) d++; else if ((u && u.draft) || draftOf(en, role, p.name)) dr++; } }))); return [d, n, dr]; };
     const t = TREKKERS.find(x => x.en === S.t), [d, n, dr] = done(S.t, t);
-    $("bar").innerHTML = `<b>巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
+    $("bar").innerHTML = `${window.EDIT_LR ? '<button class="sbtn on" data-act="mode:pot">素質の確認</button><button class="sbtn" data-act="mode:lr">ロスレコの確認</button>' : ""}<b style="margin-left:8px">巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
       <button class="sbtn${S.role === "main" ? " on" : ""}" data-act="role:main">主力の素質</button><button class="sbtn${S.role === "support" ? " on" : ""}" data-act="role:support">支援の素質</button>
       <span class="muted">${esc(TJ(S.t))}：確認済み ${d} ／ 全 ${n} 件（このブラウザで「合ってる」などを押したもの ${Object.keys(chk[S.t] || {}).length} 件）</span>
       <label class="muted" style="margin-left:auto"><input type="checkbox" data-act="adv"${S.adv ? " checked" : ""}> 詳しい入力を出す（通常は使いません）</label>`;
   };
   function renderList() {
+    if (MODE === "lr") return;
     const t = TREKKERS.find(x => x.en === S.t);
     const groups = (t.potentials || {})[S.role] || [];
     const card = p => {
@@ -225,6 +234,7 @@
   }
 
   function renderEditor() {
+    if (MODE === "lr") return;
     const t = TREKKERS.find(x => x.en === S.t);
     let p = null;
     ["main", "support"].forEach(r => (t.potentials[r] || []).forEach(g => g.potentials.forEach(x => { if (x.name === S.sel && r === S.role) p = x; })));
@@ -292,6 +302,8 @@
     const el = ev.target.closest("[data-act]");
     if (!el) return;
     const a = el.getAttribute("data-act");
+    if (a.indexOf("mode:") === 0) { setMode(a.slice(5)); return; }
+    if (MODE === "lr") { if (a !== "ckexport" && a !== "copy") return; }
     if (a === "adv") { S.adv = el.checked; bar(); renderList(); renderEditor(); return; }
     if (/^ck:/.test(a)) {
       const st = a.slice(3), name = S.sel;
@@ -304,7 +316,7 @@
         const g = {};
         Object.keys(vals).filter(k => k !== "memo").forEach(k => { const [i, lv] = k.split(":"); const v = String(vals[k]).replace(/[%％\s]/g, ""); if (v) { g[i] = g[i] || {}; g[i][lv] = v; } });
         if (st === "diff" && !Object.keys(g).length) { const m = $("ckmsg"); if (m) m.textContent = "ゲームの数字を、違うところだけ入れてから押してください"; return; }
-        const o = { st, at: new Date().toISOString().slice(0, 10) };
+        const o = { st, at: new Date().toLocaleDateString("sv") };
         if (Object.keys(g).length) o.g = g;   // Lv2〜5・7〜9 を集めるので、「合ってる」「わからない」でも入れた数字は残す
         if (vals.memo && String(vals.memo).trim()) o.memo = String(vals.memo).trim();
         chk[S.t][name] = o;
@@ -313,7 +325,7 @@
       saveChk(); bar(); renderList(); renderEditor();
       return;
     }
-    if (a === "ckexport") { $("io").value = "// 素質の確認（edit.html で作成）。ゲームの画面と比べた結果\nwindow.POT_CHECK = " + JSON.stringify(chk, null, 1) + ";\n"; $("iomsg").textContent = "書き出しました。「コピー」を押して、Claude に貼り付けてください。"; return; }
+    if (a === "ckexport") { $("io").value = "// 素質の確認（edit.html で作成）。ゲームの画面と比べた結果\nwindow.POT_CHECK = " + JSON.stringify(chk, null, 1) + ";\n" + (window.EDIT_LR ? window.EDIT_LR.exportText() : ""); $("iomsg").textContent = "書き出しました。「コピー」を押して、Claude に貼り付けてください。"; return; }
     if (a.indexOf("role:") === 0) { S.role = a.slice(5); S.sel = null; bar(); renderList(); renderEditor(); return; }
     if (a.indexOf("pick:") === 0) { Object.keys(ckBuf).forEach(k => delete ckBuf[k]); openPot(a.slice(5)); renderList(); return; }
     if (a === "ok") { const e = meta.none ? [] : rows.map(toEngine); user[S.t] = user[S.t] || {}; const o = { done: true, e, txt: meta.txt || "", verified: "確認済み" }; if (meta.off) o.off = true; if (meta.ext) o.ext = meta.ext; if (meta.note) o.note = meta.note; user[S.t][S.sel] = o; save(); meta.fromDraft = false; meta.unk = null; bar(); renderList(); renderEditor(); return; }
@@ -345,7 +357,13 @@
     }
     if (a === "clear") { if (confirm(TJ(S.t) + " の入力を消します。よいですか？")) { delete user[S.t]; save(); S.sel = null; bar(); renderList(); renderEditor(); } }
   });
-  bar(); renderList();
+  function setMode(m) {
+    MODE = m === "lr" && window.EDIT_LR ? "lr" : "pot";
+    try { localStorage.setItem("stellasora-edit-mode", MODE); } catch (e) { /* 無視 */ }
+    $("steps").innerHTML = STEPS[MODE];
+    if (MODE === "lr") window.EDIT_LR.render(); else { bar(); renderList(); renderEditor(); }
+  }
+  setMode(MODE);
   if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {   // 手元で開いたときだけ、照合用の控えを読む（無ければ何もしない）
     const s = document.createElement("script");
     s.src = "data/ref.local.js?t=" + Date.now();
