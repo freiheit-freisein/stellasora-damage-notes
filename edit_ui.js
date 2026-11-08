@@ -220,7 +220,7 @@
     const cxRows = nums.map((a, i) => {
       const cst = lv6(a) == null, lvs = cst ? [1] : LVS;
       const reg = cst ? { 1: a[0] } : { 1: a[0], 6: lv6(a) };
-      const isSl = !!clX && lv6(a) == null && clX.vals.some(v => Math.abs(v - parseFloat(String(a[0]).replace(/[^0-9.]/g, ""))) < 0.05);
+      const isSl = !!clX && lv6(a) == null && clX.vals.some(v => Math.abs(v - parseFloat((String(a[0]).match(/[0-9.]+/) || [""])[0])) < 0.05);
       const k = rf && !isSl ? CMP.matchParam(rf.params.map(x => Array.isArray(x) ? x : String(x).split("/")), reg, cst ? [1] : [1, 6], used) : -1;
       const pr = k >= 0 ? (Array.isArray(rf.params[k]) ? rf.params[k] : String(rf.params[k]).split("/")) : null;
       // 「約」の数字（スキルLvで伸びる数字を、選んだスキルLvの値に直したもの）は目安なので、1%までのずれは合っているとみなす
