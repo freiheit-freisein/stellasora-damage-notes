@@ -155,10 +155,14 @@
     }
     // 同じものが無くても、いちばん近いものを控えとして出す（2026-11-09 ユーザー: ずれとは関係なく出す。報告の入力ミスも見るため）
     let best = -1, bs = Infinity;
-    const rel = (a, b) => { const x = num(a), y = num(b); return x == null || y == null ? 9 : Math.abs(x - y) / Math.max(1, Math.abs(y)); };
+    const rel = (a, b) => { const x = Math.abs(num(a)), y = Math.abs(num(b)); return x == null || y == null ? 9 : Math.abs(x - y) / Math.max(1, Math.abs(y)); };
     for (let k = 0; k < (params || []).length; k++) {
       if (used.has(k)) continue;
       const p = params[k];
+      // Lvで変わらない数字には変わらない控え、Lvで変わる数字には変わる控えだけを当てる（例: 「3本」に 21〜72% を当てない）
+      const pConst = p.length === 1 || new Set(p.map(x => String(x))).size === 1;
+      if ((lvs.length === 1) !== pConst) continue;
+      if (/%/.test(String(reg[first])) !== /%/.test(String(p[0]))) continue;   // 「%」の付き方も同じものだけ（113.3% に 3.5 を当てない）
       const sc = rel(p[0], reg[first]) + (lvs.length > 1 && reg[last] != null && p.length > 1 ? rel(p[Math.min(last, p.length) - 1], reg[last]) : 0) + ((lvs.length > 1) === (p.length > 1) ? 0 : 0.5);
       if (sc < bs) { bs = sc; best = k; }
     }
