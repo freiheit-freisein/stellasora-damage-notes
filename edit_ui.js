@@ -225,31 +225,45 @@
     });
     const cxGet = (kd, i, lv) => kd === "g" ? (ckBuf[i + ":" + lv] != null ? ckBuf[i + ":" + lv] : (g[i] || {})[lv]) : (ckBuf["r:" + i + ":" + lv] != null ? ckBuf["r:" + i + ":" + lv] : ((ck.r || {})[i] || {})[lv]);
     if (window.CMP && nums.length) {
-      // 表は1つの数字につき1つ（2026-11-09 ユーザー: 表が2つ・行が多いと分かりにくい）
-      //  ・スキルLvで伸びる数字（コア素質）→「スキルLv（徽章込み）」の表だけ
-      //  ・それ以外 →「素質Lv」の表だけ（Lvで変わらない数字は「値」の1列）
+      // 1つの画面で見られるように: 表は1つの数字に1つ。段は「現在（計算機が使う値）・控え・採用」。クリックで採用、無ければ手入力（2026-11-09 ユーザー）
+      //  ・スキルLvで伸びる数字（コア素質）→ スキルLv1〜13 の列（現在＝計算機が今使う値）
+      //  ・それ以外 → 素質Lv1〜9 の列（現在＝計算機が使う英語Wikiの値。Lv7〜9 は計算機と同じ延ばし方）。Lvで変わらない数字は「値」の1列
       const cl = p.type === 1 ? coreLv(S.t, p.name) : null;
       const SLV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-      const SL_GROUPS = [{ lvs: SLV.slice(0, 10), ends: [], mid: 2 }, { lvs: [11, 12, 13], ends: [], mid: 1 }];
-      const slRows = cl ? (jn || []).map((x, i) => { const f = String(x).match(/\d+(?:\.\d+)?/), jv = f ? parseFloat(f[0]) : null; if (jv == null || !cl.vals.some(v => Math.abs(v - jv) < 0.05)) return null; const reg = {}; SLV.forEach(lv => { reg[lv] = String(Math.round(jv * lvRatio(S.t, cl.k, lv) * 10) / 10); }); return { i: "s" + i, n: i, label: `${i + 1}つ目`, reg, ref: reg, selfRef: true, regName: "目安", okText: "伸び方が合っている", tol: 0.02, groups: SL_GROUPS }; }).filter(Boolean) : [];
+      const pct = s => /%|％/.test(String(s)) ? "%" : "";
+      const r1 = x => String(Math.round(x * 10) / 10);
+      const slRows = cl ? (jn || []).map((x, i) => { const f = String(x).match(/\d+(?:\.\d+)?/), jv = f ? parseFloat(f[0]) : null; if (jv == null || !cl.vals.some(v => Math.abs(v - jv) < 0.05)) return null; const reg = {}; SLV.forEach(lv => { reg[lv] = r1(jv * lvRatio(S.t, cl.k, lv)) + pct(x); }); return { i: "s" + i, n: i, label: `${i + 1}つ目`, reg, ref: null }; }).filter(Boolean) : [];
       const slIdx = new Set(slRows.map(r => r.n));
-      const rows = cxRows.filter(r => !slIdx.has(r.i));
+      // 現在の値: 英語Wikiの数字の並び（Lv1〜6）のうち、Lv1とLv6が同じものを使い、Lv7〜9 は計算機と同じく最後の伸びで延ばす（上限ありの素質はLv6のまま）
+      const sp = specOf(S.t, p.name) || builtIn(S.t, p.name) || draftOf(S.t, S.role, p.name) || {};
+      const enUsed = new Set();
+      const rows = cxRows.filter(r => !slIdx.has(r.i)).map(r => {
+        const u = pct(r.reg[1]);
+        if (r.lvs.length > 1) {
+          const k = (p.nums || []).findIndex((a, j) => !enUsed.has(j) && a && a.length >= 6 && CMP.eq(a[0], r.reg[1]) && CMP.eq(a[5], r.reg[6]));
+          if (k >= 0) {
+            enUsed.add(k); const a = p.nums[k], reg = {};
+            const cap = sp.ext === "cap" || (sp.e || []).some(e => e.n === k && e.extcap);
+            for (let lv = 1; lv <= 9; lv++) reg[lv] = r1(lv <= 6 ? a[lv - 1] : cap ? a[5] : a[5] + (a[5] - a[4]) * (lv - 6)) + u;
+            return Object.assign({}, r, { reg });
+          }
+        }
+        return r;
+      });
       const allConst = rows.every(r => r.lvs.length === 1);
       CK_ROWS = { rows: rows.concat(slRows), get: cxGet, sl: null };
       const fx = ck.fix || {};
-      const attr = (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"`;
+      const attr = (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : kd === "f" ? "f:" : ""}${i}:${lv}"`;
       const skName = cl ? esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1]) : "";
       const potTable = rows.length ? CMP.table({ lvs: allConst ? [1] : LVS, head: lv => allConst ? "値" : "素質Lv" + lv, rows, groups: POT_GROUPS, get: cxGet, attr, fix: i => fx[i] }) : "";
-      const slTable = slRows.length ? `<div class="phead" style="font-size:13px">${skName}のLvで伸びる数字</div>
-        <div class="muted">ゲームの画面に出ている${skName}Lv（徽章込み）の欄に入れてください。目安＝計算機が使う値（Wikiの丸めた数字から出しているので、2%＋表示の丸めまでのずれは合っているとみなします）。</div>
-        ${CMP.table({ lvs: SLV, head: lv => "Lv" + lv, rows: slRows, groups: SL_GROUPS, get: cxGet, attr, fix: i => fx[i] })}` : "";
+      const slTable = slRows.length ? `<div class="phead" style="font-size:13px">${skName}のLv（徽章込み）で伸びる数字</div>
+        ${CMP.table({ lvs: SLV, head: lv => "Lv" + lv, rows: slRows, get: cxGet, attr, fix: i => fx[i] })}` : "";
       return `<div class="ck">
-      <div class="ck-h">ゲームの素質の画面と比べてください</div>
-      <div class="muted">報告＝もらった数字、ゲーム＝自分で画面を見た数字。分かったところだけ入れてください。緑＝同じ、赤＝違う。</div>
+      <div class="muted">数字をクリックすると「採用」に入ります（「全部」で1行まとめて）。違うときは採用の欄に打ってください。緑＝控えと同じ・青＝現在と同じ・橙＝手入力。</div>
       ${potTable}${slTable}
-      <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・報告した人・徽章あり/なし など）"></div>
-      <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button><button class="btn-add" data-act="ck:fix" style="background:#2E9E7A;color:#fff">確定する（そろった範囲）</button>${ck.fix ? `<button class="btn-add" data-act="ck:unfix">確定を消す</button>` : ""}${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>
-      <div class="muted" id="ckmsg">${ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ確認していません"}${ck.fix ? `・確定済み（${esc(ck.fixAt || "")}）` : ""}</div>
+      <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・報告した人 など）"></div>
+      <div class="ck-b"><button class="btn-add pri" data-act="ck:save">採用を保存</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button>${ck.st || ck.fix ? `<button class="btn-add" data-act="ck:del">消す</button>` : ""}</div>
+      <div class="muted" id="ckmsg">${ck.fix ? `採用済み（${esc(ck.fixAt || ck.at || "")}）` : ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ採用していません"}</div>
     </div>`;
     }
     return `<div class="ck">
@@ -265,6 +279,15 @@
   // 素質の確定のきまり（2026-11-08 ユーザー）: Lv1とLv6＋Lv2〜5のどれか1つ、Lv7〜9は2つ
   const POT_GROUPS = [{ lvs: [1, 2, 3, 4, 5, 6], ends: [1, 6], mid: 1 }, { lvs: [7, 8, 9], ends: [], mid: 2 }];
   let CK_ROWS = null;   // 今開いている素質の比べる表（確定ボタンで使う）
+  // 説明文を2つ並べる（左＝現在の文＝計算ノートが使っている日本語Wikiの文、右＝控えの文）。控えの数字は「Lv1〜最後」の幅で出す
+  function twoText(p) {
+    const cur = esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "").replace(/\n/g, "<br>");
+    const r = window.REF_LOCAL ? ((window.REF_LOCAL[S.t] || {})[p.name] || null) : undefined;
+    const rng = v => { const a = Array.isArray(v) ? v : String(v).split("/"); return a.length > 1 && a[0] !== a[a.length - 1] ? a[0] + "〜" + a[Math.min(a.length, 9) - 1] : a[0]; };
+    const ref = r === undefined ? "" : !r ? "<span class=\"muted\">控えにありません</span>" : esc(String(r.desc || "").replace(/<\/?color[^>]*>/g, "").replace(/##([^#]+)#\d+#/g, "$1").replace(/\u000b/g, "\n"))
+      .replace(/&amp;Param(\d+)&amp;/g, (m, i) => "<b style=\"color:var(--indigo)\">" + esc(rng(r.params[i - 1] != null ? r.params[i - 1] : "?")) + "</b>").replace(/\n/g, "<br>");
+    return r === undefined ? `<div class="txt">${cur}</div>` : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0"><div class="txt" style="margin:0"><b class="muted">現在の文</b><br>${cur}</div><div class="txt" style="margin:0;background:#F3F0FF"><b class="muted">控えの文</b><br>${ref}</div></div>`;
+  }
   // 手元だけの照合用データ（data/ref.local.js があれば、localhost のときだけ読む）。公開サイトには出ない
   function refHtml(p) {
     const r = ((window.REF_LOCAL || {})[S.t] || {})[p.name];
@@ -293,7 +316,7 @@
     if (!p) { $("editor").innerHTML = "<h2>素質の確認</h2><p class=\"muted\">左の素質を選んでください。</p>"; return; }
     if (!S.adv) {
       $("editor").innerHTML = `<h2>${esc(PJ(S.t, p.name))} <span class="muted">${esc(p.name)}</span></h2>
-        <div class="txt">${esc((jpOf(S.t, S.role, p.name) || {}).text || p.text || p.brief || "")}</div>${checkHtml(p)}${refHtml(p)}`;
+        ${twoText(p)}${checkHtml(p)}`;
       return;
     }
     const nOpts = (p.nums || []).map((a, i) => [i, `番号${i}（Lv1=${a[0]}${a.length > 1 ? " … Lv6=" + a[a.length - 1] : ""}）`]);
@@ -357,6 +380,24 @@
     if (a.indexOf("mode:") === 0) { setMode(a.slice(5)); return; }
     if (MODE !== "pot") { if (a !== "ckexport" && a !== "copy") return; }
     if (a === "adv") { S.adv = el.checked; bar(); renderList(); renderEditor(); return; }
+    if (a === "ck:save" || a === "ck:unk") {   // 採用の欄（f:番号:Lv）を保存。前に入れた報告・ゲームの数字はそのまま残す
+      const name = S.sel; chk[S.t] = chk[S.t] || {};
+      const prev = chk[S.t][name] || {}, o = Object.assign({}, prev), f = {};
+      o.at = new Date().toLocaleDateString("sv");
+      document.querySelectorAll("[data-ck^=\"f:\"]").forEach(x => { const ks = x.getAttribute("data-ck").split(":"), r = CMP.adopt(x); if (r) (f[ks[1]] = f[ks[1]] || {})[ks[2]] = r; });
+      if (Object.keys(f).length) { o.fix = f; o.fixAt = o.at; } else { delete o.fix; delete o.fixAt; }
+      const all = Object.values(f).flatMap(m => Object.values(m));
+      o.st = a === "ck:unk" ? "unk" : !all.length ? (prev.st || "ok") : all.every(x => x.same) ? "ok" : "diff";
+      all.forEach(x => delete x.same);
+      const mx = document.querySelector("[data-ck=\"memo\"]"), memo = String(ckBuf.memo != null ? ckBuf.memo : mx ? mx.value : "").trim();
+      if (memo) o.memo = memo; else delete o.memo;
+      delete o.sl;
+      if (a === "ck:unk" && !memo) { const m = $("ckmsg"); if (m) m.textContent = "メモを書いてから押してください"; return; }
+      chk[S.t][name] = o;
+      Object.keys(ckBuf).forEach(k => delete ckBuf[k]);
+      saveChk(); bar(); renderList(); renderEditor();
+      return;
+    }
     if (/^ck:/.test(a)) {
       const st = a.slice(3), name = S.sel;
       chk[S.t] = chk[S.t] || {};

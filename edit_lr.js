@@ -57,7 +57,7 @@
     });
     rows.forEach(r => ROWS.push({ row: r, groups }));
     const fx = (chk[V.sel] || {}).fix || {};
-    const tb = n ? CMP.table({ lvs, head, rows, groups, get: (kd, i, lv) => val(kd, `${i}:${lv}`), attr: (kd, i, lv) => `data-lk="${kd === "r" ? "r:" : ""}${i}:${lv}"`, fix: i => fx[i] }) : '<div class="muted">文の中に数字はありません。</div>';
+    const tb = n ? CMP.table({ lvs, head, rows, groups, get: (kd, i, lv) => val(kd, `${i}:${lv}`), attr: (kd, i, lv) => `data-lk="${kd === "r" ? "r:" : kd === "f" ? "f:" : ""}${i}:${lv}"`, fix: i => fx[i] }) : '<div class="muted">文の中に数字はありません。</div>';
     return `<div class="txt">${esc(last)}${it.skip ? '　<span class="tag t-draft">計算に未反映</span>' : ""}${it.off ? '　<span class="tag t-none">既定で反映しない</span>' : ""}</div>${tb}`;
   }
 
@@ -87,7 +87,7 @@
     return `<h2>${esc(r.name)}${isAuto(r) ? "*" : ""} <span class="muted">★${r.rarity} ${esc(r.element || "")}${r.core && r.core.rank && r.core.rank !== "?" ? `・登録の突破 ${esc(r.core.rank)}` : ""}</span></h2>
       <div class="ck">
         <div class="ck-h">ゲームのロスレコの画面と比べてください</div>
-        <div class="muted">登録＝サイトの今の値、控え＝手元の照合用データ、報告＝Discord などでもらった値、ゲーム＝自分で画面を見た値です。分かったところだけ入れてください。緑＝控え（無ければ登録）と同じ、赤＝違う、青＝比べる相手が無い。確定のきまり：両端（突破IとVI、Lv1とLv5）＋その間のどれか1つ。基礎攻撃力などは、何段目の突破の画面か、メモに書いてください。</div>
+        <div class="muted">数字をクリックすると「採用」に入ります（「全部」で1行まとめて）。違うときは採用の欄に打ってください。基礎攻撃力などは、何段目の突破の画面かメモに書いてください。</div>
         <div class="phead" style="font-size:13px">ステータス</div>
         ${refNote}${stRows ? `<table class="lv ck-t"><tr><th>項目</th><th>登録</th><th>ゲーム</th></tr>${stRows}</table>` : '<div class="muted">登録していません。</div>'}${refSt}
         <div class="phead" style="font-size:13px">サブにしたときの初期の音符</div>
@@ -95,7 +95,7 @@
         <div class="phead" style="font-size:13px">コア効果</div>${core}
         <div class="phead" style="font-size:13px">アシスト効果</div>${assists}
         <div class="fld"><label>メモ</label><input type="text" data-lk="memo" value="${esc(buf.memo != null ? buf.memo : (c.memo || ""))}" placeholder="気づいたこと（文が違う・突破の段・何に効くかわからない など）"></div>
-        <div class="ck-b"><button class="btn-add pri" data-act="lrck:ok">合ってる</button><button class="btn-add" data-act="lrck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="lrck:unk">わからない（メモで保存）</button><button class="btn-add" data-act="lrck:fix" style="background:#2E9E7A;color:#fff">確定する（そろった範囲）</button>${c.fix ? '<button class="btn-add" data-act="lrck:unfix">確定を消す</button>' : ""}${c.st ? '<button class="btn-add" data-act="lrck:del">確認を消す</button>' : ""}</div>
+        <div class="ck-b"><button class="btn-add pri" data-act="lrck:save">採用を保存</button><button class="btn-add" data-act="lrck:unk">わからない（メモで保存）</button>${c.st || c.fix ? '<button class="btn-add" data-act="lrck:del">消す</button>' : ""}</div>
         <div class="muted" id="lrmsg">${c.st ? `今の確認: <b>${NAME[c.st]}</b>（${esc(c.at || "")}）` : "まだ確認していません"}${c.fix ? `・確定済み（${esc(c.fixAt || "")}）` : ""}</div>
       </div>`;
   }
@@ -117,13 +117,17 @@
         const vals = {};
         document.querySelectorAll("[data-lk]").forEach(x => { const k = x.getAttribute("data-lk"); vals[k] = buf[k] != null ? buf[k] : x.value; });
         const g = {}, rp = {};
-        Object.keys(vals).filter(k => k !== "memo").forEach(k => { const v = String(vals[k]).replace(/[%％\s]/g, ""); if (!v) return; if (k.indexOf("r:") === 0) rp[k.slice(2)] = v; else g[k] = v; });
+        Object.keys(vals).filter(k => k !== "memo" && k.indexOf("f:") !== 0).forEach(k => { const v = String(vals[k]).replace(/[%％\s]/g, ""); if (!v) return; if (k.indexOf("r:") === 0) rp[k.slice(2)] = v; else g[k] = v; });
+        // 採用の欄（f:効果:Lv）。報告の欄はもう無いので、前に入れた数字は残す
+        const fa = {}; let allSame = true, nf = 0;
+        document.querySelectorAll('[data-lk^="f:"]').forEach(x => { const k = x.getAttribute("data-lk").slice(2), j = k.lastIndexOf(":"), r = CMP.adopt(x); if (!r) return; nf++; if (!r.same) allSame = false; delete r.same; (fa[k.slice(0, j)] = fa[k.slice(0, j)] || {})[k.slice(j + 1)] = r; });
         if (st === "diff" && !Object.keys(g).length) { const m = $("lrmsg"); if (m) m.textContent = "ゲームの数字を、違うところだけ入れてから押してください"; return; }
         const prev = chk[id] || {};
-        const o = { name: (L.find(x => x.id === id) || {}).name, st: st === "fix" || st === "unfix" ? (prev.st || "ok") : st, at: new Date().toLocaleDateString("sv") };
-        if (Object.keys(g).length) o.g = g;
-        if (Object.keys(rp).length) o.r = rp;
-        if (st === "fix") {
+        const o = { name: (L.find(x => x.id === id) || {}).name, st: st === "save" ? (nf ? (allSame ? "ok" : "diff") : (prev.st || "ok")) : st === "fix" || st === "unfix" ? (prev.st || "ok") : st, at: new Date().toLocaleDateString("sv") };
+        const gg = Object.assign({}, prev.g || {}, g); if (Object.keys(gg).length) o.g = gg;
+        if (prev.r || Object.keys(rp).length) o.r = Object.assign({}, prev.r || {}, rp);
+        if (st === "save") { if (nf) { o.fix = fa; o.fixAt = o.at; } }
+        else if (st === "fix") {
           const f = {};
           ROWS.forEach(x => Object.assign(f, CMP.fixAll([x.row], x.groups, (kd, i, lv) => (kd === "r" ? rp : g)[i + ":" + lv])));
           if (!Object.keys(f).length) { const m = $("lrmsg"); if (m) m.textContent = "確定できる範囲がまだありません（判定の行を見てください）"; return; }

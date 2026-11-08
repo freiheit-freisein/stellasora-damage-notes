@@ -66,34 +66,68 @@
     });
   }
 
-  // 表を作る。o: { lvs, head(lv), rows:[{ i, label, reg, ref }], groups, get(kind,i,lv), attr(kind,i,lv) → 入力欄の属性, fix(i) → 確定済みの {lv:{v,by}} }
+  // 表を作る（2026-11-09 ユーザー: 結局どの値を採用するか。「現在」と「控え」を並べ、クリックで採用、無ければ手入力）
+  // 段: 現在（計算機が今使っている値）／控え（手元の照合用データ。無ければ出さない）／採用（入力。ここに入った値を保存する）
+  // o: { lvs, head(lv), rows:[{ i, label, reg(=現在), ref(=控え), regName }], get(kind,i,lv) → 前に入れた報告(r)・ゲーム(g), attr(kind,i,lv) → 入力欄の属性, fix(i) → 採用済みの {lv:{v,by}} }
+  let uid = 0;
   function table(o) {
-    const ref = hasRef();
-    const key = lv => o.groups.some(g => g.ends.indexOf(lv) >= 0) ? " ck-key" : "";
-    const span = gr => o.lvs.filter(lv => gr.lvs.indexOf(lv) >= 0).length;
-    const cls = s => ({ "g-ok": "cx-ok", "r-ok": "cx-ok", "g-new": "cx-new", "r-new": "cx-new", "g-ng": "cx-ng", "r-ng": "cx-ng", "reg-ok": "" }[s] || "");
+    const key = lv => o.groups && o.groups.some(g => g.ends.indexOf(lv) >= 0) ? " ck-key" : "";
     const body = o.rows.map(row => {
       const lvsOf = row.lvs || o.lvs;
-      const groups = row.groups || o.groups;
-      const jd = judge(row, (k, lv) => o.get(k, row.i, lv), groups);
-      const st = {}; jd.forEach(j => Object.assign(st, j.cell));
-      const fx = (o.fix && o.fix(row.i)) || null;
+      const fx = (o.fix && o.fix(row.i)) || {};
+      const rid = "cxr" + (++uid);
       const td = (lv, h) => lvsOf.indexOf(lv) >= 0 ? h : `<td class="muted" style="text-align:center">—</td>`;
-      const v = (m, lv) => m && m[lv] != null ? esc(m[lv]) : "";
-      const tgt = lv => row.ref && row.ref[lv] != null ? row.ref[lv] : (row.reg[lv] != null ? row.reg[lv] : "");
-      const inp = (k, lv) => `<td class="ck-in${key(lv)}"><input type="text" inputmode="decimal" ${o.attr(k, row.i, lv)} data-t="${esc(tgt(lv))}"${row.tol ? ` data-tol="${row.tol}"` : ""} class="${String(o.get(k, row.i, lv) || "").trim() && new RegExp("^" + k + "-").test(st[lv] || "") ? cls(st[lv]) : ""}" value="${esc(o.get(k, row.i, lv) || "")}"></td>`;
-      // 段は「比べる数字／報告／ゲーム／判定」の4つ。比べる数字＝控え（無ければ登録）。登録が控えと違えば小さく添える。確定した値は緑
-      const cmpCell = lv => { const f = row.ref && row.ref[lv] != null ? row.ref[lv] : null, e = row.reg[lv]; const main = f != null ? f : e; if (main == null) return "";
-        const note = f != null && e != null && !eq(f, e) ? `<br><small class="cx-wiki">Wiki ${esc(e)}</small>` : ""; return esc(main) + note; };
-      const fixed = lv => fx && fx[lv];
-      const nm = row.regName || (row.ref ? "控え" : "登録");
-      return `<tr class="cx-top"><td rowspan="4"><b>${esc(row.label)}</b></td><td class="cx-k">${esc(nm)}</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="${fixed(lv) ? "cx-fix" : ""}" title="${fixed(lv) ? "確定済み" : ""}">${cmpCell(lv)}</td>`)).join("")}</tr>` +
-        `<tr><td class="cx-k">報告</td>${o.lvs.map(lv => td(lv, inp("r", lv))).join("")}</tr>` +
-        `<tr><td class="cx-k">ゲーム</td>${o.lvs.map(lv => td(lv, inp("g", lv))).join("")}</tr>` +
-        `<tr><td class="cx-k">判定</td><td colspan="${o.lvs.length}" class="cx-j">${jd.map(j => j.text).join("　／　")}${fx ? "　<span class=\"cx-good\">（確定済み）</span>" : ""}</td></tr>`;
+      const cur = lv => row.reg[lv] != null ? String(row.reg[lv]) : "";
+      const ref = lv => row.ref && !row.selfRef && row.ref[lv] != null ? String(row.ref[lv]) : "";
+      const hasRef = !!(row.ref && !row.selfRef);
+      const pick = (lv, v, kind) => v === "" ? "" : `<button type="button" class="cx-pick cx-pick-${kind}" data-pick="${rid}:${lv}" data-v="${esc(v)}" title="クリックで採用">${esc(v)}</button>`;
+      // 前に入れた報告・ゲームの数字（参考に小さく出す）
+      const hint = lv => { const g = o.get ? o.get("g", row.i, lv) : null, r = o.get ? o.get("r", row.i, lv) : null; const a = []; if (g) a.push("ゲーム " + g); if (r && r !== g) a.push("報告 " + r); return a.length ? `<br><small class="cx-wiki">${esc(a.join("・"))}</small>` : ""; };
+      const inp = lv => { const v = fx[lv] ? fx[lv].v : ""; return `<td class="ck-in${key(lv)}"><input type="text" ${o.attr("f", row.i, lv)} data-row="${rid}" data-lv="${lv}" data-cur="${esc(cur(lv))}" data-ref="${esc(ref(lv))}" class="${adoptCls(v, cur(lv), ref(lv))}" value="${esc(v)}">${hint(lv)}</td>`; };
+      const allBtn = kind => `<button type="button" class="cx-all" data-pickall="${rid}:${kind}" title="この行を全部採用">全部</button>`;
+      const n = hasRef ? 3 : 2;
+      return `<tr class="cx-top"><td rowspan="${n}"><b>${esc(row.label)}</b></td><td class="cx-k">${esc(row.regName || "現在")} ${allBtn("cur")}</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center">${pick(lv, cur(lv), "cur")}</td>`)).join("")}</tr>` +
+        (hasRef ? `<tr><td class="cx-k">控え ${allBtn("ref")}</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center">${pick(lv, ref(lv), "ref")}</td>`)).join("")}</tr>` : "") +
+        `<tr><td class="cx-k">採用</td>${o.lvs.map(lv => td(lv, inp(lv))).join("")}</tr>`;
     }).join("");
     return `<table class="lv ck-t cx-t"><tr><th colspan="2">文の中の数字</th>${o.lvs.map(lv => `<th class="${key(lv).trim()}">${esc(o.head(lv))}</th>`).join("")}</tr>${body}</table>`;
   }
+  // 採用の欄の色: 控えと同じ＝緑、現在と同じ＝青、どちらとも違う（手入力）＝橙
+  function adoptCls(v, cur, ref) {
+    if (!String(v || "").trim()) return "";
+    if (ref && near(v, ref, 0)) return "cx-ok";
+    if (cur && near(v, cur, 0)) return "cx-new";
+    return "cx-man";
+  }
+  // 採用した値の出どころ（保存のとき）: ref＝控え、cur＝現在、manual＝手入力。単位（%）は現在・控えにそろえる
+  function adopt(x) {
+    const v = String(x.value || "").trim(); if (!v) return null;
+    const cur = x.getAttribute("data-cur") || "", ref = x.getAttribute("data-ref") || "";
+    const by = ref && near(v, ref, 0) ? "ref" : cur && near(v, cur, 0) ? "cur" : "manual";
+    const t = by === "ref" ? ref : by === "cur" ? cur : (ref || cur);
+    const out = by === "manual" ? v + (/%/.test(t) && !/%/.test(v) ? "%" : "") : t;
+    return { v: out, by, same: !!(cur && near(v, cur, 0)) };
+  }
+  document.addEventListener("click", ev => {
+    const b = ev.target.closest && ev.target.closest("[data-pick],[data-pickall]");
+    if (!b) return;
+    ev.preventDefault();
+    const set = (x, v) => { x.value = v; x.dispatchEvent(new Event("input", { bubbles: true })); };
+    if (b.hasAttribute("data-pick")) {
+      const [rid, lv] = b.getAttribute("data-pick").split(":");
+      const x = document.querySelector(`input[data-row="${rid}"][data-lv="${lv}"]`);
+      if (x) set(x, b.getAttribute("data-v"));
+    } else {
+      const [rid, kind] = b.getAttribute("data-pickall").split(":");
+      document.querySelectorAll(`input[data-row="${rid}"]`).forEach(x => { const v = x.getAttribute(kind === "ref" ? "data-ref" : "data-cur"); if (v) set(x, v); });
+    }
+  });
+  document.addEventListener("input", ev => {
+    const x = ev.target;
+    if (!x.hasAttribute || !x.hasAttribute("data-row")) return;
+    x.classList.remove("cx-ok", "cx-new", "cx-man");
+    const c = adoptCls(x.value, x.getAttribute("data-cur"), x.getAttribute("data-ref")); if (c) x.classList.add(c);
+  });
 
   // 確定できる範囲の値を集める（行ごと {lv:{v,by}}）
   function fixAll(rows, groups, get) {
@@ -133,5 +167,5 @@
   const MODES = [["pot", "素質の確認"], ["lr", "ロスレコの確認"], ["sk", "スキルの確認"], ["tr", "信頼ボーナスの確認"]];
   const modeBar = cur => MODES.filter(m => m[0] === "pot" || (m[0] === "lr" ? window.EDIT_LR : window.EDIT_SK)).map(m => `<button class="sbtn${m[0] === cur ? " on" : ""}" data-act="mode:${m[0]}">${m[1]}</button>`).join("");
 
-  window.CMP = { modeBar, num, eq, judge, table, fixAll, matchParam, toLv, hasRef };
+  window.CMP = { modeBar, num, eq, judge, table, fixAll, matchParam, toLv, hasRef, adopt };
 })();

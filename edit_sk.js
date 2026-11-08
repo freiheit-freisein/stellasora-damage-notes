@@ -55,7 +55,7 @@
         rows.push({ i: `${k}:p${pi}`, label: `控えだけ${pi + 1}`, reg: {}, ref: CMP.toLv(pr, lvs), lvs, groups: pr.length === 1 ? [{ lvs: [1], ends: [1], mid: 0 }] : pr.length >= 10 ? SK_GROUPS.map(g => ({ lvs: g.lvs.filter(lv => lv <= pr.length), ends: g.ends.filter(lv => lv <= pr.length), mid: g.mid })).filter(g => g.lvs.length) : [{ lvs, ends: [1, lvs.length], mid: 1 }] });
       });
       rows.forEach(r => ROWS.push({ row: r, groups: r.groups || SK_GROUPS }));
-      const tb = rows.length ? CMP.table({ lvs: LV13, head: lv => "Lv" + lv, rows, groups: SK_GROUPS, get: (kd, i, lv) => val(kd, `${i}:${lv}`), attr: (kd, i, lv) => `data-sk="${kd === "r" ? "r:" : ""}${i}:${lv}"`, fix: i => fx[i] }) : '<div class="muted">Lvごとの数字はありません。</div>';
+      const tb = rows.length ? CMP.table({ lvs: LV13, head: lv => "Lv" + lv, rows, groups: SK_GROUPS, get: (kd, i, lv) => val(kd, `${i}:${lv}`), attr: (kd, i, lv) => `data-sk="${kd === "r" ? "r:" : kd === "f" ? "f:" : ""}${i}:${lv}"`, fix: i => fx[i] }) : '<div class="muted">Lvごとの数字はありません。</div>';
       return `<div class="phead" style="font-size:13px">${nm}：${esc(rs ? rs.jp : s.name || "")} <span class="muted">${esc(s.name || "")}</span></div>
         <div class="txt">${esc(s.text || "")}</div>${rs ? `<details><summary class="muted">控えの文</summary><div class="txt" style="margin:4px 0">${esc(rs.desc)}</div></details>` : ""}${tb}`;
     }).join("");
@@ -81,12 +81,12 @@
     if (!t) return `<h2>${title}</h2><p class="muted">左の巡遊者を選んでください。</p>`;
     ROWS = [];
     const c = store[V.mode][t.en] || {};
-    const note = V.mode === "sk" ? `登録＝サイトの今の値（英語Wiki・Lv1〜10）、控え＝手元の照合用データ、報告＝Discord などでもらった値、ゲーム＝自分で画面を見た値です。分かったところだけ入れてください（徽章なし）。緑＝控え（無ければ登録）と同じ、赤＝違う、青＝比べる相手が無い。確定のきまり：Lv1とLv10＋Lv2〜9のどれか1つ／Lv11〜13は2つ。` : "";
+    const note = V.mode === "sk" ? `数字をクリックすると「採用」に入ります（「全部」で1行まとめて）。違うときは採用の欄に打ってください（徽章なし）。` : "";
     return `<h2>${esc(TJ(t.en))} <span class="muted">${esc(t.en)}　★${t.rarity} ${esc(EL[t.element] || "")}</span></h2>
       <div class="ck"><div class="ck-h">ゲームの${V.mode === "sk" ? "スキル" : "信頼"}の画面と比べてください</div>${note ? `<div class="muted">${note}</div>` : ""}
       ${V.mode === "sk" ? skillHtml(t) : trustHtml(t)}
       <div class="fld"><label>メモ</label><input type="text" data-sk="memo" value="${esc(buf.memo != null ? buf.memo : (c.memo || ""))}" placeholder="気づいたこと（報告した人・画面の条件 など）"></div>
-      <div class="ck-b"><button class="btn-add" data-act="skck:save">入れた数字を保存</button><button class="btn-add" data-act="skck:fix" style="background:#2E9E7A;color:#fff">確定する（そろった範囲）</button>${c.fix ? '<button class="btn-add" data-act="skck:unfix">確定を消す</button>' : ""}${c.at ? '<button class="btn-add" data-act="skck:del">全部消す</button>' : ""}</div>
+      <div class="ck-b">${V.mode === "sk" ? '<button class="btn-add pri" data-act="skck:adopt">採用を保存</button>' : '<button class="btn-add" data-act="skck:save">入れた数字を保存</button><button class="btn-add" data-act="skck:fix" style="background:#2E9E7A;color:#fff">確定する</button>'}${c.fix ? '<button class="btn-add" data-act="skck:unfix">確定を消す</button>' : ""}${c.at ? '<button class="btn-add" data-act="skck:del">全部消す</button>' : ""}</div>
       <div class="muted" id="skmsg">${c.at ? `保存: ${esc(c.at)}` : "まだ保存していません"}${c.fix ? `・確定済み（${esc(c.fixAt || "")}）` : ""}</div></div>`;
   }
 
@@ -111,13 +111,15 @@
       const vals = {};
       document.querySelectorAll("[data-sk],[data-tr]").forEach(x => { const k = attrOf(x); vals[k] = buf[k] != null ? buf[k] : x.value; });
       const g = {}, rp = {};
-      Object.keys(vals).filter(k => k !== "memo").forEach(k => { const v = String(vals[k]).replace(/[%％\s]/g, ""); if (!v) return; if (k.indexOf("r:") === 0) rp[k.slice(2)] = v; else g[k] = v; });
+      const fa = {}; let nf = 0;
+      document.querySelectorAll('[data-sk^="f:"]').forEach(x => { const k = x.getAttribute("data-sk").slice(2), j = k.lastIndexOf(":"), r = CMP.adopt(x); if (!r) return; nf++; delete r.same; (fa[k.slice(0, j)] = fa[k.slice(0, j)] || {})[k.slice(j + 1)] = r; });
+      Object.keys(vals).filter(k => k !== "memo" && k.indexOf("f:") !== 0).forEach(k => { const v = String(vals[k]).replace(/[%％\s]/g, ""); if (!v) return; if (k.indexOf("r:") === 0) rp[k.slice(2)] = v; else g[k] = v; });
       const prev = store[m][V.t] || {};
       const o = { at: new Date().toLocaleDateString("sv") };
-      if (Object.keys(g).length) o.g = g;
-      if (Object.keys(rp).length) o.r = rp;
+      if (st === "adopt") { if (prev.g) o.g = prev.g; if (prev.r) o.r = prev.r; } else { if (Object.keys(g).length) o.g = g; if (Object.keys(rp).length) o.r = rp; }
       if (vals.memo && String(vals.memo).trim()) o.memo = String(vals.memo).trim();
-      if (st === "fix") {
+      if (st === "adopt") { if (nf) { o.fix = fa; o.fixAt = o.at; } }
+      else if (st === "fix") {
         const f = {};
         if (m === "sk") ROWS.forEach(x => Object.assign(f, CMP.fixAll([x.row], x.groups, (kd, i, lv) => (kd === "r" ? rp : g)[i + ":" + lv])));
         else Object.keys(Object.assign({}, rp, g)).forEach(k => { const [s, lv] = k.split(":"), v = g[k] != null ? g[k] : rp[k]; f[s] = f[s] || {}; f[s][lv] = { v: s === "atkPct" ? v + "%" : v, by: g[k] != null ? "game" : "rep" }; });
