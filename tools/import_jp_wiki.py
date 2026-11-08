@@ -44,8 +44,22 @@ def split_terms(text):
     return out + text[pos:], terms
 
 
+# 日本語Wikiが間違っているもの（ゲームの画面で確かめて直した。取り込み直しても、ここで上書きする）
+GAME_FIX = {
+    # 2026-11-09 ゲームの画面: 日本語Wikiは「明星の型」（特化構築1 Fiendbreaker）の文が入っていた
+    # nums は、Edit で先に入れた確認（1つ目＝15〜60%）と合わせるため、文の順と逆にしている
+    ('Firstlight Noya', 'support', 'Sunfire Cleave'): {
+        'ja': '光刃の極', 'label': '特化構築2',
+        'text': '光刃を放つ時、50%の確率で攻撃範囲が拡大される。\nセイナ（原点）の長剣による攻撃と光刃の与えるスキルダメージが15~60%増加する。',
+        'nums': ['15~60%', '50%'],
+    },
+}
+
+
 def write_all(data):
     """data/potentials_jp.json と、画面用の data/potentials_jp.js（window.POT_JP）を書く"""
+    for (t, role, en), v in GAME_FIX.items():
+        data.setdefault(t, {}).setdefault(role, {}).setdefault(en, {}).update(v)
     json.dump(data, open('data/potentials_jp.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
     open('data/potentials_jp.js', 'w', encoding='utf-8').write('// 日本語Wikiの素質の説明文（ゲーム内の日本語の文章と数値に近い）。tools/import_jp_wiki.py で作成。terms = 用語の説明\nwindow.POT_JP = '
                                                                + json.dumps(data, ensure_ascii=False) + ';\n')

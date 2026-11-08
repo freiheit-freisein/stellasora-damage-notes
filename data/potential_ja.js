@@ -1264,7 +1264,7 @@ window.POTENTIAL_JA = {
 "Radiant Sever": "星雷波",
 "Aegis: Sunder": "明星の剣",
 "Fiendbreaker": "明星の型",
-"Sunfire Cleave": "明星の型",
+"Sunfire Cleave": "光刃の極",
 "Aegis: Blitz": "閃光の剣",
 "Breath of Light": "閃光の型",
 "No More Goodbyes": "絆の光",
