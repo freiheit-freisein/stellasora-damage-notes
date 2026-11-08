@@ -389,7 +389,17 @@
       saveChk(); bar(); renderList(); renderEditor();
       return;
     }
-    if (a === "ckexport") { $("io").value = "// 素質の確認（edit.html で作成）。ゲームの画面と比べた結果\nwindow.POT_CHECK = " + JSON.stringify(chk, null, 1) + ";\n" + (window.EDIT_LR ? window.EDIT_LR.exportText() : "") + (window.EDIT_SK ? window.EDIT_SK.exportText() : ""); $("iomsg").textContent = "書き出しました。「コピー」を押して、Claude に貼り付けてください。"; return; }
+    if (a === "ckexport") {
+      // 取り込み済み（data/pot_check.js）と同じものは出さない。このブラウザで新しく入れた・変えた素質だけ（貼る量を減らす）
+      const out = {}; let n = 0;
+      Object.keys(chk).forEach(t => Object.keys(chk[t] || {}).forEach(p => { if (JSON.stringify(chk[t][p]) !== JSON.stringify((CK_FILE[t] || {})[p])) { (out[t] = out[t] || {})[p] = chk[t][p]; n++; } }));
+      const del = []; Object.keys(CK_FILE).forEach(t => Object.keys(CK_FILE[t]).forEach(p => { if (!(chk[t] || {})[p]) del.push(t + " / " + p); }));
+      const rest = (window.EDIT_LR ? window.EDIT_LR.exportText() : "") + (window.EDIT_SK ? window.EDIT_SK.exportText() : "");
+      const NL = String.fromCharCode(10);
+      $("io").value = (n || del.length ? "// 素質の確認（edit.html で作成）。取り込み済みから変わった素質だけ（" + n + "件）" + NL + "window.POT_CHECK_DIFF = " + JSON.stringify(out) + ";" + NL + (del.length ? "// 消した確認: " + del.join("、") + NL : "") : "") + rest;
+      $("iomsg").textContent = $("io").value.trim() ? `書き出しました（素質 ${n}件${del.length ? `・消した ${del.length}件` : ""}）。「コピー」を押して、Claude に貼り付けてください。` : "取り込み済みから変わったものはありません。";
+      return;
+    }
     if (a.indexOf("role:") === 0) { S.role = a.slice(5); S.sel = null; bar(); renderList(); renderEditor(); return; }
     if (a.indexOf("pick:") === 0) { Object.keys(ckBuf).forEach(k => delete ckBuf[k]); openPot(a.slice(5)); renderList(); return; }
     if (a === "ok") { const e = meta.none ? [] : rows.map(toEngine); user[S.t] = user[S.t] || {}; const o = { done: true, e, txt: meta.txt || "", verified: "確認済み" }; if (meta.off) o.off = true; if (meta.ext) o.ext = meta.ext; if (meta.note) o.note = meta.note; user[S.t][S.sel] = o; save(); meta.fromDraft = false; meta.unk = null; bar(); renderList(); renderEditor(); return; }

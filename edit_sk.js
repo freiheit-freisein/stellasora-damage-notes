@@ -133,8 +133,8 @@
   window.EDIT_SK = {
     render,
     // キー: スキル＝技:数字の番号:Lv（技は basic/main/support/ult、番号の「p」は控えだけにある数字）、信頼＝hp/atk/atkPct:Lv。g=ゲーム、r=報告、fix=確定
-    exportText: () => "\n// スキルの確認（キー: 技:数字の番号:Lv。g=ゲーム、r=報告、fix=確定）\nwindow.SK_CHECK = " + JSON.stringify(store.sk, null, 1) + ";\n" +
-      "\n// 信頼ボーナスの確認（キー: hp/atk/atkPct:信頼Lv。g=ゲーム、r=報告、fix=確定）\nwindow.TR_CHECK = " + JSON.stringify(store.tr, null, 1) + ";\n",
+    exportText: () => (Object.keys(store.sk).length ? "\n// スキルの確認（キー: 技:数字の番号:Lv。g=ゲーム、r=報告、fix=確定）\nwindow.SK_CHECK = " + JSON.stringify(store.sk) + ";\n" : "") +
+      (Object.keys(store.tr).length ? "\n// 信頼ボーナスの確認（キー: hp/atk/atkPct:信頼Lv。g=ゲーム、r=報告、fix=確定）\nwindow.TR_CHECK = " + JSON.stringify(store.tr) + ";\n" : ""),
   };
   void ent;
 })();

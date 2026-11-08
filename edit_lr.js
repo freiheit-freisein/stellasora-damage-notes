@@ -140,6 +140,6 @@
   window.EDIT_LR = {
     render,
     // 書き出しの中身（キー: c:コア効果:数字の番号:突破、a:アシスト:効果:数字の番号:Lv、st:ステータス、nt:初期音符の番号）
-    exportText: () => "\n// ロスレコの確認（キー: c:コア効果:数字の番号:突破、a:アシスト:効果:数字の番号:Lv、st:ステータス、nt:初期の音符の番号。g=ゲーム、r=報告、fix=確定）\nwindow.LR_CHECK = " + JSON.stringify(chk, null, 1) + ";\n",
+    exportText: () => !Object.keys(chk).length ? "" : "\n// ロスレコの確認（キー: c:コア効果:数字の番号:突破、a:アシスト:効果:数字の番号:Lv、st:ステータス、nt:初期の音符の番号。g=ゲーム、r=報告、fix=確定）\nwindow.LR_CHECK = " + JSON.stringify(chk) + ";\n",
   };
 })();
