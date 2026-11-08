@@ -164,7 +164,7 @@
       const u = specOf(S.t, p.name), b = builtIn(S.t, p.name), dr = draftOf(S.t, S.role, p.name);
       const tag = (!u && !b && dr) ? `<span class="tag t-draft">下書き（自動）${dr.review ? "・要確認" : ""}</span>` : u ? (u.draft ? `<span class="tag t-draft">下書き（未確認）</span>` : `<span class="tag t-user">入力済み${u.e && u.e.length ? "" : "（影響なし）"}</span>`) : b ? `<span class="tag t-built">組み込み（検証済み）</span>` : `<span class="tag t-none">未入力</span>`;
       const ck = chkOf(S.t, p.name);
-      const ckTag = ck ? `<span class="tag ck-${ck.st}">${CK_NAME[ck.st]}</span>` : ((u && !u.draft) || (!u && b)) ? '<span class="tag ck-ok">確認済み</span>' : '<span class="tag t-none">未確認</span>';
+      const ckTag = ck && ck.fix ? (ck.seen ? '<span class="tag ck-ok">採用（ゲームで確認）</span>' : Object.values(ck.fix).some(m => Object.values(m).some(x => x.by === "game" || x.by === "rep")) ? '<span class="tag ck-ok">採用（ゲーム・報告あり）</span>' : '<span class="tag t-draft">採用（見比べていない）</span>') : ck ? `<span class="tag ck-${ck.st}">${CK_NAME[ck.st]}</span>` : ((u && !u.draft) || (!u && b)) ? '<span class="tag ck-ok">確認済み</span>' : '<span class="tag t-none">未確認</span>';
       return `<div class="pc${S.sel === p.name ? " sel" : ""}" data-act="pick:${esc(p.name)}"><b>${esc(PJ(S.t, p.name))}</b>${p.type === 1 ? '<span class="tag t-core">コア</span>' : ""}${p.type === 1 && coreLv(S.t, p.name) ? `<span class="tag t-built">${esc((SKILLS.find(x => x[0] === coreLv(S.t, p.name).k) || [0, ""])[1])}Lvで伸びる</span>` : ""}${ckTag}${S.adv ? tag : ""}<span class="en">${esc(p.name)}</span><span class="muted">${esc(((jpOf(S.t, S.role, p.name) || {}).text || p.brief || ""))}</span></div>`;
     };
     const builds = groups.filter(g => !/Generic/i.test(g.title)), gen = groups.find(g => /Generic/i.test(g.title));
@@ -266,8 +266,8 @@
       <div class="muted">数字をクリックすると「採用」に入ります（「全部」で1行まとめて）。違うときは採用の欄に打ってください。緑＝控えと同じ・青＝現在と同じ・橙＝手入力。</div>
       ${potTable}${slTable}
       <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・報告した人 など）"></div>
-      <div class="ck-b"><button class="btn-add pri" data-act="ck:save">採用を保存</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button>${ck.st || ck.fix ? `<button class="btn-add" data-act="ck:del">消す</button>` : ""}</div>
-      <div class="muted" id="ckmsg">${ck.fix ? `採用済み（${esc(ck.fixAt || ck.at || "")}）` : ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ採用していません"}</div>
+      <div class="ck-b"><label class="cx-seen"><input type="checkbox" data-seen${ck.seen ? " checked" : ""}> ゲームの画面と見比べた</label><button class="btn-add pri" data-act="ck:save">採用を保存</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button>${ck.st || ck.fix ? `<button class="btn-add" data-act="ck:del">消す</button>` : ""}</div>
+      <div class="muted" id="ckmsg">${ck.fix ? `採用済み（${esc(ck.fixAt || ck.at || "")}・${ck.seen ? "ゲームの画面と見比べた" : "見比べていない"}）` : ck.st ? `今の確認: <b>${CK_NAME[ck.st]}</b>` : "まだ採用していません"}</div>
     </div>`;
     }
     return `<div class="ck">
@@ -395,6 +395,7 @@
       all.forEach(x => delete x.same);
       const mx = document.querySelector("[data-ck=\"memo\"]"), memo = String(ckBuf.memo != null ? ckBuf.memo : mx ? mx.value : "").trim();
       if (memo) o.memo = memo; else delete o.memo;
+      const sx = document.querySelector("#editor [data-seen]"); if (sx && sx.checked) o.seen = "game"; else delete o.seen;
       delete o.sl;
       if (a === "ck:unk" && !memo) { const m = $("ckmsg"); if (m) m.textContent = "メモを書いてから押してください"; return; }
       chk[S.t][name] = o;
