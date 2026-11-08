@@ -232,7 +232,8 @@
       const SLV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
       const pct = s => /%|％/.test(String(s)) ? "%" : "";
       const r1 = x => String(Math.round(x * 10) / 10);
-      const slRows = cl ? (jn || []).map((x, i) => { const f = String(x).match(/\d+(?:\.\d+)?/), jv = f ? parseFloat(f[0]) : null; if (jv == null || !cl.vals.some(v => Math.abs(v - jv) < 0.05)) return null; const reg = {}; SLV.forEach(lv => { reg[lv] = r1(jv * lvRatio(S.t, cl.k, lv)) + pct(x); }); const pa = rf ? (rf.params || []).map(v => Array.isArray(v) ? v : String(v).split("/")).find(v => v.length >= 10 && Math.abs(CMP.num(v[9]) - jv) <= Math.max(1, jv * 0.01)) : null; return { i: "s" + i, n: i, label: `${i + 1}つ目`, reg, ref: pa ? CMP.toLv(pa, SLV) : null }; }).filter(Boolean) : [];
+      const slUsed = new Set();   // 控えは、ずれていても一番近いものを出す
+      const slRows = cl ? (jn || []).map((x, i) => { const f = String(x).match(/\d+(?:\.\d+)?/), jv = f ? parseFloat(f[0]) : null; if (jv == null || !cl.vals.some(v => Math.abs(v - jv) < 0.05)) return null; const reg = {}; SLV.forEach(lv => { reg[lv] = r1(jv * lvRatio(S.t, cl.k, lv)) + pct(x); }); const pl = rf ? (rf.params || []).map(v => Array.isArray(v) ? v : String(v).split("/")) : [], pk = pl.reduce((b, v, k) => v.length >= 10 && !slUsed.has(k) && (b < 0 || Math.abs(CMP.num(v[9]) - jv) < Math.abs(CMP.num(pl[b][9]) - jv)) ? k : b, -1); if (pk >= 0) slUsed.add(pk); const pa = pk >= 0 ? pl[pk] : null; return { i: "s" + i, n: i, label: `${i + 1}つ目`, reg, ref: pa ? CMP.toLv(pa, SLV) : null }; }).filter(Boolean) : [];
       const slIdx = new Set(slRows.map(r => r.n));
       // 現在の値: 英語Wikiの数字の並び（Lv1〜6）のうち、Lv1とLv6が同じものを使い、Lv7〜9 は計算機と同じく最後の伸びで延ばす（上限ありの素質はLv6のまま）
       const sp = specOf(S.t, p.name) || builtIn(S.t, p.name) || draftOf(S.t, S.role, p.name) || {};

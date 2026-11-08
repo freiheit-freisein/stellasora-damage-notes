@@ -153,7 +153,17 @@
       if (lvs.length > 1 && reg[last] != null && p.length > 1 && !eq(p[Math.min(last, p.length) - 1], reg[last])) continue;
       used.add(k); return k;
     }
-    return -1;
+    // 同じものが無くても、いちばん近いものを控えとして出す（2026-11-09 ユーザー: ずれとは関係なく出す。報告の入力ミスも見るため）
+    let best = -1, bs = Infinity;
+    const rel = (a, b) => { const x = num(a), y = num(b); return x == null || y == null ? 9 : Math.abs(x - y) / Math.max(1, Math.abs(y)); };
+    for (let k = 0; k < (params || []).length; k++) {
+      if (used.has(k)) continue;
+      const p = params[k];
+      const sc = rel(p[0], reg[first]) + (lvs.length > 1 && reg[last] != null && p.length > 1 ? rel(p[Math.min(last, p.length) - 1], reg[last]) : 0) + ((lvs.length > 1) === (p.length > 1) ? 0 : 0.5);
+      if (sc < bs) { bs = sc; best = k; }
+    }
+    if (best >= 0) used.add(best);
+    return best;
   }
   const toLv = (arr, lvs) => { const m = {}; lvs.forEach(lv => { if (arr[lv - 1] != null) m[lv] = arr[lv - 1]; }); return m; };
 
