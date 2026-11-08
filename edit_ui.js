@@ -241,7 +241,13 @@
       const slRows = cl ? (jn || []).map((x, i) => { const f = String(x).match(/\d+(?:\.\d+)?/), jv = f ? parseFloat(f[0]) : null; if (jv == null || !cl.vals.some(v => Math.abs(v - jv) < 0.05)) return null; const reg = {}; SLV.forEach(lv => { reg[lv] = String(Math.round(jv * lvRatio(S.t, cl.k, lv) * 10) / 10); }); return { i: "s" + i, label: `${i + 1}つ目`, reg, ref: reg, selfRef: true, regName: "目安", okText: "伸び方が合っている", tol: 0.01 }; }).filter(Boolean) : [];
       const slTable = slRows.length ? `<div class="phead" style="font-size:13px">スキルLvで伸びる数字（${esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1])}のLv）</div>
         <div class="muted">計算機は、この数字を${esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1])}のLvで伸ばしています（Lv10の値 × そのスキルの倍率の伸び方）。目安＝計算機が使う値。ゲームの画面で見た数字を、そのときのスキルLvの欄に入れてください。2つそろえば、伸び方が合っているか分かります（目安は計算で出した値なので、1%までのずれは合っているとみなします）。Lv11〜13 の目安は、計算機が Lv1→10 の平均の伸びで延ばした仮の値です。Lv11〜13 は1つ分かれば判定を出します。</div>
-        ${CMP.table({ lvs: SLV, head: lv => "スキルLv" + lv, rows: slRows, groups: [{ lvs: SLV.slice(0, 10), ends: [], mid: 2 }, { lvs: [11, 12, 13], ends: [], mid: 1 }], get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"` })}` : "";
+        ${(() => {   // 徽章を付け替えながら入れやすいように、「今のスキルLv（徽章込み）」を選んで、その時の数字だけを入れる欄（下の表の同じ欄と同じもの）
+          const cur = slOf(S.t, cl.k), nm = esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1]);
+          return `<div class="sl" style="background:#EEF6FF"><b>今の${nm}Lv（徽章込み）</b><select data-sl="${cl.k}">${SLV.map(v => `<option${v === cur ? " selected" : ""}>${v}</option>`).join("")}</select>
+            ${slRows.map(r => `<label>${esc(r.label)}（ゲーム）<input type="text" inputmode="decimal" style="width:70px;min-height:30px;border-radius:8px;border:2px solid var(--border)" data-ck="${r.i}:${cur}" value="${esc(cxGet("g", r.i, cur) || "")}"> <span class="muted">目安 ${esc(r.reg[cur])}</span></label>`).join("")}
+            <div class="muted">徽章を付け替えたら、まずここのLvを画面のスキルLv（徽章込み）に合わせてから、その時の数字を入れてください。入れた数字は下の表の同じLvの欄に入ります（「合ってる」などで保存）。</div></div>`;
+        })()}
+        ${CMP.table({ lvs: SLV, head: lv => (lv === slOf(S.t, cl.k) ? "▶" : "") + "スキルLv" + lv, rows: slRows, groups: [{ lvs: SLV.slice(0, 10), ends: [], mid: 2 }, { lvs: [11, 12, 13], ends: [], mid: 1 }], get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"` })}` : "";
       CK_ROWS = { rows: cxRows, get: cxGet, sl: p.type === 1 ? (k => ({ k, lv: slOf(S.t, k) }))(potSkill(S.t, S.role, p.name)) : null };
       const fx = ck.fix || {};
       return `<div class="ck">
