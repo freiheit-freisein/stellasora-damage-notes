@@ -162,7 +162,8 @@
       // Lvで変わらない数字には変わらない控え、Lvで変わる数字には変わる控えだけを当てる（例: 「3本」に 21〜72% を当てない）
       const pConst = p.length === 1 || new Set(p.map(x => String(x))).size === 1;
       if ((lvs.length === 1) !== pConst) continue;
-      if (/%/.test(String(reg[first])) !== /%/.test(String(p[0]))) continue;   // 「%」の付き方も同じものだけ（113.3% に 3.5 を当てない）
+      if (num(p[0]) == null) continue;   // 数字でない控え（「Auto Attack DMG」など）は当てない
+      if (/[%％]/.test(String(reg[first])) !== /[%％]/.test(String(p[0]))) continue;   // 「%」の付き方も同じものだけ（113.3% に 3.5 を当てない）
       const sc = rel(p[0], reg[first]) + (lvs.length > 1 && reg[last] != null && p.length > 1 ? rel(p[Math.min(last, p.length) - 1], reg[last]) : 0) + ((lvs.length > 1) === (p.length > 1) ? 0 : 0.5);
       if (sc < bs) { bs = sc; best = k; }
     }

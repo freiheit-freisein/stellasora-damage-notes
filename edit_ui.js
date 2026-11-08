@@ -215,10 +215,13 @@
       ${LVS.map(lv => `<td${key(lv)}>${lv6(a) == null && lv !== 1 ? "—" : inp(i, lv)}</td>`).join("")}</tr>`).join("");
     // 比べる表（登録・控え・報告・ゲーム）。控えは手元のときだけ
     const rf = ((window.REF_LOCAL || {})[S.t] || {})[p.name], used = new Set();
+    // スキルLvで伸びるコア素質の数字は、下のスキルLvの表で控えを当てるので、ここでは当てない（ほかの数字の控えを取らないように）
+    const clX = p.type === 1 ? coreLv(S.t, p.name) : null;
     const cxRows = nums.map((a, i) => {
       const cst = lv6(a) == null, lvs = cst ? [1] : LVS;
       const reg = cst ? { 1: a[0] } : { 1: a[0], 6: lv6(a) };
-      const k = rf ? CMP.matchParam(rf.params.map(x => Array.isArray(x) ? x : String(x).split("/")), reg, cst ? [1] : [1, 6], used) : -1;
+      const isSl = !!clX && lv6(a) == null && clX.vals.some(v => Math.abs(v - parseFloat(String(a[0]).replace(/[^0-9.]/g, ""))) < 0.05);
+      const k = rf && !isSl ? CMP.matchParam(rf.params.map(x => Array.isArray(x) ? x : String(x).split("/")), reg, cst ? [1] : [1, 6], used) : -1;
       const pr = k >= 0 ? (Array.isArray(rf.params[k]) ? rf.params[k] : String(rf.params[k]).split("/")) : null;
       // 「約」の数字（スキルLvで伸びる数字を、選んだスキルLvの値に直したもの）は目安なので、1%までのずれは合っているとみなす
       return { i, label: `${i + 1}つ目`, reg, ref: pr ? CMP.toLv(pr.length === 1 ? [pr[0]] : pr, lvs) : null, lvs, groups: cst ? [{ lvs: [1], ends: [1], mid: 0 }] : POT_GROUPS, tol: /^約/.test(String(a[0])) ? 0.01 : 0 };
