@@ -229,7 +229,8 @@
       const reg = cst ? { 1: a[0] } : { 1: a[0], 6: lv6(a) };
       const k = rf ? CMP.matchParam(rf.params.map(x => Array.isArray(x) ? x : String(x).split("/")), reg, cst ? [1] : [1, 6], used) : -1;
       const pr = k >= 0 ? (Array.isArray(rf.params[k]) ? rf.params[k] : String(rf.params[k]).split("/")) : null;
-      return { i, label: `${i + 1}つ目`, reg, ref: pr ? CMP.toLv(pr.length === 1 ? [pr[0]] : pr, lvs) : null, lvs, groups: cst ? [{ lvs: [1], ends: [1], mid: 0 }] : POT_GROUPS };
+      // 「約」の数字（スキルLvで伸びる数字を、選んだスキルLvの値に直したもの）は目安なので、1%までのずれは合っているとみなす
+      return { i, label: `${i + 1}つ目`, reg, ref: pr ? CMP.toLv(pr.length === 1 ? [pr[0]] : pr, lvs) : null, lvs, groups: cst ? [{ lvs: [1], ends: [1], mid: 0 }] : POT_GROUPS, tol: /^約/.test(String(a[0])) ? 0.01 : 0 };
     });
     const cxGet = (kd, i, lv) => kd === "g" ? (ckBuf[i + ":" + lv] != null ? ckBuf[i + ":" + lv] : (g[i] || {})[lv]) : (ckBuf["r:" + i + ":" + lv] != null ? ckBuf["r:" + i + ":" + lv] : ((ck.r || {})[i] || {})[lv]);
     if (window.CMP && nums.length) {
@@ -246,7 +247,7 @@
       return `<div class="ck">
       <div class="ck-h">ゲームの素質の画面と比べてください</div>
       <div class="muted">上の文は日本語Wikiの文です。登録＝サイトの今の値（Wiki）、控え＝手元の照合用データ、報告＝Discord などでもらった値、ゲーム＝自分で画面を見た値です。</div>
-      ${CMP.table({ lvs: LVS, head: lv => "Lv" + lv, rows: cxRows, groups: POT_GROUPS, get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"`, fix: i => fx[i] })}${slTable}
+      ${CMP.table({ lvs: LVS, head: lv => "素質Lv" + lv, rows: cxRows, groups: POT_GROUPS, get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"`, fix: i => fx[i] })}${slTable}
       <div class="muted">報告・ゲームの数字は、分かったところだけ入れてください。緑＝控え（無ければ登録）と同じ、赤＝違う、青＝比べる相手が無い。確定のきまり：Lv1とLv6＋Lv2〜5のどれか1つ／Lv7〜9は2つ。</div>${slNote ? `<div class="muted">${slNote}</div>` : ""}
       <div class="fld"><label>メモ</label><input type="text" data-ck="memo" value="${esc(ck.memo || "")}" placeholder="気づいたこと（文が違う・何に効くかわからない・報告した人 など）"></div>
       <div class="ck-b"><button class="btn-add pri" data-act="ck:ok">合ってる</button><button class="btn-add" data-act="ck:diff">数字が違う（入れた数字で保存）</button><button class="btn-add" data-act="ck:unk">わからない（メモで保存）</button><button class="btn-add" data-act="ck:fix" style="background:#2E9E7A;color:#fff">確定する（そろった範囲）</button>${ck.fix ? `<button class="btn-add" data-act="ck:unfix">確定を消す</button>` : ""}${ck.st ? `<button class="btn-add" data-act="ck:del">確認を消す</button>` : ""}</div>
