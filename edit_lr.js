@@ -95,7 +95,7 @@
         <div class="phead" style="font-size:13px">コア効果</div>${core}
         <div class="phead" style="font-size:13px">アシスト効果</div>${assists}
         <div class="fld"><label>メモ</label><input type="text" data-lk="memo" value="${esc(buf.memo != null ? buf.memo : (c.memo || ""))}" placeholder="気づいたこと（文が違う・突破の段・何に効くかわからない など）"></div>
-        <div class="ck-b"><label class="cx-seen"><input type="checkbox" data-seen${c.seen ? " checked" : ""}> ゲームの画面と見比べた</label><button class="btn-add pri" data-act="lrck:save">採用を保存</button><button class="btn-add" data-act="lrck:unk">わからない（メモで保存）</button>${c.st || c.fix ? '<button class="btn-add" data-act="lrck:del">消す</button>' : ""}</div>
+        <div class="ck-b"><button class="btn-add pri" data-act="lrck:save">採用を保存</button><button class="btn-add" data-act="lrck:unk">わからない（メモで保存）</button>${c.st || c.fix ? '<button class="btn-add" data-act="lrck:del">消す</button>' : ""}</div>
         <div class="muted" id="lrmsg">${c.st ? `今の確認: <b>${NAME[c.st]}</b>（${esc(c.at || "")}）` : "まだ確認していません"}${c.fix ? `・確定済み（${esc(c.fixAt || "")}）` : ""}</div>
       </div>`;
   }
@@ -126,7 +126,7 @@
         const o = { name: (L.find(x => x.id === id) || {}).name, st: st === "save" ? (nf ? (allSame ? "ok" : "diff") : (prev.st || "ok")) : st === "fix" || st === "unfix" ? (prev.st || "ok") : st, at: new Date().toLocaleDateString("sv") };
         const gg = Object.assign({}, prev.g || {}, g); if (Object.keys(gg).length) o.g = gg;
         if (prev.r || Object.keys(rp).length) o.r = Object.assign({}, prev.r || {}, rp);
-        if (st === "save") { if (nf) { o.fix = fa; o.fixAt = o.at; } const sx = document.querySelector("#editor [data-seen]"); if (sx && sx.checked) o.seen = "game"; }
+        if (st === "save") { if (nf) { o.fix = fa; o.fixAt = o.at; } }
         else if (st === "fix") {
           const f = {};
           ROWS.forEach(x => Object.assign(f, CMP.fixAll([x.row], x.groups, (kd, i, lv) => (kd === "r" ? rp : g)[i + ":" + lv])));

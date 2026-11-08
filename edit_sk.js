@@ -86,7 +86,7 @@
       <div class="ck"><div class="ck-h">ゲームの${V.mode === "sk" ? "スキル" : "信頼"}の画面と比べてください</div>${note ? `<div class="muted">${note}</div>` : ""}
       ${V.mode === "sk" ? skillHtml(t) : trustHtml(t)}
       <div class="fld"><label>メモ</label><input type="text" data-sk="memo" value="${esc(buf.memo != null ? buf.memo : (c.memo || ""))}" placeholder="気づいたこと（報告した人・画面の条件 など）"></div>
-      <div class="ck-b">${V.mode === "sk" ? `<label class="cx-seen"><input type="checkbox" data-seen${c.seen ? " checked" : ""}> ゲームの画面と見比べた</label>` + '<button class="btn-add pri" data-act="skck:adopt">採用を保存</button>' : '<button class="btn-add" data-act="skck:save">入れた数字を保存</button><button class="btn-add" data-act="skck:fix" style="background:#2E9E7A;color:#fff">確定する</button>'}${c.fix ? '<button class="btn-add" data-act="skck:unfix">確定を消す</button>' : ""}${c.at ? '<button class="btn-add" data-act="skck:del">全部消す</button>' : ""}</div>
+      <div class="ck-b">${V.mode === "sk" ? '<button class="btn-add pri" data-act="skck:adopt">採用を保存</button>' : '<button class="btn-add" data-act="skck:save">入れた数字を保存</button><button class="btn-add" data-act="skck:fix" style="background:#2E9E7A;color:#fff">確定する</button>'}${c.fix ? '<button class="btn-add" data-act="skck:unfix">確定を消す</button>' : ""}${c.at ? '<button class="btn-add" data-act="skck:del">全部消す</button>' : ""}</div>
       <div class="muted" id="skmsg">${c.at ? `保存: ${esc(c.at)}` : "まだ保存していません"}${c.fix ? `・確定済み（${esc(c.fixAt || "")}）` : ""}</div></div>`;
   }
 
@@ -118,7 +118,7 @@
       const o = { at: new Date().toLocaleDateString("sv") };
       if (st === "adopt") { if (prev.g) o.g = prev.g; if (prev.r) o.r = prev.r; } else { if (Object.keys(g).length) o.g = g; if (Object.keys(rp).length) o.r = rp; }
       if (vals.memo && String(vals.memo).trim()) o.memo = String(vals.memo).trim();
-      if (st === "adopt") { if (nf) { o.fix = fa; o.fixAt = o.at; } const sx = document.querySelector("#editor [data-seen]"); if (sx && sx.checked) o.seen = "game"; }
+      if (st === "adopt") { if (nf) { o.fix = fa; o.fixAt = o.at; } }
       else if (st === "fix") {
         const f = {};
         if (m === "sk") ROWS.forEach(x => Object.assign(f, CMP.fixAll([x.row], x.groups, (kd, i, lv) => (kd === "r" ? rp : g)[i + ":" + lv])));
