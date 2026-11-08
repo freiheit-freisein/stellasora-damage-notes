@@ -83,7 +83,8 @@
       const pick = (lv, v, kind) => v === "" ? "" : `<button type="button" class="cx-pick cx-pick-${kind}" data-pick="${rid}:${lv}" data-v="${esc(v)}" title="クリックで採用">${esc(v)}</button>`;
       // 前に入れた報告・ゲームの数字（参考に小さく出す）
       const hint = lv => { const g = o.get ? o.get("g", row.i, lv) : null, r = o.get ? o.get("r", row.i, lv) : null; const a = []; if (g) a.push("ゲーム " + g); if (r && r !== g) a.push("報告 " + r); return a.length ? `<br><small class="cx-wiki">${esc(a.join("・"))}</small>` : ""; };
-      const inp = lv => { const v = fx[lv] ? fx[lv].v : ""; return `<td class="ck-in${key(lv)}"><input type="text" ${o.attr("f", row.i, lv)} data-row="${rid}" data-lv="${lv}" data-cur="${esc(cur(lv))}" data-ref="${esc(ref(lv))}" class="${adoptCls(v, cur(lv), ref(lv))}" value="${esc(v)}">${hint(lv)}</td>`; };
+      // 採用の欄: 採用済みの値。無ければ、前に入れたゲームの数字（無ければ報告の数字）を最初から入れておく（2026-11-09 ユーザー）
+      const inp = lv => { let v = fx[lv] ? fx[lv].v : "", pre = ""; if (!v && o.get) { const g = o.get("g", row.i, lv), r = o.get("r", row.i, lv); if (g) { v = String(g); pre = "game"; } else if (r) { v = String(r); pre = "rep"; } } return `<td class="ck-in${key(lv)}"><input type="text" ${o.attr("f", row.i, lv)} data-row="${rid}" data-lv="${lv}" data-cur="${esc(cur(lv))}" data-ref="${esc(ref(lv))}"${pre ? ` data-pre="${esc(v)}" data-src="${pre}"` : ""} class="${adoptCls(v, cur(lv), ref(lv))}" value="${esc(v)}">${pre ? "" : hint(lv)}</td>`; };
       const allBtn = kind => `<button type="button" class="cx-all" data-pickall="${rid}:${kind}" title="この行を全部採用">全部</button>`;
       const n = hasRef ? 3 : 2;
       return `<tr class="cx-top"><td rowspan="${n}"><b>${esc(row.label)}</b></td><td class="cx-k">${esc(row.regName || "現在")} ${allBtn("cur")}</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center">${pick(lv, cur(lv), "cur")}</td>`)).join("")}</tr>` +
@@ -103,9 +104,11 @@
   function adopt(x) {
     const v = String(x.value || "").trim(); if (!v) return null;
     const cur = x.getAttribute("data-cur") || "", ref = x.getAttribute("data-ref") || "";
-    const by = ref && near(v, ref, 0) ? "ref" : cur && near(v, cur, 0) ? "cur" : "manual";
-    const t = by === "ref" ? ref : by === "cur" ? cur : (ref || cur);
-    const out = by === "manual" ? v + (/%/.test(t) && !/%/.test(v) ? "%" : "") : t;
+    // 最初から入れておいた（前のゲーム・報告の）数字のままなら、出どころは game／rep
+    const pre = x.getAttribute("data-pre"), src = pre != null && pre === v ? x.getAttribute("data-src") : null;
+    const m = ref && near(v, ref, 0) ? "ref" : cur && near(v, cur, 0) ? "cur" : "manual", by = src || m;
+    const t = m === "ref" ? ref : m === "cur" ? cur : (ref || cur);
+    const out = m === "manual" ? v + (/%/.test(t) && !/%/.test(v) ? "%" : "") : t;
     return { v: out, by, same: !!(cur && near(v, cur, 0)) };
   }
   document.addEventListener("click", ev => {
