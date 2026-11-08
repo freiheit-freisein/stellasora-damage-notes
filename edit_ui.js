@@ -63,7 +63,9 @@
   const SKILLS = [["basic", "通常攻撃"], ["main", "主力スキル"], ["support", "支援スキル"], ["ult", "必殺技"]];
   const slOf = (en, k) => +(((SL[en] || {})[k]) || 10);
   // そのスキルのLvの倍率 ÷ Lv10の倍率（スキルの1つ目の数値で見る）
-  const lvRatio = (en, k, lv) => { const t = TREKKERS.find(x => x.en === en), i = { basic: 0, main: 1, support: 2, ult: 3 }[k], n = t && t.skills && t.skills[i] && t.skills[i].nums; if (!n || !n[9] || !n[lv - 1]) return 1; return n[lv - 1][0][0] / n[9][0][0]; };
+  const lvRatio = (en, k, lv) => { const t = TREKKERS.find(x => x.en === en), i = { basic: 0, main: 1, support: 2, ult: 3 }[k], n = t && t.skills && t.skills[i] && t.skills[i].nums; if (!n || !n[9]) return 1; if (n[lv - 1]) return n[lv - 1][0][0] / n[9][0][0];
+    // Lv11〜13 は計算機（sim_engine.js の skillVal）と同じく、Lv1→10 の平均の伸びで延ばす（仮。ゲームの値で確かめる）
+    const v10 = n[9][0][0], v1 = n[0][0][0]; return (v10 + (v10 - v1) / 9 * (lv - 10)) / v10; };
   // コア素質がどのスキルのLvで伸びるか: 入力済みの効果に lv があればそれ、なければ素質の役割（主力→主力スキル、支援→支援スキル）
   const potSkill = (en, role, pot) => { const cl = ((window.CORE_LV || {})[en] || {})[pot]; if (cl) return cl.k; const sp = (user[en] && user[en][pot]) || builtIn(en, pot) || {}; const e = (sp.e || []).find(x => x.lv); return e ? e.lv : role; };
   // スキルLvで伸びるコア素質（data/core_lv.js）
@@ -168,7 +170,7 @@
     const builds = groups.filter(g => !/Generic/i.test(g.title)), gen = groups.find(g => /Generic/i.test(g.title));
     const bn = g => { const m = /Build (\d)/i.exec(g.title); return m ? m[1] : "?"; };
     const grid = (arr, c) => `<div class="pgrid" style="grid-template-columns:repeat(${c},minmax(0,1fr))">${arr.map(card).join("")}</div>`;
-    const slRow = `<div class="sl"><b>スキルLv</b>${SKILLS.map(([k, nm]) => `<label>${nm} <select data-sl="${k}">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => `<option${v === slOf(S.t, k) ? " selected" : ""}>${v}</option>`).join("")}</select></label>`).join("")}
+    const slRow = `<div class="sl"><b>スキルLv</b>${SKILLS.map(([k, nm]) => `<label>${nm} <select data-sl="${k}">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(v => `<option${v === slOf(S.t, k) ? " selected" : ""}>${v}</option>`).join("")}</select></label>`).join("")}
       <div class="muted">ゲームの画面と同じLv（徽章なし）を入れてください。コア素質の追加ダメージの数字を、そのLvの値で出します。</div></div>`;
     // 並び（3列）: 特化構築ごとに「コア2つ」→「素質」、最後に汎用（2026-11-07 ユーザー指定）
     $("list").innerHTML = slRow + builds.map(g => `<div class="phead">コア：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type === 1), 3)}<div class="phead">${S.role === "main" ? "主力" : "支援"}：特化構築${bn(g)}</div>${grid(g.potentials.filter(x => x.type !== 1), 3)}`).join("") + (gen ? `<div class="phead">汎用</div>${grid(gen.potentials, 3)}` : "");
@@ -234,11 +236,11 @@
       // コア素質はスキルLvで数字が変わるので、確定するときに、そのときのスキルLvも残す
       // スキルLvで伸びる数字は、スキルLv1〜10の目安と、ゲーム・報告の数字を比べる（2つそろえば伸び方が合っている）
       const cl = p.type === 1 ? coreLv(S.t, p.name) : null;
-      const SLV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const SLV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];   // Lv11〜13 は徽章などで上がったとき
       const slRows = cl ? (jn || []).map((x, i) => { const f = String(x).match(/\d+(?:\.\d+)?/), jv = f ? parseFloat(f[0]) : null; if (jv == null || !cl.vals.some(v => Math.abs(v - jv) < 0.05)) return null; const reg = {}; SLV.forEach(lv => { reg[lv] = String(Math.round(jv * lvRatio(S.t, cl.k, lv) * 10) / 10); }); return { i: "s" + i, label: `${i + 1}つ目`, reg, ref: reg, selfRef: true, regName: "目安", okText: "伸び方が合っている", tol: 0.01 }; }).filter(Boolean) : [];
       const slTable = slRows.length ? `<div class="phead" style="font-size:13px">スキルLvで伸びる数字（${esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1])}のLv）</div>
-        <div class="muted">計算機は、この数字を${esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1])}のLvで伸ばしています（Lv10の値 × そのスキルの倍率の伸び方）。目安＝計算機が使う値。ゲームの画面で見た数字を、そのときのスキルLvの欄に入れてください。2つそろえば、伸び方が合っているか分かります（目安は計算で出した値なので、1%までのずれは合っているとみなします）。</div>
-        ${CMP.table({ lvs: SLV, head: lv => "スキルLv" + lv, rows: slRows, groups: [{ lvs: SLV, ends: [], mid: 2 }], get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"` })}` : "";
+        <div class="muted">計算機は、この数字を${esc((SKILLS.find(x => x[0] === cl.k) || [0, cl.k])[1])}のLvで伸ばしています（Lv10の値 × そのスキルの倍率の伸び方）。目安＝計算機が使う値。ゲームの画面で見た数字を、そのときのスキルLvの欄に入れてください。2つそろえば、伸び方が合っているか分かります（目安は計算で出した値なので、1%までのずれは合っているとみなします）。Lv11〜13 の目安は、計算機が Lv1→10 の平均の伸びで延ばした仮の値です。Lv11〜13 は1つ分かれば判定を出します。</div>
+        ${CMP.table({ lvs: SLV, head: lv => "スキルLv" + lv, rows: slRows, groups: [{ lvs: SLV.slice(0, 10), ends: [], mid: 2 }, { lvs: [11, 12, 13], ends: [], mid: 1 }], get: cxGet, attr: (kd, i, lv) => `data-ck="${kd === "r" ? "r:" : ""}${i}:${lv}"` })}` : "";
       CK_ROWS = { rows: cxRows, get: cxGet, sl: p.type === 1 ? (k => ({ k, lv: slOf(S.t, k) }))(potSkill(S.t, S.role, p.name)) : null };
       const fx = ck.fix || {};
       return `<div class="ck">
