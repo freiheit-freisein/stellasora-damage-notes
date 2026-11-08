@@ -10,7 +10,8 @@
   const num = v => { if (v == null || v === "") return null; const n = parseFloat(String(v).replace(/[%％,\s約]/g, "")); return isFinite(n) ? n : null; };
   const eq = (a, b) => { const x = num(a), y = num(b); return x != null && y != null && Math.abs(x - y) < 1e-6 * Math.max(1, Math.abs(y)); };
   // 目安（計算で出した値）と比べる行は、ゲームの丸めの分だけずれてよい（row.tol = 割合。例 0.01 = 1%、最低 0.1）
-  const near = (a, b, tol) => { if (!tol) return eq(a, b); const x = num(a), y = num(b); return x != null && y != null && Math.abs(x - y) <= Math.max(0.1, tol * Math.abs(y)); };
+  // 目安は丸めた表から計算した値なので tol（割合）までずれてよい。ゲームの数字が整数なら、表示の四捨五入の分（0.5）も足す
+  const near = (a, b, tol) => { if (!tol) return eq(a, b); const x = num(a), y = num(b); if (x == null || y == null) return false; const r = Number.isInteger(x) ? 0.5 : 0.05; return Math.abs(x - y) <= Math.max(0.1, tol * Math.abs(y)) + r; };
   const hasRef = () => !!window.REF_LOCAL;
   const rng = a => a.length > 1 ? `Lv${a[0]}〜${a[a.length - 1]}` : `Lv${a[0]}`;
 
@@ -81,14 +82,15 @@
       const v = (m, lv) => m && m[lv] != null ? esc(m[lv]) : "";
       const tgt = lv => row.ref && row.ref[lv] != null ? row.ref[lv] : (row.reg[lv] != null ? row.reg[lv] : "");
       const inp = (k, lv) => `<td class="ck-in${key(lv)}"><input type="text" inputmode="decimal" ${o.attr(k, row.i, lv)} data-t="${esc(tgt(lv))}"${row.tol ? ` data-tol="${row.tol}"` : ""} class="${String(o.get(k, row.i, lv) || "").trim() && new RegExp("^" + k + "-").test(st[lv] || "") ? cls(st[lv]) : ""}" value="${esc(o.get(k, row.i, lv) || "")}"></td>`;
-      const showRef = ref && !row.selfRef;   // selfRef = 登録（目安）を比べる相手にする行。控えの段は出さない
-      const n = 2 + (showRef ? 1 : 0) + 2 + (fx ? 1 : 0);
-      return `<tr class="cx-top"><td rowspan="${n}"><b>${esc(row.label)}</b></td><td class="cx-k">${esc(row.regName || "登録")}</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center">${v(row.reg, lv)}</td>`)).join("")}</tr>` +
-        (showRef ? `<tr><td class="cx-k">控え</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="cx-ref">${row.ref ? v(row.ref, lv) : ""}</td>`)).join("")}</tr>` : "") +
+      // 段は「比べる数字／報告／ゲーム／判定」の4つ。比べる数字＝控え（無ければ登録）。登録が控えと違えば小さく添える。確定した値は緑
+      const cmpCell = lv => { const f = row.ref && row.ref[lv] != null ? row.ref[lv] : null, e = row.reg[lv]; const main = f != null ? f : e; if (main == null) return "";
+        const note = f != null && e != null && !eq(f, e) ? `<br><small class="cx-wiki">Wiki ${esc(e)}</small>` : ""; return esc(main) + note; };
+      const fixed = lv => fx && fx[lv];
+      const nm = row.regName || (row.ref ? "控え" : "登録");
+      return `<tr class="cx-top"><td rowspan="4"><b>${esc(row.label)}</b></td><td class="cx-k">${esc(nm)}</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="${fixed(lv) ? "cx-fix" : ""}" title="${fixed(lv) ? "確定済み" : ""}">${cmpCell(lv)}</td>`)).join("")}</tr>` +
         `<tr><td class="cx-k">報告</td>${o.lvs.map(lv => td(lv, inp("r", lv))).join("")}</tr>` +
         `<tr><td class="cx-k">ゲーム</td>${o.lvs.map(lv => td(lv, inp("g", lv))).join("")}</tr>` +
-        (fx ? `<tr><td class="cx-k">確定</td>${o.lvs.map(lv => td(lv, `<td style="text-align:center" class="cx-fix${fx[lv] && fx[lv].by === "est" ? " cx-est" : ""}">${fx[lv] ? esc(fx[lv].v) : ""}</td>`)).join("")}</tr>` : "") +
-        `<tr><td class="cx-k">判定</td><td colspan="${o.lvs.length}" class="cx-j">${row.ref || !ref ? jd.map(j => j.text).join("　／　") : '<span class="muted">控えに同じ数字が見つかりません（登録とゲーム・報告で比べます）</span>　' + jd.map(j => j.text).join("　／　")}</td></tr>`;
+        `<tr><td class="cx-k">判定</td><td colspan="${o.lvs.length}" class="cx-j">${jd.map(j => j.text).join("　／　")}${fx ? "　<span class=\"cx-good\">（確定済み）</span>" : ""}</td></tr>`;
     }).join("");
     return `<table class="lv ck-t cx-t"><tr><th colspan="2">文の中の数字</th>${o.lvs.map(lv => `<th class="${key(lv).trim()}">${esc(o.head(lv))}</th>`).join("")}</tr>${body}</table>`;
   }
