@@ -155,7 +155,7 @@
     }
     // 同じものが無くても、いちばん近いものを控えとして出す（2026-11-09 ユーザー: ずれとは関係なく出す。報告の入力ミスも見るため）
     let best = -1, bs = Infinity;
-    const rel = (a, b) => { const x = Math.abs(num(a)), y = Math.abs(num(b)); return x == null || y == null ? 9 : Math.abs(x - y) / Math.max(1, Math.abs(y)); };
+    const rel = (a, b) => { const x0 = num(a), y0 = num(b), x = x0 == null ? null : Math.abs(x0), y = y0 == null ? null : Math.abs(y0); return x == null || y == null ? 9 : Math.abs(x - y) / Math.max(1, Math.abs(y)); };
     for (let k = 0; k < (params || []).length; k++) {
       if (used.has(k)) continue;
       const p = params[k];
