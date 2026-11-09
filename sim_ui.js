@@ -75,7 +75,8 @@
       <button class="btn-add" data-act="log-open">更新履歴</button><button class="btn-add" data-act="rp-open">報告</button>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
-    $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比較中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "再度比較する" : "比較"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比較を止める</button>` : "");
+    // 比較: 「今の値を記憶」の1つだけ。記憶した値からの増減は、結果の「比較」の列に出る（列の見出しの × で消す）
+    $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" title="${memo ? "今の値で記憶し直します。結果の「比較」の列は、記憶した値からの増減です" : "今の値を記憶します。このあと入力を変えると、結果の「比較」の列に増減が出ます"}">今の値を記憶</button>`;
   }
 
   // ---- 共通の倍率（種類を問わない倍率）。手順のタブの下に1行で出し、スクロールしても上に残す ----
@@ -117,7 +118,8 @@
   const big = n => n >= 1e8 ? (Math.round(n / 1e6) / 100) + "億" : n >= 1e4 ? Math.round(n / 1e4).toLocaleString("ja-JP") + "万" : fmt(n);
   function renderMobile(items) {
     const mb = (k, l, en) => `<button class="tab" aria-selected="${V.m === k}" data-act="m:${k}"><span class="te">${en}</span><span>${l}</span></button>`;
-    $("mbar").innerHTML = mb("in", "入力", "INPUT") + mb("res", "結果", "RESULT") + mb("drill", "内訳", "DETAIL");
+    if (V.m === "drill") V.m = "res";   // 内訳は結果の中で開くので、タブは入力と結果の2つ
+    $("mbar").innerHTML = mb("in", "入力", "INPUT") + mb("res", "結果", "RESULT");
     document.body.className = "m-" + V.m;
   }
 
@@ -941,9 +943,23 @@
     window.__items = items;
     const curVals = {};
     // 巡遊者ごとに1枚のカード。攻撃ごとに1行（名前・倍率・ダメージ・比較）。細かい値は行の下に小さく出し、押すと内訳
-    // 細かい値は、小数の桁を固定する（倍率は3桁、率は1桁）
-    // 「種別倍率: 1.014」の形。コロンの後ろは半角スペース1つ、項目の間は全角スペース1つ分（CSS の gap）
+    // 細かい値は「通常攻撃ダメージ: +38.4%」の形。コロンの後ろは半角スペース1つ、項目の間は全角スペース1つ分（CSS の gap）。率は小数1桁
     const v = (cls, lab, val) => `<span class="rs-v ${cls}">${lab}: ${val}</span>`;
+    const p1 = x => (x * 100).toFixed(1) + "%";
+    // その行の攻撃の種類（通常1ローテなら通常攻撃）。違う種類のヒット（スキル扱いの通常攻撃など）は、内訳で分かるようにする
+    const mainType = key => /^(mark|supm)/.test(key) ? "mark" : key === "basic" ? "basic" : /^(ult|supu)/.test(key) ? "ult" : "skill";
+    const typeB = (sm, t) => { const r = sm.rows.find(x => x.type === t) || sm.rows[0]; return r ? r.B : 1; };
+    // 内訳: 押した行のすぐ下に出す。1ヒット1行（ヒット・倍率×回数・1ヒットの期待値・小計）。種類が違うヒットと、会心が違うヒットだけ補足を出す
+    const drillHtml = (sm, t) => `<div class="rs-drill"><table><colgroup><col><col class="c2"><col class="c3"><col class="c4"></colgroup>
+      <tr><th>ヒット</th><th>倍率×回数</th><th>1ヒット</th><th>小計</th></tr>
+      ${sm.rows.map(r => {
+        const cd = r.critDmg != null ? r.critDmg : r.crit / r.normal;
+        const notes = [];
+        if (r.type !== t) notes.push(`${E.TYPE_NAME[r.type]}扱い（+${p1(r.B - 1)}）`);   // カッコの中は、その種類のダメージ%
+        if (Math.abs(r.rate - sm.rate) > 0.0005 || Math.abs(cd - sm.critDmg) > 0.0005) notes.push(`会心率: ${p1(r.rate)}　会心ダメ: ${p1(cd)}`);
+        const tip = esc(`非会心 ${fmt(r.normal)}／会心 ${fmt(r.crit)}／属性 ${f3(r.W)}／種別 ${f3(r.B)}／被ダメージ ${f3(r.taken)}／敵 ${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ${r.markX}` : ""}`);
+        return `<tr title="${tip}"><td><b>${esc(r.name)}</b>${notes.map(n => `<small>${n}</small>`).join("")}</td><td>${(Math.round(r.mult * 10) / 10).toFixed(1)}% ×${r.count}</td><td>${dmgF(r.avg)}</td><td>${dmgF(r.total)}</td></tr>`;
+      }).join("")}</table></div>`;
     const row = ([key, label, sm, id]) => {
       if (!sm) return "";   // その巡遊者にない攻撃（印など）は出さない
       curVals[key] = sm.exp;
@@ -953,42 +969,23 @@
         cmp = `<span class="rs-cmp ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${(Math.round(d * 1000) / 10)}%</span>`;
       }
       const nm = label.replace(chOf(id).jp + " ", "");
-      return `<button type="button" class="rs-row${V.drill === key ? " sel" : ""}" data-act="drill:${key}" aria-pressed="${V.drill === key}" title="押すと内訳を出します">
+      const t = mainType(key), open = V.drill === key;
+      return `<button type="button" class="rs-row${open ? " sel" : ""}" data-act="drill:${key}" aria-expanded="${open}" title="${open ? "押すと内訳を閉じます" : "押すと内訳を出します"}">
         <span class="rs-nm">${esc(nm)}</span>
         <span class="rs-mult">${fmt(sm.mult)}%</span>
         <span class="rs-dmg">${dmgF(sm.exp)}</span>
         ${cmp}<span class="rs-go" aria-hidden="true">›</span>
-        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${v("k", "種別倍率", sm.B.toFixed(3))}${v("cr", "会心率", (sm.rate * 100).toFixed(1) + "%")}${v("cd", "会心ダメ", (sm.critDmg * 100).toFixed(1) + "%")}${v("dm", "非会心", dmgF(sm.non))}${v("dm", "会心", dmgF(sm.crit))}</span></button>`;
+        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${v("k", E.TYPE_NAME[t] + "ダメージ", "+" + p1(typeB(sm, t) - 1))}${v("cr", "会心率", p1(sm.rate))}${v("cd", "会心ダメ", p1(sm.critDmg))}</span></button>${open ? drillHtml(sm, t) : ""}`;
     };
     // 列の名前（倍率・ダメージ・比較）は、巡遊者ごとの見出しの行に、それぞれの列の上に出す
     $("result").innerHTML = SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);
       const rows = items.filter(x => x[3] === id && (k === "main" ? !/^sup/.test(x[0]) : x[0].slice(-1) === (k === "s1" ? "1" : "2")));
-      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">総倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? "比較" : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
+      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">総倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? `比較<button type="button" class="cmp-x" data-act="memodel" title="記憶した値を消して、比較の列を閉じます" aria-label="比較をやめる">×</button>` : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
     }).join("");
     window.__cur = curVals;
-    renderDrill(items);
     renderMobile(items);
   }
-  function renderDrill(items) {
-    const it = items.find(x => x[0] === V.drill);
-    const panel = $("drillPanel");
-    if (!it || !it[2]) { panel.style.display = "none"; return; }
-    panel.style.display = "";
-    const sm = it[2];
-    $("drillTitle").textContent = `${it[1]}の内訳` + (/^sup/.test(it[0]) ? "" : `（${chOf(it[3]).jp}）`);
-    // 1ヒットを2段で: 種別／名前・倍率／回数・非会心／会心・期待値（1ヒット）／会心率と会心ダメージ。倍率の内訳と小計は、行にマウスを重ねると出る
-    const r1 = n => (Math.round(n * 10) / 10).toFixed(1);
-    $("drill").innerHTML = `<table><colgroup><col style="width:34%"><col style="width:18%"><col style="width:22%"><col style="width:26%"></colgroup>
-      <tr><th>種別<br>ヒット</th><th>倍率<br>回数</th><th>非会心<br>会心</th><th>期待値<br><span class="nb">会心率</span><span class="nb">／会心ダメ</span></th></tr>
-      ${sm.rows.map(r => {
-        const tip = esc(`小計 ${fmt(r.total)}／属性W ×${f3(r.W)}／種別B ×${f3(r.B)}／被ダメージ ×${f3(r.taken)}／敵D ×${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ×${r.markX}` : ""}`);
-        return `<tr class="d1" title="${tip}"><td>${E.TYPE_NAME[r.type]}</td><td>${r1(r.mult)}%</td><td>${dmgF(r.normal)}</td><td class="ex">${dmgF(r.avg)}</td></tr>
-        <tr class="d2" title="${tip}"><td>${esc(r.name)}</td><td>×${r.count} hit</td><td>${dmgF(r.crit)}</td><td><span class="nb">${pct(r.rate)}</span><span class="nb">／${pct(r.critDmg != null ? r.critDmg : r.crit / r.normal)}</span></td></tr>`;
-      }).join("")}
-      <tr class="sum"><td>合計</td><td>${fmt(sm.mult)}%</td><td>${dmgUnit === "raw" ? big(sm.non) : dmgF(sm.non)}<br>${dmgUnit === "raw" ? big(sm.crit) : dmgF(sm.crit)}</td><td>${dmgF(sm.exp)}</td></tr></table>`;
-  }
-
   // 上に残す帯（手順のタブと共通の倍率）は、見出しのすぐ下に付ける
   function setHdrH() { const h = document.querySelector(".site-header"); if (h) document.documentElement.style.setProperty("--hdr-h", (h.offsetHeight + 8) + "px"); }
   window.addEventListener("resize", setHdrH);
@@ -1088,15 +1085,13 @@
     }
     if (a.indexOf("tf:") === 0) { V.tilesFor = a.slice(3); renderAll(); return; }
     if (a.indexOf("drill:") === 0) {
-      const k = a.slice(6), phone = window.matchMedia("(max-width: 860px)").matches;
-      if (phone) { V.drill = k; V.m = "drill"; } else V.drill = V.drill === k ? null : k;   // スマホは内訳のタブに切り替える
+      const k = a.slice(6);
+      V.drill = V.drill === k ? null : k;   // 押した行のすぐ下に内訳を開く（もう一度押すと閉じる）
       renderAll();
-      if (!phone && V.drill) { const p = $("drillPanel"); if (p) p.scrollIntoView({ behavior: "smooth", block: "nearest" }); }   // 結果の欄の下に出るので、そこまで動く
       return;
     }
     if (a.indexOf("m:") === 0) {
       V.m = a.slice(2);
-      if (V.m === "drill" && !V.drill) { const f = (window.__items || []).find(x => x[2]); V.drill = f ? f[0] : null; }   // 内訳は、まだ選んでいなければ先頭の項目
       renderAll(); window.scrollTo(0, 0); return;
     }
     if (a.indexOf("mchar:") === 0) { V.mChar = a.slice(6); renderAll(); return; }
@@ -1156,7 +1151,6 @@
       if (!v) return;
       try { navigator.clipboard.writeText(v).then(() => say("url", "コピーしました"), () => say("url", "コピーできませんでした。枠の中を選んでコピーしてください", true)); } catch (e) { say("url", "コピーできませんでした", true); }
     }
-    else if (a === "drillclose") { V.drill = null; renderAll(); }
     else if (a.indexOf("help:") === 0) { V.help = V.help || {}; V.help[a.slice(5)] = !V.help[a.slice(5)]; renderAll(); }
     else if (a.indexOf("stp|") === 0) {   // −／＋ のボタン
       const m = /^stp\|(-?1)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);

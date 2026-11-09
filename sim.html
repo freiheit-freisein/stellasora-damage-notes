@@ -139,11 +139,28 @@
   .rs-cmp { text-align: right; font-size: 12px; font-weight: 900; }
   .rs-cmp.up { color: #05626A; } .rs-cmp.down { color: var(--danger); }
   .rs-go { color: var(--muted); font-size: 18px; font-weight: 700; }
+  /* 内訳（押した行のすぐ下） */
+  .rs-drill { padding: 4px 12px 10px 16px; background: var(--dmg-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .rs-drill table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
+  .rs-drill th { font-size: 11px; font-weight: 700; color: var(--muted); text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+  .rs-drill th:first-child, .rs-drill td:first-child { text-align: left; }
+  .rs-drill td { padding: 5px 6px; text-align: right; border-bottom: 1px solid var(--border); vertical-align: top; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rs-drill tr:last-child td { border-bottom: 0; }
+  .rs-drill td:first-child { white-space: normal; }
+  .rs-drill td b { font-weight: 700; color: var(--indigo); }
+  .rs-drill td small { display: block; font-size: 11px; color: var(--muted); }
+  .rs-drill col.c2 { width: 84px; } .rs-drill col.c3 { width: 92px; } .rs-drill col.c4 { width: 96px; }
+  @media (max-width: 860px) { .rs-drill { padding: 4px 8px 8px 12px; } .rs-drill table { font-size: 11px; } .rs-drill col.c2 { width: 70px; } .rs-drill col.c3 { width: 64px; } .rs-drill col.c4 { width: 70px; } .rs-drill td, .rs-drill th { padding: 4px 3px; } }
   .rs-sub .rs-mm { display: none; }
-  .rs-row.sel .rs-go { color: var(--accent); }
+  .rs-row.sel .rs-go { color: var(--accent); transform: rotate(90deg); }
+  .rs-go { display: inline-block; transition: transform .15s; }
   .tile.pink { position: relative; }
   .drill-hint { position: absolute; right: 10px; bottom: 6px; font-size: 11px; font-weight: 700; color: #B05A70; }
-  .cmpbar { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin: 0 0 8px; }   /* 比較のボタンは、見出しとは別の行 */
+  /* 結果の見出しの行: 「今の値を記憶」と表記の切り替えを1行に */
+  .panel > h2.res-h { align-items: center; flex-wrap: wrap; }
+  .cmpbar { display: inline-flex; align-items: center; }
+  .cmpbar .btn-add { min-height: 30px; padding: 0 12px; font-size: 12px; }
+  .rs-ch .cmp-x { margin-left: 4px; padding: 0 5px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--muted); font: inherit; font-size: 10px; cursor: pointer; }
   .cmp-on { font-size: 11px; font-weight: 900; padding: 0 8px; border-radius: 999px; background: #4B5082; color: #fff; }
   .cmp { font-size: 12px; font-weight: 700; }
   .cmp.up { color: #05626A; } .cmp.down { color: var(--danger); }
@@ -586,8 +603,7 @@
     <div class="panel"><div id="display"></div></div>
   </div>
   <div id="right">
-    <div class="panel"><h2><span class="en">RESULT</span>結果<span style="flex:1"></span><span id="unitbar" class="unitbar" role="group" aria-label="ダメージの表記"></span></h2><div id="cmpbar" class="cmpbar"></div><div id="result"></div></div>
-    <div class="panel" id="drillPanel" style="display:none"><h2><span class="en">DETAIL</span><span id="drillTitle">内訳</span><span style="flex:1"></span><button type="button" class="help-btn" data-act="drillclose">閉じる</button></h2><div id="drill"></div></div>
+    <div class="panel"><h2 class="res-h"><span class="en">RESULT</span>結果<span style="flex:1"></span><span id="cmpbar" class="cmpbar"></span><span id="unitbar" class="unitbar" role="group" aria-label="ダメージの表記"></span></h2><div id="result"></div></div>
   </div>
 </div>
 <footer class="site-footer about"><div class="wrap">
