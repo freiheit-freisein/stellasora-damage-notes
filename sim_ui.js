@@ -884,7 +884,7 @@
     const ukey = JSON.stringify(G);
     if (V.upOpen && V.upKey !== ukey) { V.upKey = ukey; try { V.ups = S.contrib.calcUpgrades(G).slice(0, 10); } catch (e) { V.ups = []; } }
     const KCLS = { 心相: "k-heart", しずく: "k-emb", 素質: "k-pot", ロスレコ: "k-lr", 音符: "k-note" };
-    const upHtml = !V.upOpen ? '<p class="muted" style="margin:0">1つだけ変えたときに、ダメージが大きく伸びる強化を10個まで出します。「開く」で計算します。</p>' : (V.ups || []).length ? `<ol class="up-list">${V.ups.map((u, i) => `<li><span class="up-k ${KCLS[u.kind] || ""}">${u.kind}</span><span class="up-l">${esc(u.label)}</span><b class="up-g">+${(u.gain * 100).toFixed(1)}%</b><button type="button" class="btn-add" data-act="upapply:${i}">反映する</button></li>`).join("")}</ol>` : '<p class="muted" style="margin:0">伸びる手が見つかりませんでした。</p>';
+    const upHtml = !V.upOpen ? '<p class="muted" style="margin:0">1つだけ変えたときに、ダメージが大きく伸びる強化を10個まで出します。</p>' : (V.ups || []).length ? `<ol class="up-list">${V.ups.map((u, i) => `<li><span class="up-k ${KCLS[u.kind] || ""}">${u.kind}</span><span class="up-l">${esc(u.label)}</span><b class="up-g">+${(u.gain * 100).toFixed(1)}%</b><button type="button" class="btn-add" data-act="upapply:${i}">反映する</button></li>`).join("")}</ol>` : '<p class="muted" style="margin:0">伸びる手が見つかりませんでした。</p>';
     return `<div class="wide"><div class="secg">
       <section class="sec full"><h3>3分間の回数<span class="h-sub">寄与率は、この回数で合計した3分間のダメージで出します</span></h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
@@ -893,7 +893,7 @@
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・寄与率は、この回数で合計したダメージで出します。`, "margin-top:4px;color:#33386A")}</div>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">${rotHtml}</div></section>
-      <section class="sec full"><h3>オススメ強化ポイント<span class="beta-s">β版</span><button type="button" class="help-btn" data-act="upopen" aria-expanded="${!!V.upOpen}">${V.upOpen ? "閉じる" : "開く"}</button>${V.upOpen ? '<span class="h-sub">1つだけ変えたとき、上の3分間の回数で合計したダメージがどれだけ伸びるか</span>' : ""}</h3>${upHtml}
+      <section class="sec full"><h3>オススメ強化ポイント<span class="beta-s">β版</span><button type="button" class="help-btn" data-act="upopen" aria-expanded="${!!V.upOpen}">${V.upOpen ? "閉じる" : "計算する"}</button>${V.upOpen ? '<span class="h-sub">1つだけ変えたとき、上の3分間の回数で合計したダメージがどれだけ伸びるか</span>' : ""}</h3>${upHtml}
         ${!V.upOpen ? "" : helpTxt("ups", "心相の凸・ロスレコの突破・しずく・素質の付け替え・音符の付け替えを、全部ためして伸びる順に並べます（伸びが0.1%未満の手は出しません）。", "・心相: 1凸上げる。<br>・ロスレコ: 突破を1つ上げる（サブは基礎攻撃力だけ変わります）。<br>・しずく: 徽章の値を1段階上げる。1枚の徽章に2回までですが、もう使った回数は分からないので、数えていません。<br>・素質の付け替え: 取った素質を1つ下げて、別の素質を1つ上げる（巡遊者をまたいでもよい。合計5まで。Lv1→0、Lv6→7はできません）。いちばん伸びる組み合わせを1つだけ出します。<br>・音符の付け替え: 取った音符を減らして、別の音符に足す（合計15個まで。1→0はできません）。1・5・10・15個を試して、いちばん伸びる組み合わせを1つだけ出します。<br>付け替えは1回ずつ出すので、「反映する」のあと、次の付け替えが出ます（使った数は数えていないので、合計の上限は自分で確かめてください）。<br>「反映する」を押すと、その変更を入力に入れます。「今の値を記憶」をしていなければ、押す前の値を記憶するので、結果の比較で伸びを確かめられます。", "margin-top:8px")}</section>
       <section class="sec full"><h3>与ダメへの寄与率</h3>
       ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。素質（コア以外）は、徽章の素質レベル上昇も込みのLvで、Lv9まで選べます（Lv7〜9の値は、ゲームの画面で確かめていないものは推定です）。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 8px")}
@@ -1096,7 +1096,17 @@
     const t = ev.target.closest("[data-act]");
     if (!t) return;
     const a = t.getAttribute("data-act");
-    if (a.indexOf("panel:") === 0) { V.panel = a.slice(6); V.pick = null; V.lrPick = null; renderAll(); return; }
+    if (a.indexOf("panel:") === 0) {
+      V.panel = a.slice(6); V.pick = null; V.lrPick = null; renderAll();
+      // 下までスクロールしたままタブを替えると、新しい画面の途中から見えてしまうので、中身の頭が上の帯に隠れていれば、頭まで戻す
+      const d = $("display"), nav = $("navp");
+      if (d && nav) {
+        const fixed = getComputedStyle(nav).position === "sticky" ? nav.getBoundingClientRect().bottom : 0;
+        const top = d.getBoundingClientRect().top;
+        if (top < fixed) window.scrollTo(0, window.scrollY + top - fixed - 12);
+      }
+      return;
+    }
     // 巡遊者の入力をクリア（2回押し）。保存されていた値がおかしいとき用
     if (a.indexOf("chclr:") === 0) { V.clrSure = a.slice(6); renderAll(); return; }
     if (a === "chclr-no") { V.clrSure = null; renderAll(); return; }
