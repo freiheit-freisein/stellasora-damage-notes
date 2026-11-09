@@ -101,7 +101,7 @@
     const b = (key, label, en, n) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${n ? `<span class="tn">${n}</span>` : ""}${label}</span></button>`;
     // 入力する順に番号を付けて並べる。ゲームの画面と数値を合わせるための画面（直接入力・補正）は、右端に「実測合わせ」としてまとめる
     $("selectors").innerHTML = b("load", "読込", "LOAD", 1) + b("overview", "巡遊者", "TREKKERS", 2) + b("lr", "記録・ロスレコ", "RECORD", 3) + b("gimmick", "エネミー", "ENEMY", 4) + b("score", "ビルド確認", "CHECK", 5) + b("share", "共有・保存", "SHARE", 6)
-      + `<span class="tab-sep" aria-hidden="true"></span><span class="tab-grp">実測合わせ</span>` + b("direct", "直接入力", "DIRECT") + b("adjust", "補正", "ADJUST");
+      + `<span class="tab-sep" aria-hidden="true"></span>` + b("direct", "直接入力", "DIRECT") + b("adjust", "補正", "ADJUST");
     // スマホ: タブの列は横にスクロールするので、選んだタブを真ん中より少し左に寄せる（右に続きのタブが見えるように）
     const row = $("selectors"), on = row.querySelector('[aria-selected="true"]');
     if (on && row.scrollWidth > row.clientWidth) {
@@ -487,6 +487,9 @@
         <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(lrOptName(x))}</option>`).join("")}</select>${rankSel(arr, cur)}</div>`;
     };
     const m = "lrManual";
+    // 手入力の欄は、ふだんは閉じておく（値が入っているときは、開いた状態から始める）
+    const manHas = ["baseAtk", "baseHp", "elem", "basicDmg", "skillDmg", "atkPct"].some(k => +((G.lrManual || {})[k]) || 0);
+    const manOpen = V.manOpen != null ? V.manOpen : manHas;
     // 音符: ゲームと同じく、色と名前 → 数 → 効果 を縦に並べ、1行にする
     const NC = { 強撃: "#E5533D", 幸運: "#F08A24", 爆発: "#8B5CF6", 体力: "#3FB65F", 集中: "#1FB5A8", 器用: "#3B6FE0", 必殺: "#E84D8A", 水: "#2BA6DE", 風: "#55C27A", 光: "#E8B10F", 火: "#E5533D", 地: "#A0703C", 闇: "#6B4FA0" };
     const STN = { atkPct: "攻撃力", critRate: "会心率", critDmg: "会心ダメージ", hpPct: "最大HP", basicDmg: "通常攻撃ダメージ", skillDmg: "スキルダメージ", ultDmg: "必殺技ダメージ" };
@@ -546,12 +549,12 @@
       <section class="sec full"><h3>音符<span class="h-sub">探索で獲得した数を入力します。サブのロスレコの初期音符は自動で足します</span></h3>${noteIn}</section>
       <section class="sec full"><h3>メインのロスレコの効果</h3>
         <div class="grid-in" style="grid-template-columns:1fr">${fxHtml || '<span class="muted">メインのロスレコを選ぶと、効果が出ます</span>'}</div></section>
-      <section class="sec full"><h3>一覧にないロスレコ・サブの合計（手入力）</h3>
-        <div class="grid-in man-g">
+      <section class="sec full"><h3>一覧にないロスレコ・サブの合計（手入力）<button type="button" class="help-btn" data-act="manopen" aria-expanded="${manOpen}">${manOpen ? "閉じる" : "開く"}</button>${manHas ? '<span class="tag-ok">入力あり</span>' : ""}</h3>
+        ${manOpen ? `<div class="grid-in man-g">
           ${fld("基礎攻撃力 合計", inp(m + ".baseAtk", { w: 100 }))}${fld("基礎HP 合計", inp(m + ".baseHp", { w: 100 }))}
           ${fld("属性ダメージ 合計", inp(m + ".elem", { w: 100 }), "0.66=66%")}${fld("その属性", inp(m + ".elemEl", { sel: [["", "全員"], ["光", "光"], ["水", "水"], ["風", "風"], ["火", "火"], ["地", "地"], ["闇", "闇"]], str: true }))}
           ${fld("通常攻撃ダメージ 合計", inp(m + ".basicDmg", { w: 100 }))}${fld("スキルダメージ 合計", inp(m + ".skillDmg", { w: 100 }))}${fld("攻撃力% 合計", inp(m + ".atkPct", { w: 100 }))}
-        </div></section>
+        </div>` : '<div class="muted help" style="margin:0">一覧にないロスレコを使うときに、基礎攻撃力・属性ダメージなどの合計を手で入れます。「開く」で入力欄が出ます。</div>'}</section>
       </div></div>`;
   }
 
@@ -1180,6 +1183,7 @@
     else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
+    else if (a === "manopen") { const has = ["baseAtk", "baseHp", "elem", "basicDmg", "skillDmg", "atkPct"].some(k => +((G.lrManual || {})[k]) || 0); V.manOpen = !(V.manOpen != null ? V.manOpen : has); renderAll(); }
     else if (a === "bjopen") { V.bjOpen = !(V.bjOpen || DV.bjson || V.bimp); if (!V.bjOpen) { DV.bjson = ""; V.bimp = null; } renderAll(); }
     else if (a === "rp-send") sendReport();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
