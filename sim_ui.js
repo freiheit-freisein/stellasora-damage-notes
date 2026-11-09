@@ -942,6 +942,8 @@
     window.__items = items;
     const curVals = {};
     // 巡遊者ごとに1枚のカード。攻撃ごとに1行（名前・倍率・ダメージ・比較）。細かい値は行の下に小さく出し、押すと内訳
+    // 細かい値は、桁をそろえて行ごとに縦に並ぶように（値は右寄せ・幅を固定・小数の桁を固定）
+    const v = (cls, lab, val) => `<span class="rs-v ${cls}"><i>${lab}</i><b>${val}</b></span>`;
     const row = ([key, label, sm, id]) => {
       if (!sm) return "";   // その巡遊者にない攻撃（印など）は出さない
       curVals[key] = sm.exp;
@@ -956,7 +958,7 @@
         <span class="rs-mult">${fmt(sm.mult)}%</span>
         <span class="rs-dmg">${dmgF(sm.exp)}</span>
         ${cmp}<span class="rs-go" aria-hidden="true">›</span>
-        <span class="rs-sub"><span class="rs-mm">倍率 ${fmt(sm.mult)}%</span><span>種別 ×${f3(sm.B)}</span><span>会心率 ${pct(sm.rate)}</span><span>会心ダメ ${pct(sm.critDmg)}</span><span>非会心 ${dmgF(sm.non)}</span><span>会心 ${dmgF(sm.crit)}</span></span></button>`;
+        <span class="rs-sub">${v("rs-mm", "倍率", fmt(sm.mult) + "%")}${v("k", "倍率", "×" + sm.B.toFixed(3))}${v("cr", "会心率", (sm.rate * 100).toFixed(1) + "%")}${v("cd", "会心ダメ", (sm.critDmg * 100).toFixed(1) + "%")}${v("dm", "非会心", dmgF(sm.non))}${v("dm", "会心", dmgF(sm.crit))}</span></button>`;
     };
     $("result").innerHTML = `<div class="rs-row rs-colh" aria-hidden="true"><span>攻撃</span><span class="rs-mult">倍率</span><span class="rs-dmg">ダメージ（期待値）</span><span class="rs-cmp">${memo ? "比較" : ""}</span><span></span></div>` + SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);

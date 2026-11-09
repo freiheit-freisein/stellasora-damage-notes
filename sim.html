@@ -127,7 +127,11 @@
   .rs-row:first-of-type { border-top: 0; }
   .rs-row:hover { background: var(--dmg-soft); }
   .rs-row.sel { background: var(--dmg-soft); box-shadow: inset 4px 0 0 var(--accent); }
-  .rs-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 12px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .rs-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 14px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .rs-v { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+  .rs-v i { font-style: normal; }
+  .rs-v b { display: inline-block; font-weight: 400; text-align: right; font-variant-numeric: tabular-nums; }
+  .rs-v.k b { width: 3.6em; } .rs-v.cr b { width: 3.6em; } .rs-v.cd b { width: 4.2em; } .rs-v.dm b { min-width: 5.2em; } .rs-v.rs-mm b { width: 4.2em; }
   .rs-nm { min-width: 0; font-size: 14px; font-weight: 900; color: var(--indigo); }
   .rs-mult { text-align: right; font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
   .rs-dmg { min-width: 0; text-align: right; font-size: 20px; font-weight: 900; color: var(--indigo); font-variant-numeric: tabular-nums; line-height: 1.2; }
@@ -478,9 +482,8 @@
     .notes-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
     .fld { grid-template-columns: 100px minmax(0, 1fr); }
     .stp-lab { width: 100px; }
-    .rs-row { grid-template-columns: minmax(0, 1fr) 120px 48px 12px; gap: 2px 6px; padding: 8px 10px; }
-    .rs-mult { display: none; }
-    .rs-sub .rs-mm { display: inline; }
+    .rs-row { grid-template-columns: minmax(0, 1fr) 58px 104px 40px 10px; gap: 2px 6px; padding: 8px 10px; }
+    .rs-nm { font-size: 13px; } .rs-mult { font-size: 12px; }
     .rs-dmg { font-size: 18px; }
     .wide > table { display: block; overflow-x: auto; }
     #drill td, #drill th { white-space: normal; overflow: visible; font-size: 11px; }
@@ -491,6 +494,10 @@
     .mchip { flex: none; display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--dmg-line); background: var(--dmg-soft); font-size: 11px; color: var(--muted); cursor: pointer; }
     .mchip b { font-size: 14px; color: var(--indigo); }
     .mchip .up { color: var(--ok); } .mchip .down { color: var(--danger); }
+  }
+  @media (max-width: 380px) {
+    .rs-row { grid-template-columns: minmax(0, 1fr) 50px 88px 38px 8px; gap: 2px 4px; padding: 8px; }
+    .rs-nm { white-space: nowrap; } .rs-dmg { font-size: 16px; } .rs-mult, .rs-cmp { font-size: 11px; }
   }
   /* ページの見出し（見た目は今のロゴのまま）と、ページの下の「このツールについて」 */
   .logo-h1 { margin: 0; font-size: inherit; font-weight: inherit; display: inline-flex; align-items: center; gap: 10px; }
