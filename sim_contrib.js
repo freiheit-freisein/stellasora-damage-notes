@@ -158,14 +158,16 @@
   //   心相: 1凸上げる（★5は10段階、★4は5段階）。上限は50段階
   //   ロスレコ: 突破を1つ上げる（メインとサブ。サブは基礎攻撃力だけ変わる）
   //   しずく: 徽章の1つの値を1段階上げる（緑→青→金→虹、レベル上昇は 金+1→虹+2→虹+3）。1枚の徽章に2回まで（使った回数はデータに無いので、ここでは数えない）
-  //   素質の付け替え: 合計5まで、取った素質を下げて別の素質を上げられる。Lv1→0 と Lv6→7 はできない（ここでは同じ巡遊者の中で付け替える）
+  //   素質の付け替え: 合計5まで、取った素質を下げて別の素質を上げられる。Lv1→0 と Lv6→7 はできない。巡遊者をまたいでもよい（2026-11-10 ユーザー）
   //   音符の付け替え: 合計15個まで、ある音符を減らして別の音符に足せる。1→0 はできない
   // 返り値は伸びの大きい順: { kind, label, gain（割合）, apply(g) }
   function calcUpgrades(G) {
     const t0 = sum3(dmgParts(G)), out = [];
     if (!(t0 > 0)) return out;
     const tryG = fn => { const g = clone(G); fn(g); return sum3(dmgParts(g)) / t0 - 1; };
-    const add = (kind, label, fn, src) => { const gain = tryG(fn); if (gain >= 0.0005) out.push({ kind, label, gain, apply: fn, src }); };
+    const MIN = 0.001;   // 伸びが0.1%未満の手は出さない
+    const add = (kind, label, fn, src) => { const gain = tryG(fn); if (gain >= MIN) out.push({ kind, label, gain, apply: fn, src }); };
+    const pots = [];   // 付け替えできる素質（3人分。コア素質は対象外）
     const LR = window.LOSTRECORDS || [];
     SLOTS.forEach(([k]) => {
       const id = G.team[k], cs = G.chars[id], c = chOf(id), tk = TK(c.en);
@@ -183,18 +185,23 @@
           add("しずく", `${c.jp}：${KIND_NAME[e.kind] || ""} ${embShort(id, sl)} → ${qVal(o, nq) != null ? valTxt(o, qVal(o, nq)) : nq}`, g => { g.chars[id].emb[i].slots[j].q = nq; });
         });
       });
-      // 素質の付け替え（同じ巡遊者の中。コア素質は対象外）
+      // 付け替えできる素質を集める
       const core = new Set();
       const role = k === "main" ? "main" : "support";
       ((tk && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { if (p.type === 1) core.add(S.potKey(p.name)); }));
-      const ps = Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0 && !core.has(p));
-      const nm = p => JA((Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p, id);
-      ps.forEach(a => ps.forEach(b => {
-        const la = +cs.pots2[a], lb = +cs.pots2[b];
-        if (a === b || la <= 1 || lb >= POT_LV_MAX) return;
-        add("素質", `${c.jp}：${nm(a)} Lv${la}→${la - 1}、${nm(b)} Lv${lb}→${lb + 1}`, g => { g.chars[id].pots2[a] = la - 1; g.chars[id].pots2[b] = lb + 1; }, "p:" + id);
-      }));
+      Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0 && !core.has(p)).forEach(p => pots.push({ id, p, lv: +cs.pots2[p],
+        name: `${c.jp}の${JA((Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p, id)}` }));
     });
+    // 素質の付け替え（巡遊者をまたいでもよい）: 1つ下げたときの損と1つ上げたときの得を先に出し、得の大きい5つ×損の小さい5つの組み合わせを実際に計算する
+    if (pots.length > 1) {
+      const setLv = (x, v) => g => { g.chars[x.id].pots2[x.p] = v; };
+      const ups = pots.filter(x => x.lv < POT_LV_MAX).map(x => ({ x, d: tryG(setLv(x, x.lv + 1)) })).sort((a, b) => b.d - a.d).slice(0, 5);
+      const downs = pots.filter(x => x.lv > 1).map(x => ({ x, d: tryG(setLv(x, x.lv - 1)) })).sort((a, b) => b.d - a.d).slice(0, 5);
+      ups.forEach(u => downs.forEach(dn => {
+        if (u.x === dn.x) return;
+        add("素質", `${dn.x.name} Lv${dn.x.lv}→${dn.x.lv - 1}、${u.x.name} Lv${u.x.lv}→${u.x.lv + 1}`, g => { setLv(dn.x, dn.x.lv - 1)(g); setLv(u.x, u.x.lv + 1)(g); }, "p");
+      }));
+    }
     // ロスレコの突破
     ["lrMain", "lrSub"].forEach(arr => (G[arr] || []).filter(Boolean).forEach(rid => {
       const r = LR.find(x => x.id === rid); if (!r) return;
@@ -216,11 +223,11 @@
           const gain = tryG(fn);
           if (!best || gain > best.gain) best = { n, gain, fn };
         });
-        if (best && best.gain >= 0.0005) out.push({ kind: "音符", label: `${a.replace("の音符", "")} −${best.n} → ${b.replace("の音符", "")} +${best.n}`, gain: best.gain, apply: best.fn, src: "n" });
+        if (best && best.gain >= MIN) out.push({ kind: "音符", label: `${a.replace("の音符", "")} −${best.n} → ${b.replace("の音符", "")} +${best.n}`, gain: best.gain, apply: best.fn, src: "n" });
       });
     });
     out.sort((x, y) => y.gain - x.gain);
-    // 付け替えは、似た手ばかり並ばないように、素質は巡遊者ごと、音符は全体で、いちばん伸びる1つだけ残す（入れてみると、次の手が出る）
+    // 付け替えは、似た手ばかり並ばないように、素質・音符それぞれ、いちばん伸びる1つだけ残す（入れてみると、次の手が出る）
     const seen = new Set();
     return out.filter(x => { if (!x.src) return true; if (seen.has(x.src)) return false; seen.add(x.src); return true; });
   }
