@@ -1,6 +1,7 @@
 # 公開のあと、更新履歴（data/changelog.js）に増えた行を Discord に流す。
 # 使い方: python tools/notify_discord.py            … 前回流したコミットから HEAD までに増えた行を送る
 #         python tools/notify_discord.py --dry-run  … 送らずに中身だけ出す
+#         python tools/notify_discord.py --only=2   … 増えた行のうち先頭の2件だけ送る（残りは送らずに、送ったことにする）
 # Webhook の URL は .discord-webhook（git に入れない）。前回流したコミットは .discord-last に残す。
 import json, re, subprocess, sys, urllib.request
 from pathlib import Path
@@ -33,6 +34,9 @@ def main():
             items.append(f"```\n【{CAT.get(m.group(1), m.group(1))}{'・追加' if add else ''}】{txt}\n```")
     if not items:
         print("増えた更新履歴の行がありません"); LAST.write_text(head, encoding="utf-8"); return
+    only = next((int(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--only=")), None)   # 先頭のN件だけ送る（長いと読みにくいとき。ユーザーの指示）
+    if only:
+        items = items[:only]
     head_txt = "**巡遊者の計算ノートを更新しました**"
     foot = ""   # URL は付けない（ユーザーの希望）
     body, out = [], []
