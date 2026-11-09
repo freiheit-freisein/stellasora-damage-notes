@@ -153,6 +153,78 @@
     return items;
   }
 
+  // ---- 次に強くなる手（1つだけ変えたとき、3分間のダメージがどれだけ伸びるか）----
+  // 候補（ゲームのきまり。2026-11-10 ユーザー）:
+  //   心相: 1凸上げる（★5は10段階、★4は5段階）。上限は50段階
+  //   ロスレコ: 突破を1つ上げる（メインとサブ。サブは基礎攻撃力だけ変わる）
+  //   しずく: 徽章の1つの値を1段階上げる（緑→青→金→虹、レベル上昇は 金+1→虹+2→虹+3）。1枚の徽章に2回まで（使った回数はデータに無いので、ここでは数えない）
+  //   素質の付け替え: 合計5まで、取った素質を下げて別の素質を上げられる。Lv1→0 と Lv6→7 はできない（ここでは同じ巡遊者の中で付け替える）
+  //   音符の付け替え: 合計15個まで、ある音符を減らして別の音符に足せる。1→0 はできない
+  // 返り値は伸びの大きい順: { kind, label, gain（割合）, apply(g) }
+  function calcUpgrades(G) {
+    const t0 = sum3(dmgParts(G)), out = [];
+    if (!(t0 > 0)) return out;
+    const tryG = fn => { const g = clone(G); fn(g); return sum3(dmgParts(g)) / t0 - 1; };
+    const add = (kind, label, fn, src) => { const gain = tryG(fn); if (gain >= 0.0005) out.push({ kind, label, gain, apply: fn, src }); };
+    const LR = window.LOSTRECORDS || [];
+    SLOTS.forEach(([k]) => {
+      const id = G.team[k], cs = G.chars[id], c = chOf(id), tk = TK(c.en);
+      // 心相
+      const step = tk && tk.rarity >= 5 ? 10 : 5, tal = +cs.talent || 0;
+      if (tal + step <= 50) add("心相", `${c.jp}：心相 ${tal / 10}凸 → ${(tal + step) / 10}凸`, g => { g.chars[id].talent = tal + step; });
+      // しずく（徽章の値を1段階）
+      (cs.emb || []).forEach((e, i) => {
+        if (!cs.embOn[i]) return;
+        e.slots.forEach((sl, j) => {
+          const o = sl.k && optOf(sl.k); if (!o || !sl.q) return;
+          const qs = qualOf(o).map(x => x[0]), qi = qs.indexOf(sl.q);
+          if (qi < 0 || qi + 1 >= qs.length) return;
+          const nq = qs[qi + 1];
+          add("しずく", `${c.jp}：${KIND_NAME[e.kind] || ""} ${embShort(id, sl)} → ${qVal(o, nq) != null ? valTxt(o, qVal(o, nq)) : nq}`, g => { g.chars[id].emb[i].slots[j].q = nq; });
+        });
+      });
+      // 素質の付け替え（同じ巡遊者の中。コア素質は対象外）
+      const core = new Set();
+      const role = k === "main" ? "main" : "support";
+      ((tk && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { if (p.type === 1) core.add(S.potKey(p.name)); }));
+      const ps = Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0 && !core.has(p));
+      const nm = p => JA((Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p, id);
+      ps.forEach(a => ps.forEach(b => {
+        const la = +cs.pots2[a], lb = +cs.pots2[b];
+        if (a === b || la <= 1 || lb >= POT_LV_MAX) return;
+        add("素質", `${c.jp}：${nm(a)} Lv${la}→${la - 1}、${nm(b)} Lv${lb}→${lb + 1}`, g => { g.chars[id].pots2[a] = la - 1; g.chars[id].pots2[b] = lb + 1; }, "p:" + id);
+      }));
+    });
+    // ロスレコの突破
+    ["lrMain", "lrSub"].forEach(arr => (G[arr] || []).filter(Boolean).forEach(rid => {
+      const r = LR.find(x => x.id === rid); if (!r) return;
+      const fxCan = arr === "lrMain" && S.lrRankOf(G, rid).can, atkCan = S.lrAtkScalable(r);
+      if (!fxCan && !atkCan) return;
+      const now = S.lrRankNow(G, rid);
+      if (now >= 6) return;
+      add("ロスレコ", `${r.name}：突破${S.lrRoman(now)} → ${S.lrRoman(now + 1)}${arr === "lrSub" ? "（サブ）" : ""}`, g => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: now + 1 }); });
+    }));
+    // 音符の付け替え（減らす音符は自分で取ったものだけ。1個は残す）。動かす数は 1・5・10・15（できる分まで）を試して、いちばん伸びるもの
+    const own = G.notes || {}, names = S.NOTE_ALL || Object.keys(own);
+    names.forEach(a => {
+      const na = +own[a] || 0; if (na <= 1) return;
+      names.forEach(b => {
+        if (a === b) return;
+        let best = null;
+        [1, 5, 10, 15].map(n => Math.min(n, na - 1)).filter((n, i, xs) => xs.indexOf(n) === i).forEach(n => {
+          const fn = g => { g.notes = Object.assign({}, g.notes); g.notes[a] = na - n; g.notes[b] = (+g.notes[b] || 0) + n; };
+          const gain = tryG(fn);
+          if (!best || gain > best.gain) best = { n, gain, fn };
+        });
+        if (best && best.gain >= 0.0005) out.push({ kind: "音符", label: `${a.replace("の音符", "")} −${best.n} → ${b.replace("の音符", "")} +${best.n}`, gain: best.gain, apply: best.fn, src: "n" });
+      });
+    });
+    out.sort((x, y) => y.gain - x.gain);
+    // 付け替えは、似た手ばかり並ばないように、素質は巡遊者ごと、音符は全体で、いちばん伸びる1つだけ残す（入れてみると、次の手が出る）
+    const seen = new Set();
+    return out.filter(x => { if (!x.src) return true; if (seen.has(x.src)) return false; seen.add(x.src); return true; });
+  }
+
   S.contrib = { SLOTS, KIND_NAME, EMB_CATS, catOfKey, potTargets, POT_LV_MAX, POT_LV_EMB_MAX, defChar, defState, merge, optOf, LV_Q, isLv, lvAmt, qualOf, qVal, valTxt, embShort,
-    rotDefault, rotCount, dmgParts, sum3, cmpOf, calcContrib };
+    rotDefault, rotCount, dmgParts, sum3, cmpOf, calcContrib, calcUpgrades };
 })(window.SIM);
