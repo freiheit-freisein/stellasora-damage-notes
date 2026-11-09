@@ -277,7 +277,8 @@
     const fx = S.LR_FX[rid], r = L.find(x => x.id === rid);
     const v = +((G.lrRank || {})[rid]);
     if (!fx) return { rank: 1, scale: 1, can: false };
-    if (fx.auto) return { rank: v >= 1 && v <= 6 ? v : 1, scale: 1, can: true };
+    // 突破を選んでいないときは、突破の欄・基礎攻撃力と同じ突破（S.lrRankNow）にそろえる
+    if (fx.auto) return { rank: v >= 1 && v <= 6 ? v : S.lrRankNow(G, rid), scale: 1, can: true };
     const r0 = ROMAN[(r && r.core && r.core.rank) || ""];
     if (!r0 || !r || r.rarity < 5) return { rank: r0 || 1, scale: 1, can: false };   // 星3など、突破ごとの値が分からないもの
     const rank = v >= 1 && v <= 6 ? v : r0;
