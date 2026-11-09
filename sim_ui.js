@@ -942,7 +942,7 @@
     const curVals = {};
     // 巡遊者ごとに1枚のカード。攻撃ごとに1行（名前・倍率・ダメージ・比較）。細かい値は行の下に小さく出し、押すと内訳
     // 細かい値は、小数の桁を固定する（倍率は3桁、率は1桁）
-    // 「倍率: 1.014」の形。コロンの後ろは半角スペース1つ、項目の間は全角スペース1つ分（CSS の gap）
+    // 「種別倍率: 1.014」の形。コロンの後ろは半角スペース1つ、項目の間は全角スペース1つ分（CSS の gap）
     const v = (cls, lab, val) => `<span class="rs-v ${cls}">${lab}: ${val}</span>`;
     const row = ([key, label, sm, id]) => {
       if (!sm) return "";   // その巡遊者にない攻撃（印など）は出さない
@@ -958,13 +958,13 @@
         <span class="rs-mult">${fmt(sm.mult)}%</span>
         <span class="rs-dmg">${dmgF(sm.exp)}</span>
         ${cmp}<span class="rs-go" aria-hidden="true">›</span>
-        <span class="rs-sub">${v("rs-mm", "倍率", fmt(sm.mult) + "%")}${v("k", "倍率", sm.B.toFixed(3))}${v("cr", "会心率", (sm.rate * 100).toFixed(1) + "%")}${v("cd", "会心ダメ", (sm.critDmg * 100).toFixed(1) + "%")}${v("dm", "非会心", dmgF(sm.non))}${v("dm", "会心", dmgF(sm.crit))}</span></button>`;
+        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${v("k", "種別倍率", sm.B.toFixed(3))}${v("cr", "会心率", (sm.rate * 100).toFixed(1) + "%")}${v("cd", "会心ダメ", (sm.critDmg * 100).toFixed(1) + "%")}${v("dm", "非会心", dmgF(sm.non))}${v("dm", "会心", dmgF(sm.crit))}</span></button>`;
     };
     // 列の名前（倍率・ダメージ・比較）は、巡遊者ごとの見出しの行に、それぞれの列の上に出す
     $("result").innerHTML = SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);
       const rows = items.filter(x => x[3] === id && (k === "main" ? !/^sup/.test(x[0]) : x[0].slice(-1) === (k === "s1" ? "1" : "2")));
-      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? "比較" : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
+      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">総倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? "比較" : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
