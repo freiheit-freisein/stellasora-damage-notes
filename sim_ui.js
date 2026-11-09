@@ -20,20 +20,7 @@
   const KIND_NAME = { triangle: "初級", circle: "中級", star: "上級" };       // 徽章は 初級・中級・上級 で呼ぶ（巡遊者ごとに三角・円・六星の並びが違うため）
   const KIND_ORDER = ["triangle", "circle", "star"];
 
-  function defChar(id) {
-    const c = chOf(id);
-    const lv = { nazuka: { basic: 1, main: 1, support: 8, ult: 7 }, eleanor: { basic: 1, main: 1, support: 9, ult: 8 } }[id] || { basic: 10, main: 10, support: 10, ult: 10 };
-    return { skillLv: clone(lv), trustLv: c.trust0, talent: c.talent0, emb: S.EMB_DEFAULT[id](), embOn: [1, 1, 1], add: {},
-      manual: {}, pots: {}, sup: {}, pots2: {}, pon: {}, pstk: {}, pcnt: {} };
-  }
-  function defState() {
-    const G = { team: { main: "willow", s1: "nazuka", s2: "eleanor" }, recordLv: 4, enemy: "stomp", traits: {}, enemyOv: { res: {}, extra: {} }, directPriority: true,
-      notes: clone(TEST2_CTX.notes), lrMain: clone(TEST2_CTX.lr), lrSub: clone(TEST2_CTX.lrSub), lrOn: {}, lrN: {},
-      lrManual: { baseAtk: 0, baseHp: 0, elem: 0, elemEl: "", basicDmg: 0, skillDmg: 0, atkPct: 0 },
-      other: { mult: 1, taken: 1 }, heartCrit: false, glimmer: true, markDebuff: true, chars: {} };
-    S.CH.forEach(c => { G.chars[c.id] = defChar(c.id); });
-    return G;
-  }
+  const { defChar, defState, merge } = S.contrib;   // 初期状態は sim_contrib.js（比較ページと共通）
 
   // テスト3・セイナHCの構成は、画面のボタンをなくし、共有コードで読み込む。
   // セイナHC（記録Lv34）の入力（初期値との差分）。検証用に残す
@@ -42,10 +29,6 @@
   let G = defState();
   let firstVisit = true;
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.team) { G = merge(defState(), s); firstVisit = false; } } catch (e) { /* 保存なしでも動く */ }
-  function merge(a, b) {
-    Object.keys(b).forEach(k => { if (b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) && a[k] && typeof a[k] === "object" && !Array.isArray(a[k])) merge(a[k], b[k]); else a[k] = b[k]; });
-    return a;
-  }
   let shareMsg = "";
   const DV = { preset: "", code: "", url: "" }, DM = {};   // ポップアップの各欄の値とメッセージ（{t, ng}）
   const V = { panel: firstVisit ? "load" : "overview", tilesFor: "main", drill: null, pick: null, lrPick: null, lrEl: {}, mChar: "main", m: "in" };
@@ -284,32 +267,12 @@
 
   // ---- 徽章 ----
   // 項目の区分（左から 区分 → 項目 → 値 の順にドロップダウンで選ぶ）
-  const EMB_CATS = [
-    ["ステータス", ["hpPct", "baseHp", "atkPct", "baseAtk", "defPct", "baseDef"]],
-    ["会心", ["critRate", "basicCritRate", "skillCritRate", "ultCritRate", "markCritRate", "critDmg"]],
-    ["ダメージ・貫通", ["resPen", "elemDmg", "basicDmg", "skillDmg", "ultDmg", "markDmg"]],
-    ["従者・派生", ["servantDmg", "servantCritRate", "derivedDmg", "derivedCritRate"]],
-    ["スキル・素質", ["lvBasic", "lvMain", "lvSupport", "lvUlt", "potMain", "potSupport", "potCommon"]],
-    ["その他", ["spMain", "spSupport"]],
-  ];
-  const catOfKey = key => { const c = EMB_CATS.find(x => x[1].indexOf(key) >= 0); return c ? c[0] : ""; };
-  const optOf = key => EMBLEM_OPTIONS.find(o => o.key === key);
-  // 品質の候補。値がある品質だけ（金までのものに虹は出さない）。スキル・素質レベル上昇は 金 +1／虹 +2・+3
-  const LV_Q = [["gold", "金"], ["rainbow2", "虹"], ["rainbow3", "虹"]];
-  const isLv = o => o.type === "skillLv" || o.type === "potLv";
-  const lvAmt = q => q === "gold" ? 1 : q === "rainbow2" ? 2 : 3;
-  const qualOf = (o) => isLv(o) ? LV_Q : EMBLEM_QUALITY.filter(([q]) => o.tiers[q] != null);
-  const qVal = (o, q) => isLv(o) ? lvAmt(q) : o.tiers[q];
-  const valTxt = (o, v) => o.fmt === "pct" ? pct(v) : o.fmt === "lv" ? "+" + v : fmt(v);
+  const { EMB_CATS, catOfKey } = S.contrib;   // 徽章の項目の区分（比較ページと共通）
+  // 品質の候補（値がある品質だけ）・値の表記は sim_contrib.js（比較ページと共通）
+  const { optOf, isLv, qualOf, qVal, valTxt } = S.contrib;
   // 素質の対象の候補（英語名の一覧）
-  function potTargets(id, key) {
-    const t = TK(chOf(id).en);
-    if (!t || !t.potentials) return [];
-    // 汎用素質は、主力と支援で一覧が違う（シアの「月の海の兎たち」は支援だけ）ので、編成の位置で決める
-    const role = key === "potSupport" ? "support" : key === "potCommon" ? (G.team.main === id ? "main" : "support") : "main";
-    const groups = (t.potentials[role] || []).filter(g => key === "potCommon" ? /Generic/i.test(g.title) : !/Generic/i.test(g.title));
-    return groups.reduce((a, g) => a.concat(g.potentials.map(x => ({ en: x.name, core: x.type === 1 }))), []).filter(x => !x.core);
-  }
+  const potTargets = (id, key) => S.contrib.potTargets(G, id, key);
+
   function slotLabel(id, sl) {
     if (!sl.k) return "（未設定）";
     const o = optOf(sl.k);
@@ -634,97 +597,14 @@
       ${els.map(e => `<tr><td>${e}${en.weak.indexOf(e) >= 0 ? "（弱点）" : ""}</td><td>${inp(`enemyOv.res.${e}`, { w: 90 })}<span class="muted"> 既定 ${en.res[e] != null ? en.res[e] : (en.resDefault != null ? en.resDefault : 250)}</span></td><td>${inp(`enemyOv.extra.${e}`, { w: 90 })}<span class="muted"> 既定 ${(en.extra && en.extra[e]) || 1}</span></td></tr>`).join("")}</table>
       <p class="muted">耐性の式は、有効耐性 = 耐性 − 貫通 のとき 倍率 = 1 − 0.25×(E/250)²（実測と一致）。「その他」は、原因が分かっていない差を合わせるための倍率です。</p></div>`;
   }
-  // ---- 指名手配の3分間の回数（かなり雑な目安）----
-  // スキル・必殺技は、CDが明けたらすぐ使う想定で ceil(180 ÷ CD) 回（SPは考えない）。CDは日本語Wiki（data/skill_ct.js）、
-  // ゲーム内で確かめた値があればそちらを使う。通常攻撃は 180 ÷ 1ローテの秒数（スキル中・ダッシュの中断は入れない）。
-  // 回数は G.rot[巡遊者][basic|main|ult|support] で上書きできる
-  const FIGHT_SEC = 180;
-  const CT_GAME = { "Firstlight Noya": { main: 10, support: 12, ult: 30 } };   // ゲーム内の表示（2026-10-28 ユーザー）
-  const BASIC_SEC = { "Firstlight Noya": 5 };   // 通常1ローテの秒数（最終段から最終段までを目で見た値）。ほかは未測定
-  const BASIC_SEC_DEFAULT = 5;
-  function rotDefault(id) {
-    const c = chOf(id), ct = Object.assign({}, (window.SKILL_CT || {})[c.en] || {}, CT_GAME[c.en] || {});
-    const n = k => ct[k] ? Math.ceil(FIGHT_SEC / ct[k]) : null;
-    const bs = BASIC_SEC[c.en];
-    return { ct, basicSec: bs || BASIC_SEC_DEFAULT, basicMeasured: !!bs, basic: Math.floor(FIGHT_SEC / (bs || BASIC_SEC_DEFAULT)), main: n("main"), ult: n("ult"), support: n("support") };
-  }
-  function rotCount(g, id, k) {
-    const v = ((g.rot || {})[id] || {})[k];
-    if (v != null && v !== "") return Math.max(0, +v);
-    return rotDefault(id)[k] || 0;
-  }
-  // ---- 与ダメへの寄与率（今の入力のまま、1つ外すと何%下がるか）----
-  // 巡遊者ごとの対象のダメージ（3分間）: 主力は 通常×回数＋主力スキル×回数＋必殺技×回数（印を含む）、支援は 支援スキル×回数＋必殺技×回数
-  function dmgParts(g) {
-    const r = E.calcTeam(clone(g)), mid = g.team.main, m = r.team[mid], n = (id, k) => rotCount(g, id, k);
-    const sup = id => r.team[id].groups.support.totExp * n(id, "support") + r.team[id].groups.ult.totExp * n(id, "ult");
-    return { main: m.groups.basic.totExp * n(mid, "basic") + m.groups.main.totExp * n(mid, "main") + m.groups.ult.totExp * n(mid, "ult"),
-      s1: sup(g.team.s1), s2: sup(g.team.s2) };
-  }
-  const sum3 = d => d.main + d.s1 + d.s2;
-  // 項目ごとの「比べる値」。素質はLv、アシスト効果はLv、コア効果は突破。既定は今の1つ下（下げられなければ1つ上）。
-  // 今より上にもできる（上げたときの伸び）。徽章は1枠ずつ外す（比べる値はない）
-  const cmpOf = (key, cur, lo, hi) => {
-    let t = (V.cmp || {})[key];
-    t = t == null ? (cur > lo ? cur - 1 : cur + 1) : Math.min(hi, Math.max(lo, +t));
-    return t === cur ? (cur > lo ? cur - 1 : cur + 1) : t;
-  };
-  // 徽章の枠の短い名前: 素質のレベル上昇は素質名と値、ほかは項目名（かっこの補足は外す）と値（「HP 12%」「ナイトパンチ +3」）
-  const embShort = (id, sl) => {
-    const o = optOf(sl.k); if (!o) return "";
-    const v = qVal(o, sl.q), vt = v != null ? " " + valTxt(o, v) : "";
-    return (o.type === "potLv" && sl.t ? JA(sl.t, id) : o.label.replace(/（.*?）/g, "")) + vt;
-  };
+  // ---- 3分間の回数・与ダメへの寄与率は sim_contrib.js（比較ページと共通）----
+  const { rotDefault, rotCount, dmgParts, sum3, embShort } = S.contrib;
   function calcContrib() {
-    const d0 = dmgParts(G), t0 = sum3(d0), items = [];
-    const drop = (kind, label, slot, fn, cmp, uid) => {
-      const g = clone(G); fn(g); const d = dmgParts(g);
-      items.push({ kind, label, cmp, uid: kind + "|" + (uid || label), team: t0 > 0 ? 1 - sum3(d) / t0 : 0 });
-    };
-    // 比べる値つきの項目（lo〜hi の範囲。今と同じ値は飛ばす）
-    const cmpItem = (kind, label, slot, key, cur, lo, hi, unit, set) => {
-      if (hi <= lo) return;
-      const t = cmpOf(key, cur, lo, hi);
-      drop(kind, label, slot, g => set(g, t), { key, cur, t, lo, hi, unit });
-    };
-    SLOTS.forEach(([k]) => {
-      const id = G.team[k], cs = G.chars[id], c = chOf(id), tk = TK(c.en), role = k === "main" ? "main" : "support";
-      const core = new Set();   // コア素質（取得するかどうかだけ。Lvは0か1）
-      ((tk && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { if (p.type === 1) core.add(S.potKey(p.name)); }));
-      const pot = (key, name, lv, max, set) => cmpItem("素質", `${c.jp}：${name}`, k, key, lv, 0, Math.max(max, lv), "Lv", set);   // 取得できるのはLv6まで（前の入力で7以上のものは、その値まで）
-      // 素質の選択（pots2）のコア以外は、徽章でLv9まで上げられるので、徽章込みのLvで0〜9を比べる
-      const bonus = emx(id).pot, potLvSet = en => (g, v) => { g._potLv = Object.assign({}, g._potLv, { [id + ":" + en]: v }); };
-      Object.keys(cs.pots2 || {}).filter(p => +cs.pots2[p] > 0).forEach(p => {
-        const en = (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === p)) || p, b = bonus[en] || 0;
-        if (core.has(p)) pot(`p2:${id}:${p}`, JA(en, id), +cs.pots2[p], 1, (g, v) => { g.chars[id].pots2[p] = v; });
-        else pot(`p2:${id}:${p}`, JA(en, id) + (b ? `（徽章+${b}込み）` : ""), +cs.pots2[p] + b, POT_LV_EMB_MAX, potLvSet(en));
-      });
-      Object.keys(cs.pots || {}).filter(p => +cs.pots[p] > 0).forEach(p => {
-        const x = (window.POTENTIALS || []).find(q => q.id === p) || {};
-        pot(`p:${id}:${p}`, x.jp || p, +cs.pots[p], x.core ? 1 : POT_LV_MAX, (g, v) => { g.chars[id].pots[p] = v; });
-      });
-      Object.keys(cs.sup || {}).filter(p => cs.sup[p] && +cs.sup[p].lv > 0).forEach(p => pot(`sp:${id}:${p}`, (((window.SUP_POTS || {})[id] || []).find(x => x.id === p) || {}).jp || p, +cs.sup[p].lv, POT_LV_MAX, (g, v) => { g.chars[id].sup[p].lv = v; }));
+    return S.contrib.calcContrib(G, { cmp: V.cmp, more: ({ k, pot, potLvSet }) => {
       // 未取得の素質（Lv0）は、チェックしたときだけ出す（特化構築の違うものまで出ると、見分けにくいため）。計算に入らないものは出さない
       if (V.potAll) potItems(k).filter(x => !x.lv && !x.noeff && !x.tags.some(t => t.indexOf("計算に未対応") >= 0)).forEach(x =>
         pot(`pa:${x.path}`, x.name + (x.grp ? ` (${x.grp.replace("特化構築", "特化")})` : ""), 0, x.core ? 1 : x.path.indexOf(".pots2.") >= 0 ? POT_LV_EMB_MAX : POT_LV_MAX, (!x.core && x.path.indexOf(".pots2.") >= 0) ? potLvSet(x.en) : (g, v) => { const ks = x.path.split("."); let o = g; ks.slice(0, -1).forEach(q => { o[q] = o[q] || {}; o = o[q]; }); o[ks[ks.length - 1]] = v; }));
-      (cs.emb || []).forEach((e, i) => {
-        if (!cs.embOn[i] || !e.slots.some(sl => sl.k)) return;
-        e.slots.forEach((sl, j) => { if (sl.k) drop("徽章", `${c.jp}：${KIND_NAME[e.kind] || ""}\n${embShort(id, sl)}`, k, g => { g.chars[id].emb[i].slots[j].k = ""; }, null, `${id}:${i}:${j}`); });
-      });
-    });
-    // ロスレコ（メインのものだけ効果がある）: アシスト効果はLv（0〜5。未発動も、上げたときを見られる）、コア効果は突破（1〜6）
-    const LR = window.LOSTRECORDS || [];
-    (G.lrMain || []).filter(Boolean).forEach(rid => {
-      const fx = S.LR_FX[rid], r = LR.find(x => x.id === rid); if (!fx || !r) return;
-      const rk = S.lrRankOf(G, rid);
-      if (rk.can) cmpItem("ロスレコ", `${r.name}：コア効果`, null, `lrc:${rid}`, rk.rank, 1, 6, "突破", (g, v) => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: v }); });
-      fx.assists.forEach(a => {
-        const lv = S.lrAssistLv(S.notesTotal(G), a);
-        cmpItem("ロスレコ", `${r.name}：${a.name}`, null, `lra:${rid}:${a.id}`, lv, 0, 5, "Lv", (g, v) => { g._lrAssistDec = Object.assign({}, g._lrAssistDec, { [rid + ":" + a.id]: lv - v }); });
-      });
-    });
-    items.sort((a, b) => Math.abs(b.team) - Math.abs(a.team));
-    return items;
+    } });
   }
   let contribCache = { key: "", items: null }, orderCache = { key: "", ids: [] };
   function getContrib() {
@@ -956,6 +836,7 @@
       <div class="ld-line"><input type="text" id="bname" placeholder="名前を付けて保存"><button class="btn-add" data-act="bsave">保存</button></div>
       ${msgOf("build")}<div class="muted help">ビルドをブラウザ（ローカルストレージ）に保存します。「① 読込」から読み込むことができます。ご利用中のブラウザだけに残ります。他のPCへ共有するときはURLかコードでお願いします。</div>
       <h4 class="bl-h">保存したビルド</h4>${buildsHtml()}
+      <div class="ld-line" style="grid-template-columns:auto 1fr;margin-top:8px"><a class="btn-add" href="compare.html" style="display:inline-flex;align-items:center;text-decoration:none">ビルド比較を開く</a><span class="muted">保存したビルドどうし、または保存したビルドと、それを変えたものを並べて比べます。</span></div>
       ${IS_LOCAL ? `<h3 style="margin-top:18px">長い共有コード</h3>
       <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
       ${msgOf("code")}<div class="muted help">サーバーを使わずに作れる、長い形の共有コードです（手元で動かしているときだけ出します）。</div>` : ""}</div>`;
