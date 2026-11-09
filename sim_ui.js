@@ -87,9 +87,10 @@
     const ref = c.ref === "hp" ? st.hp : st.atk;
     const W = 1 + st.elemAdd + o.ef.W;
     const taken = o.ef.taken * (G.other.taken || 1) * (G.other.mult || 1) * dd.extra;
-    const who = SLOTS.map(([k, l]) => `<button type="button" class="${V.tilesFor === k ? "on" : ""}" aria-pressed="${V.tilesFor === k}" data-act="tf:${k}">${l}</button>`).join("");
-    const t = (label, val, sub) => `<div class="mi"><span>${label}</span><b>${val}</b><small title="${esc(sub)}">${esc(sub)}</small></div>`;
-    $("mline").innerHTML = `<div class="ml-h"><span class="ml-t">共通の倍率</span><span class="unitbar ml-who" role="group" aria-label="倍率を出す巡遊者">${who}</span><span class="ml-nm">${esc(c.jp)}</span></div>
+    const who = SLOTS.map(([k, l]) => `<button type="button" class="${V.tilesFor === k ? "on" : ""}" aria-pressed="${V.tilesFor === k}" data-act="tf:${k}" title="${esc(chOf(G.team[k]).jp)}">${l}</button>`).join("");
+    // 1行だけの細い帯。補足（攻撃力・貫通など）は、マウスを重ねると出す
+    const t = (label, val, sub) => `<div class="mi" title="${esc(label + "：" + sub)}"><span>${label.replace(/^ダメージ/, "").replace(/倍率$/, "")}</span><b>${val}</b></div>`;
+    $("mline").innerHTML = `<div class="ml-h"><span class="ml-t">共通の倍率</span><span class="unitbar ml-who" role="group" aria-label="倍率を出す巡遊者">${who}</span></div>
       <div class="ml-items">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", "×" + f3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", "×" + f3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", f3(dd.def), "敵の防御")}${t("その他倍率", "×" + f3(taken), "被ダメージ・実測合わせ等")}</div>`;
   }
 
@@ -744,7 +745,8 @@
   }
   function renderLoad() {
     const names = Object.keys(savedBuilds());
-    // 「作る」の2つと「読み込む」の3つを、カードに分けて2列に並べる
+    // 「作る」の2つと「読み込む」の3つを、カードに分けて2列に並べる。ほかのサイトの編成データは、使う人が少ないので既定は閉じておく（入力中・読み込んだあとは開く）
+    const bjOpen = !!(V.bjOpen || DV.bjson || V.bimp);
     return `<div class="wide"><div class="secg">
       <section class="sec"><h3>新しく作る</h3>
         <div class="sh-line"><button type="button" class="btn-add pri" data-act="pick-open">巡遊者を選んで作る</button></div>
@@ -758,10 +760,10 @@
       <section class="sec"><h3>このブラウザに保存したビルドを読み込む</h3>
         ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」で行えます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
         ${msgOf("build")}</section>
-      <section class="sec full"><h3>ほかのサイトの編成データを読み込む</h3>
-        <textarea id="dv-bjson" class="codebox" rows="4" spellcheck="false" placeholder='{ "format": "stellasora-build", "schema": 1, "team": [ … ] }'>${esc(DV.bjson || "")}</textarea>
+      <section class="sec full"><h3>ほかのサイトの編成データを読み込む<button type="button" class="help-btn" data-act="bjopen" aria-expanded="${bjOpen}">${bjOpen ? "閉じる" : "開く"}</button></h3>
+        ${bjOpen ? `<textarea id="dv-bjson" class="codebox" rows="4" spellcheck="false" placeholder='{ "format": "stellasora-build", "schema": 1, "team": [ … ] }'>${esc(DV.bjson || "")}</textarea>
         <div class="sh-line"><button class="btn-add" data-act="bj-in">読み込む</button><label class="btn-add ocr-pick">ファイルを選ぶ<input type="file" accept=".json,application/json" id="bj-file"></label></div>
-        ${msgOf("bjson")}${bimpBox()}<div class="muted help">ほかのファンサイトで作った編成データ（JSON）を貼り付けるか、ファイルを選んでください。書いてある項目だけが入り、それ以外は初期値になります。形の決まりは <a href="https://github.com/freiheit-freisein/stellasora-data" target="_blank" rel="noopener">stellasora-data</a> にあります。</div></section>
+        ${msgOf("bjson")}${bimpBox()}<div class="muted help">ほかのファンサイトで作った編成データ（JSON）を貼り付けるか、ファイルを選んでください。書いてある項目だけが入り、それ以外は初期値になります。形の決まりは <a href="https://github.com/freiheit-freisein/stellasora-data" target="_blank" rel="noopener">stellasora-data</a> にあります。</div>` : '<div class="muted help" style="margin:0">ほかのファンサイトで作った編成データ（JSON）を読み込みます。「開く」で入力欄が出ます。</div>'}</section>
       </div></div>`;
   }
   // 編成データを読み込んだ結果（読み込めたもの・入れられなかったもの・計算に使わない情報）
@@ -939,18 +941,27 @@
     ].filter(x => !/^supm/.test(x[0]) || x[2]);   // 支援の印は、印を発動できる支援（グレイなど）だけ出す
     window.__items = items;
     const curVals = {};
-    $("result").innerHTML = items.map(([key, label, sm, id]) => {
-      const nm = esc(chOf(id).jp);
-      if (!sm) return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>—</b><small>${nm}にはこの項目がありません</small></div><div class="tile"><span>${esc(label)} ダメージ</span><b>—</b></div></div>`;
+    // 巡遊者ごとに1枚のカード。攻撃ごとに1行（名前・倍率・ダメージ・比較）。細かい値は行の下に小さく出し、押すと内訳
+    const row = ([key, label, sm, id]) => {
+      if (!sm) return "";   // その巡遊者にない攻撃（印など）は出さない
       curVals[key] = sm.exp;
-      let cmp = "";
+      let cmp = '<span class="rs-cmp"></span>';
       if (memo && memo.v && memo.v[key] != null) {
         const d = sm.exp / memo.v[key] - 1;
-        cmp = `<div class="cmp ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${(Math.round(d * 1000) / 10)}%</div>`;
+        cmp = `<span class="rs-cmp ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${(Math.round(d * 1000) / 10)}%</span>`;
       }
-      return `<div class="res-row"><div class="tile"><span>${esc(label)}倍率</span><b>${fmt(sm.mult)}%</b>
-        <small>種別ダメージ ×${f3(sm.B)}</small><small>会心率 ${pct(sm.rate)} ／ 会心ダメージ ${pct(sm.critDmg)}</small><small>会心期待値倍率 ×${f3(sm.expMult)}</small></div>
-        <div class="tile pink${V.drill === key ? " sel" : ""}" data-act="drill:${key}"><span>${esc(label)} ダメージ</span><b>${dmgF(sm.exp)}</b><small>非会心 ${dmgF(sm.non)} ／ 会心 ${dmgF(sm.crit)}</small>${cmp}<span class="drill-hint">${V.drill === key ? "内訳を表示中" : "内訳 ›"}</span></div></div>`;
+      const nm = label.replace(chOf(id).jp + " ", "");
+      return `<button type="button" class="rs-row${V.drill === key ? " sel" : ""}" data-act="drill:${key}" aria-pressed="${V.drill === key}" title="押すと内訳を出します">
+        <span class="rs-nm">${esc(nm)}</span>
+        <span class="rs-mult">${fmt(sm.mult)}%</span>
+        <span class="rs-dmg">${dmgF(sm.exp)}</span>
+        ${cmp}<span class="rs-go" aria-hidden="true">›</span>
+        <span class="rs-sub"><span class="rs-mm">倍率 ${fmt(sm.mult)}%</span><span>種別 ×${f3(sm.B)}</span><span>会心率 ${pct(sm.rate)}</span><span>会心ダメ ${pct(sm.critDmg)}</span><span>非会心 ${dmgF(sm.non)}</span><span>会心 ${dmgF(sm.crit)}</span></span></button>`;
+    };
+    $("result").innerHTML = `<div class="rs-row rs-colh" aria-hidden="true"><span>攻撃</span><span class="rs-mult">倍率</span><span class="rs-dmg">ダメージ（期待値）</span><span class="rs-cmp">${memo ? "比較" : ""}</span><span></span></div>` + SLOTS.map(([k, l]) => {
+      const id = G.team[k], c = chOf(id);
+      const rows = items.filter(x => x[3] === id && (k === "main" ? !/^sup/.test(x[0]) : x[0].slice(-1) === (k === "s1" ? "1" : "2")));
+      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-h"><span class="rs-slot">${l}</span>${esc(c.jp)}<span class="rs-el">${esc(c.el)}</span></h3>${rows.map(row).join("")}</section>`;
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
@@ -1172,6 +1183,7 @@
     else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
+    else if (a === "bjopen") { V.bjOpen = !(V.bjOpen || DV.bjson || V.bimp); if (!V.bjOpen) { DV.bjson = ""; V.bimp = null; } renderAll(); }
     else if (a === "rp-send") sendReport();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
