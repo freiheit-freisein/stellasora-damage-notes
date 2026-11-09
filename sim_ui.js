@@ -948,7 +948,13 @@
     const p1 = x => (x * 100).toFixed(1) + "%";
     // その行の攻撃の種類（通常1ローテなら通常攻撃）。違う種類のヒット（スキル扱いの通常攻撃など）は、内訳で分かるようにする
     const mainType = key => /^(mark|supm)/.test(key) ? "mark" : key === "basic" ? "basic" : /^(ult|supu)/.test(key) ? "ult" : "skill";
-    const typeB = (sm, t) => { const r = sm.rows.find(x => x.type === t) || sm.rows[0]; return r ? r.B : 1; };
+    // 行の下に出す「○○ダメージ: +x%」。その行に実際にある種類だけを出す（行の種類を先に、ほかはダメージの多い順）。
+    // 例: セイナ(原点)の必殺技は、ヒットがすべて通常攻撃扱い・スキル扱いなので「必殺技ダメージ」は出さない
+    const typeList = (sm, t) => {
+      const by = {};
+      sm.rows.forEach(r => { const o = by[r.type] = by[r.type] || { t: r.type, B: r.B, dmg: 0 }; o.dmg += r.total; });
+      return Object.values(by).sort((a, b) => (b.t === t) - (a.t === t) || b.dmg - a.dmg);
+    };
     // 内訳: 押した行のすぐ下に出す。1ヒット1行（ヒット・倍率×回数・1ヒットの期待値・小計）。種類が違うヒットと、会心が違うヒットだけ補足を出す
     // 会心率・会心ダメは内訳の頭に1行で出す（ヒットごとに違うときは、そのヒットの下にも出す）
     const drillHtml = (sm, t) => `<div class="rs-drill"><div class="rs-dsum">${v("cr", "会心率", p1(sm.rate))}${v("cd", "会心ダメ", p1(sm.critDmg))}</div><table><colgroup><col><col class="c2"><col class="c3"><col class="c4"></colgroup>
@@ -976,7 +982,7 @@
         <span class="rs-mult">${fmt(sm.mult)}%</span>
         <span class="rs-dmg">${dmgF(sm.exp)}</span>
         ${cmp}<span class="rs-go" aria-hidden="true">›</span>
-        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${v("k", E.TYPE_NAME[t] + "ダメージ", "+" + p1(typeB(sm, t) - 1))}</span></button>${open ? drillHtml(sm, t) : ""}`;
+        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${typeList(sm, t).map(x => v("k", E.TYPE_NAME[x.t] + "ダメージ", "+" + p1(x.B - 1))).join("")}</span></button>${open ? drillHtml(sm, t) : ""}`;
     };
     // 列の名前（倍率・ダメージ・比較）は、巡遊者ごとの見出しの行に、それぞれの列の上に出す
     $("result").innerHTML = SLOTS.map(([k, l]) => {
