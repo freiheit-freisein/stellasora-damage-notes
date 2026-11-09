@@ -78,9 +78,7 @@
     $("cmpbar").innerHTML = (memo ? `<span class="cmp-on">比較中</span>` : "") + `<button class="btn-add" data-act="memo" style="min-height:30px;padding:0 10px;font-size:12px">${memo ? "再度比較する" : "比較"}</button>` + (memo ? `<button class="btn-add" data-act="memodel" style="min-height:30px;padding:0 10px;font-size:12px">比較を止める</button>` : "");
   }
 
-  // ---- 倍率タイル（種類を問わない共通の倍率） ----
-  let multOpen = true;   // 既定は大きく出す。「コンパクトにする」で1行に
-  try { multOpen = localStorage.getItem("stellasora-sim-mult") !== "0"; } catch (e) { /* 無視 */ }
+  // ---- 共通の倍率（種類を問わない倍率）。手順のタブの下に1行で出し、スクロールしても上に残す ----
   function renderTiles() {
     const id = G.team[V.tilesFor] || G.team.main;
     const o = R.team[id];
@@ -89,19 +87,10 @@
     const ref = c.ref === "hp" ? st.hp : st.atk;
     const W = 1 + st.elemAdd + o.ef.W;
     const taken = o.ef.taken * (G.other.taken || 1) * (G.other.mult || 1) * dd.extra;
-    $("tilesFor").innerHTML = SLOTS.map(([k, l]) => `<button class="sbtn${V.tilesFor === k ? " on" : ""}" data-act="tf:${k}" style="min-height:26px;padding:0 10px;font-size:12px">${l}</button>`).join(" ") + ` ${esc(c.jp)}`;
-    const t = (label, val, sub) => `<div class="tile"><span>${label}</span><b>${val}</b><small>${sub || ""}</small></div>`;
-    // 既定は大きく出し、「コンパクトにする」で1行にまとめる。どちらにしたかは、このブラウザに覚える
-    $("multBtn").textContent = multOpen ? "コンパクトにする" : "大きく表示";
-    $("multBtn").setAttribute("aria-expanded", multOpen);
-    $("multSum").innerHTML = multOpen ? "" : `基礎値 ${fmt(ref)} ／ 属性 ×${f3(W)} ／ 耐性 ×${f3(dd.res * dd.weak)} ／ 防御 ${f3(dd.def)} ／ その他 ×${f3(taken)}`;
-    $("tiles").style.display = multOpen ? "" : "none";
-    $("tiles").innerHTML =
-      t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力") +
-      t("属性倍率", "×" + f3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W)) +
-      t("耐性倍率", "×" + f3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`) +
-      t("防御倍率", f3(dd.def), "敵の防御") +
-      t("その他倍率", "×" + f3(taken), "被ダメージ・実測合わせ等");
+    const who = SLOTS.map(([k, l]) => `<button type="button" class="${V.tilesFor === k ? "on" : ""}" aria-pressed="${V.tilesFor === k}" data-act="tf:${k}">${l}</button>`).join("");
+    const t = (label, val, sub) => `<div class="mi"><span>${label}</span><b>${val}</b><small title="${esc(sub)}">${esc(sub)}</small></div>`;
+    $("mline").innerHTML = `<div class="ml-h"><span class="ml-t">共通の倍率</span><span class="unitbar ml-who" role="group" aria-label="倍率を出す巡遊者">${who}</span><span class="ml-nm">${esc(c.jp)}</span></div>
+      <div class="ml-items">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", "×" + f3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", "×" + f3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", f3(dd.def), "敵の防御")}${t("その他倍率", "×" + f3(taken), "被ダメージ・実測合わせ等")}</div>`;
   }
 
   // ---- 選択ボタン ----
@@ -547,22 +536,26 @@
     }).join("");
     const rb = E.recordBonus(G.recordLv);
     const recOpts = (RECORD_LEVELS || []).map(x => [x[0], `Lv${x[0]}（攻撃+${x[2]} / HP+${x[3]}）`]);
-    return `<div class="wide"><h3>記録レベル</h3>
-      ${fld("記録レベル", inp("recordLv", { sel: recOpts }), `戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）`)}
-      <h3 style="margin-top:14px">ロスレコ・音符</h3>
-      <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div>${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
-      ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。「突破」で、コア効果の値と基礎攻撃力が変わります（★5の基礎攻撃力は、突破1つごとに +130。サブも基礎攻撃力が変わります）。条件付きの効果は、既定では反映しません（チェックで反映）。")}
-      <h3 style="margin-top:12px;font-size:14px">音符効果（探索で獲得した数を入力。サブのロスレコの初期音符は自動で足します）</h3>
-      ${noteIn}
-      <h3 style="margin-top:12px;font-size:14px">効果の数（暁光・星願など。戦闘中のある時点を想定して入力）</h3>
-      ${counts ? `<div class="grid-in cnt-grid">${counts}</div>` : '<p class="muted">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}
-      <h3 style="margin-top:12px;font-size:14px">メインのロスレコの効果</h3>
-      <div class="grid-in" style="grid-template-columns:1fr">${fxHtml || '<span class="muted">メインのロスレコを選ぶと、効果が出ます</span>'}</div>
-      <h3 style="margin-top:12px;font-size:14px">一覧にないロスレコ・サブの合計（手入力）</h3>
-      <div class="grid-in">
-        ${fld("基礎攻撃力 合計", inp(m + ".baseAtk", { w: 100 }))}${fld("基礎HP 合計", inp(m + ".baseHp", { w: 100 }))}
-        ${fld("属性ダメージ 合計", inp(m + ".elem", { w: 100 }), "0.66=66%")}${fld("その属性", inp(m + ".elemEl", { sel: [["", "全員"], ["光", "光"], ["水", "水"], ["風", "風"], ["火", "火"], ["地", "地"], ["闇", "闇"]], str: true }))}
-        ${fld("通常攻撃ダメージ 合計", inp(m + ".basicDmg", { w: 100 }))}${fld("スキルダメージ 合計", inp(m + ".skillDmg", { w: 100 }))}${fld("攻撃力% 合計", inp(m + ".atkPct", { w: 100 }))}
+    // 上の段: 左にロスレコ6枚、右に記録レベルと効果の数。下の段: 音符・メインのロスレコの効果・手入力（横いっぱい）
+    return `<div class="wide"><div class="secg lr-g">
+      <section class="sec"><h3>ロスレコ</h3>
+        <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div class="lr-sub">${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
+        ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。「突破」で、コア効果の値と基礎攻撃力が変わります（★5の基礎攻撃力は、突破1つごとに +130。サブも基礎攻撃力が変わります）。条件付きの効果は、既定では反映しません（チェックで反映）。")}</section>
+      <div class="sec-col">
+        <section class="sec"><h3>記録レベル</h3>${inp("recordLv", { sel: recOpts })}
+          <div class="muted help">戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）</div></section>
+        <section class="sec"><h3>効果の数</h3><div class="muted help" style="margin:0 0 6px">暁光・星願など。戦闘中のある時点を想定して入力します。</div>
+          ${counts ? `<div class="cnt-list">${counts}</div>` : '<p class="muted" style="margin:0">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}</section>
+      </div>
+      <section class="sec full"><h3>音符<span class="h-sub">探索で獲得した数を入力します。サブのロスレコの初期音符は自動で足します</span></h3>${noteIn}</section>
+      <section class="sec full"><h3>メインのロスレコの効果</h3>
+        <div class="grid-in" style="grid-template-columns:1fr">${fxHtml || '<span class="muted">メインのロスレコを選ぶと、効果が出ます</span>'}</div></section>
+      <section class="sec full"><h3>一覧にないロスレコ・サブの合計（手入力）</h3>
+        <div class="grid-in man-g">
+          ${fld("基礎攻撃力 合計", inp(m + ".baseAtk", { w: 100 }))}${fld("基礎HP 合計", inp(m + ".baseHp", { w: 100 }))}
+          ${fld("属性ダメージ 合計", inp(m + ".elem", { w: 100 }), "0.66=66%")}${fld("その属性", inp(m + ".elemEl", { sel: [["", "全員"], ["光", "光"], ["水", "水"], ["風", "風"], ["火", "火"], ["地", "地"], ["闇", "闇"]], str: true }))}
+          ${fld("通常攻撃ダメージ 合計", inp(m + ".basicDmg", { w: 100 }))}${fld("スキルダメージ 合計", inp(m + ".skillDmg", { w: 100 }))}${fld("攻撃力% 合計", inp(m + ".atkPct", { w: 100 }))}
+        </div></section>
       </div></div>`;
   }
 
@@ -575,27 +568,32 @@
   function renderGimmick() {
     const en = G.enemyObj;
     const tr = S.DEFAULT_ENEMY_TRAITS[G.enemy] || [];
-    return `<div class="wide"><h3>エネミー</h3>
-      ${fld("種類", `<select id="enemy-cat">${ENEMY_CATS.map(([k]) => `<option${k === enemyCat(G.enemyObj) ? " selected" : ""}>${k}</option>`).join("")}</select>`)}
-      ${fld("敵", inp("enemy", { sel: enemiesOf(enemyCat(G.enemyObj)).map(e => [e.id, (e.season ? `シーズン${e.season}：` : "") + e.name.replace(/（(指名手配|首領討伐)・/, "（")]), str: true }))}
-      <p class="note">弱点: ${en.weak.join("・") || "なし"}（弱点補正 ×${en.weakMult}）／防御倍率 ${en.def}／印の別枠 ×${en.markX}／主力の最大HP +${pct(en.hpBonus)}${en.teamHp ? `／全員のHP +${pct(en.teamHp)}・攻撃 +${pct(en.teamAtk)}・会心率 +${pct(en.teamCrit)}` : ""}</p>
-      <p class="muted">${esc(en.note)}</p>
-      ${tr.map(t => `<label class="check" style="font-weight:400"><input type="checkbox" data-p="traits.${t.id}" data-t="b"${G.traits[t.id] ? " checked" : ""}>${esc(t.name)}</label>`).join("")}
-      <label class="check" style="font-weight:400"><input type="checkbox" data-p="glimmer" data-t="b"${G.glimmer !== false ? " checked" : ""}>敵に「残光」が付いている（光チームの素質の条件）</label></div>`;
+    return `<div class="wide"><div class="secg">
+      <section class="sec"><h3>敵</h3>
+        ${fld("種類", `<select id="enemy-cat">${ENEMY_CATS.map(([k]) => `<option${k === enemyCat(G.enemyObj) ? " selected" : ""}>${k}</option>`).join("")}</select>`)}
+        ${fld("敵", inp("enemy", { sel: enemiesOf(enemyCat(G.enemyObj)).map(e => [e.id, (e.season ? `シーズン${e.season}：` : "") + e.name.replace(/（(指名手配|首領討伐)・/, "（")]), str: true }))}
+        <p class="note">弱点: ${en.weak.join("・") || "なし"}（弱点補正 ×${en.weakMult}）／防御倍率 ${en.def}／印の別枠 ×${en.markX}／主力の最大HP +${pct(en.hpBonus)}${en.teamHp ? `／全員のHP +${pct(en.teamHp)}・攻撃 +${pct(en.teamAtk)}・会心率 +${pct(en.teamCrit)}` : ""}</p>
+        ${en.note ? `<p class="muted" style="margin:6px 0 0">${esc(en.note)}</p>` : ""}</section>
+      <section class="sec"><h3>敵の状態</h3>
+        ${tr.map(t => `<label class="check" style="font-weight:400"><input type="checkbox" data-p="traits.${t.id}" data-t="b"${G.traits[t.id] ? " checked" : ""}>${esc(t.name)}</label>`).join("")}
+        <label class="check" style="font-weight:400"><input type="checkbox" data-p="glimmer" data-t="b"${G.glimmer !== false ? " checked" : ""}>敵に「残光」が付いている（光チームの素質の条件）</label></section>
+      </div></div>`;
   }
   function renderAdjust() {
     const en = G.enemyObj;
     const els = ["光", "水", "風", "火", "地", "闇"];
-    return `<div class="wide"><h3>補正（敵の数値の上書きと、「その他倍率」）</h3>
-      <div class="grid-in">
-        ${fld("その他倍率（全体に掛ける）", inp("other.mult", { w: 100 }), "不明な倍率を入れる")}${fld("被ダメージ（別枠の乗算）", inp("other.taken", { w: 100 }), "1.15 = +15%")}
-        ${fld("敵の防御倍率 上書き", inp("enemyOv.def", { w: 100 }), "空=" + en.def)}${fld("弱点補正 上書き", inp("enemyOv.weakMult", { w: 100 }), "空=" + en.weakMult)}
-        ${fld("印の別枠 上書き", inp("enemyOv.markX", { w: 100 }), "空=" + en.markX)}
-      </div>
-      <h3 style="margin-top:12px;font-size:14px">敵の属性ごとの耐性と、実測合わせの倍率</h3>
-      <table style="max-width:560px"><tr><th>属性</th><th>耐性（空=${"既定"}）</th><th>その他（実測合わせ）</th></tr>
-      ${els.map(e => `<tr><td>${e}${en.weak.indexOf(e) >= 0 ? "（弱点）" : ""}</td><td>${inp(`enemyOv.res.${e}`, { w: 90 })}<span class="muted"> 既定 ${en.res[e] != null ? en.res[e] : (en.resDefault != null ? en.resDefault : 250)}</span></td><td>${inp(`enemyOv.extra.${e}`, { w: 90 })}<span class="muted"> 既定 ${(en.extra && en.extra[e]) || 1}</span></td></tr>`).join("")}</table>
-      <p class="muted">耐性の式は、有効耐性 = 耐性 − 貫通 のとき 倍率 = 1 − 0.25×(E/250)²（実測と一致）。「その他」は、原因が分かっていない差を合わせるための倍率です。</p></div>`;
+    return `<div class="wide"><div class="secg">
+      <section class="sec"><h3>補正（敵の数値の上書きと、「その他倍率」）</h3>
+        <div class="adj-list">
+          ${fld("その他倍率（全体に掛ける）", inp("other.mult", { w: 100 }), "不明な倍率を入れる")}${fld("被ダメージ（別枠の乗算）", inp("other.taken", { w: 100 }), "1.15 = +15%")}
+          ${fld("敵の防御倍率 上書き", inp("enemyOv.def", { w: 100 }), "空=" + en.def)}${fld("弱点補正 上書き", inp("enemyOv.weakMult", { w: 100 }), "空=" + en.weakMult)}
+          ${fld("印の別枠 上書き", inp("enemyOv.markX", { w: 100 }), "空=" + en.markX)}
+        </div></section>
+      <section class="sec"><h3>敵の属性ごとの耐性と、実測合わせの倍率</h3>
+        <table class="adj-t"><tr><th>属性</th><th>耐性（空=既定）</th><th>その他（実測合わせ）</th></tr>
+        ${els.map(e => `<tr><td>${e}${en.weak.indexOf(e) >= 0 ? "（弱点）" : ""}</td><td>${inp(`enemyOv.res.${e}`, { w: 90 })}<span class="muted"> 既定 ${en.res[e] != null ? en.res[e] : (en.resDefault != null ? en.resDefault : 250)}</span></td><td>${inp(`enemyOv.extra.${e}`, { w: 90 })}<span class="muted"> 既定 ${(en.extra && en.extra[e]) || 1}</span></td></tr>`).join("")}</table>
+        <p class="muted">耐性の式は、有効耐性 = 耐性 − 貫通 のとき 倍率 = 1 − 0.25×(E/250)²（実測と一致）。「その他」は、原因が分かっていない差を合わせるための倍率です。</p></section>
+      </div></div>`;
   }
   // ---- 3分間の回数・与ダメへの寄与率は sim_contrib.js（比較ページと共通）----
   const { rotDefault, rotCount, dmgParts, sum3, embShort } = S.contrib;
@@ -746,22 +744,25 @@
   }
   function renderLoad() {
     const names = Object.keys(savedBuilds());
-    return `<div class="wide">
-      <h3>新しく作る</h3>
-      <div class="ld-line" style="grid-template-columns:auto 1fr"><button type="button" class="btn-add pri" data-act="pick-open">巡遊者を選んで作る</button><span class="muted">一覧から3人を選びます。入力中のデータは、すべて初期値に戻ります。</span></div>
-      <h3 style="margin-top:18px">プリセットコードから作る</h3>
-      <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" placeholder="ゲームの素質プリセットのコード" spellcheck="false"><button class="btn-add" data-act="dv:preset:in">読み込む</button></div>
-      ${msgOf("preset")}<div class="muted help">編成と素質Lvが自動的に反映されます（ゲーム内で使われているコードです）。</div>
-      <h3 style="margin-top:18px">共有コード・共有URLを読み込む</h3>
-      <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
-      ${msgOf("load")}<div class="muted help">共有URL・共有コード、どちらでも読み込めます。</div>
-      <h3 style="margin-top:18px">このブラウザに保存したビルドを読み込む</h3>
-      ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」で行えます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
-      ${msgOf("build")}
-      <h3 style="margin-top:18px">ほかのサイトの編成データを読み込む</h3>
-      <textarea id="dv-bjson" rows="4" spellcheck="false" placeholder='{ "format": "stellasora-build", "schema": 1, "team": [ … ] }' style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12px">${esc(DV.bjson || "")}</textarea>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><button class="btn-add" data-act="bj-in">読み込む</button><label class="btn-add ocr-pick">ファイルを選ぶ<input type="file" accept=".json,application/json" id="bj-file"></label></div>
-      ${msgOf("bjson")}${bimpBox()}<div class="muted help">ほかのファンサイトで作った編成データ（JSON）を貼り付けるか、ファイルを選んでください。書いてある項目だけが入り、それ以外は初期値になります。形の決まりは <a href="https://github.com/freiheit-freisein/stellasora-data" target="_blank" rel="noopener">stellasora-data</a> にあります。</div></div>`;
+    // 「作る」の2つと「読み込む」の3つを、カードに分けて2列に並べる
+    return `<div class="wide"><div class="secg">
+      <section class="sec"><h3>新しく作る</h3>
+        <div class="sh-line"><button type="button" class="btn-add pri" data-act="pick-open">巡遊者を選んで作る</button></div>
+        <div class="muted help">一覧から3人を選びます。入力中のデータは、すべて初期値に戻ります。</div></section>
+      <section class="sec"><h3>プリセットコードから作る</h3>
+        <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" placeholder="ゲームの素質プリセットのコード" spellcheck="false"><button class="btn-add" data-act="dv:preset:in">読み込む</button></div>
+        ${msgOf("preset")}<div class="muted help">編成と素質Lvが自動的に反映されます（ゲーム内で使われているコードです）。</div></section>
+      <section class="sec"><h3>共有コード・共有URLを読み込む</h3>
+        <div class="ld-line"><input type="text" id="dv-load" value="${esc(DV.load || "")}" placeholder="例: emtXtc9 ／ https://sim.stella-tool.com/s/emtXtc9" spellcheck="false"><button class="btn-add" data-act="ld-any">読み込む</button></div>
+        ${msgOf("load")}<div class="muted help">共有URL・共有コード、どちらでも読み込めます。</div></section>
+      <section class="sec"><h3>このブラウザに保存したビルドを読み込む</h3>
+        ${names.length ? `<div class="ld-line"><select id="bsel"><option value="">（選んでください）</option>${names.map(n => `<option${n === V.bselPick ? " selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn-add" data-act="bload">読み込む</button></div><div class="muted help">名前の変更・コピー・削除は「⑥ 共有・保存」で行えます。</div>` : '<p class="muted">まだありません（「⑥ 共有・保存」で保存できます）。</p>'}
+        ${msgOf("build")}</section>
+      <section class="sec full"><h3>ほかのサイトの編成データを読み込む</h3>
+        <textarea id="dv-bjson" class="codebox" rows="4" spellcheck="false" placeholder='{ "format": "stellasora-build", "schema": 1, "team": [ … ] }'>${esc(DV.bjson || "")}</textarea>
+        <div class="sh-line"><button class="btn-add" data-act="bj-in">読み込む</button><label class="btn-add ocr-pick">ファイルを選ぶ<input type="file" accept=".json,application/json" id="bj-file"></label></div>
+        ${msgOf("bjson")}${bimpBox()}<div class="muted help">ほかのファンサイトで作った編成データ（JSON）を貼り付けるか、ファイルを選んでください。書いてある項目だけが入り、それ以外は初期値になります。形の決まりは <a href="https://github.com/freiheit-freisein/stellasora-data" target="_blank" rel="noopener">stellasora-data</a> にあります。</div></section>
+      </div></div>`;
   }
   // 編成データを読み込んだ結果（読み込めたもの・入れられなかったもの・計算に使わない情報）
   function bimpBox() {
@@ -822,24 +823,26 @@
   function renderShareTab() {
     const url = DV.url || "", sid = (/\/s\/([A-Za-z0-9]+)/.exec(url) || [])[1] || "";
     const copyRow = (label, v, key) => `<div class="ld-row"><span class="ld-lab">${label}</span><input type="text" readonly value="${esc(v)}" placeholder="（「URLを作る」を押すと出ます）"><button class="btn-add" data-act="cp:${key}"${v ? "" : " disabled"}>コピー</button></div>`;
-    return `<div class="wide">
-      <h3>共有URL・共有コード</h3>
-      <div class="sh-line"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
-        <span class="xtag"><span class="muted">タグを追加</span>${X_TAGS.map((t, i) => `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtag:${i}"${xTags[i] ? " checked" : ""}>${t}</label>`).join("")}</span></div>
-      ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
-      ${msgOf("url")}<div class="muted help">作成したビルドを他の人に共有できます。コードの場合は「①読込」から入力してください。</div>
-      <h3 style="margin-top:18px">ビルドカード</h3>${cardBlock()}
-      <h3 style="margin-top:18px">プリセットコード（ゲーム内で入力できます）</h3>
-      <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:preset:out">作る</button><button class="btn-add" data-act="dv:preset:copy">コピー</button></div>
-      ${msgOf("preset")}<div class="muted help">編成と素質Lvを記録したコードです。ゲーム内のプリセット登録で読み込むことができます。</div>
-      <h3 style="margin-top:18px">このブラウザに保存</h3>
-      <div class="ld-line"><input type="text" id="bname" placeholder="名前を付けて保存"><button class="btn-add" data-act="bsave">保存</button></div>
-      ${msgOf("build")}<div class="muted help">ビルドをブラウザ（ローカルストレージ）に保存します。「① 読込」から読み込むことができます。ご利用中のブラウザだけに残ります。他のPCへ共有するときはURLかコードでお願いします。</div>
-      <h4 class="bl-h">保存したビルド</h4>${buildsHtml()}
-      <div class="ld-line" style="grid-template-columns:auto 1fr;margin-top:8px"><a class="btn-add" href="compare.html" style="display:inline-flex;align-items:center;text-decoration:none">ビルド比較を開く</a><span class="muted">保存したビルドどうし、または保存したビルドと、それを変えたものを並べて比べます。</span></div>
-      ${IS_LOCAL ? `<h3 style="margin-top:18px">長い共有コード</h3>
-      <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
-      ${msgOf("code")}<div class="muted help">サーバーを使わずに作れる、長い形の共有コードです（手元で動かしているときだけ出します）。</div>` : ""}</div>`;
+    // 共有するもの（URL・プリセットコード）と、手元に残すもの（保存・カード）をカードに分けて2列に並べる
+    return `<div class="wide"><div class="secg">
+      <section class="sec"><h3>共有URL・共有コード</h3>
+        <div class="sh-line"><button class="btn-add pri" data-act="dv:url:out">URLを作る</button><button class="btn-add xbtn" data-act="share-x">Xで共有</button>
+          <span class="xtag"><span class="muted">タグを追加</span>${X_TAGS.map((t, i) => `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="xtag:${i}"${xTags[i] ? " checked" : ""}>${t}</label>`).join("")}</span></div>
+        ${copyRow("共有URL", url, "url")}${copyRow("共有コード", sid, "sid")}
+        ${msgOf("url")}<div class="muted help">作成したビルドを他の人に共有できます。コードの場合は「①読込」から入力してください。</div></section>
+      <section class="sec"><h3>プリセットコード（ゲーム内で入力できます）</h3>
+        <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:preset:out">作る</button><button class="btn-add" data-act="dv:preset:copy">コピー</button></div>
+        ${msgOf("preset")}<div class="muted help">編成と素質Lvを記録したコードです。ゲーム内のプリセット登録で読み込むことができます。</div>
+        ${IS_LOCAL ? `<h3 style="margin-top:16px">長い共有コード</h3>
+        <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
+        ${msgOf("code")}<div class="muted help">サーバーを使わずに作れる、長い形の共有コードです（手元で動かしているときだけ出します）。</div>` : ""}</section>
+      <section class="sec"><h3>このブラウザに保存</h3>
+        <div class="ld-line"><input type="text" id="bname" placeholder="名前を付けて保存"><button class="btn-add" data-act="bsave">保存</button></div>
+        ${msgOf("build")}<div class="muted help">ビルドをブラウザ（ローカルストレージ）に保存します。「① 読込」から読み込むことができます。ご利用中のブラウザだけに残ります。他のPCへ共有するときはURLかコードでお願いします。</div>
+        <h4 class="bl-h">保存したビルド</h4>${buildsHtml()}
+        <div class="sh-line" style="margin-top:10px"><a class="btn-add" href="compare.html" style="display:inline-flex;align-items:center;text-decoration:none">ビルド比較を開く</a><span class="muted">保存したビルドどうし、または保存したビルドと、それを変えたものを並べて比べます。</span></div></section>
+      <section class="sec"><h3>ビルドカード</h3>${cardBlock()}</section>
+      </div></div>`;
   }
 
   function renderScore() {
@@ -849,7 +852,7 @@
     const rotHtml = SLOTS.map(([k, l]) => {
       const id = G.team[k], d = rotDefault(id);
       const f = k === "main" ? rotIn(id, "basic", "通常1ローテ", d) + rotIn(id, "main", "主力スキル", d) + rotIn(id, "ult", "必殺技", d) : rotIn(id, "support", "支援スキル", d) + rotIn(id, "ult", "必殺技", d);
-      return `<div class="box"><b>${l}：${esc(chOf(id).jp)}</b>${f}</div>`;
+      return `<div class="box rot-box"><b>${l}：${esc(chOf(id).jp)}</b>${f}</div>`;
     }).join("");
     let items;
     try { items = getContrib(); } catch (e) { return `<div class="wide"><h3>ビルド確認</h3><p class="muted">寄与率を計算できませんでした（${esc(e.message)}）</p></div>`; }
@@ -863,19 +866,21 @@
       return `<span class="decin"><span class="muted">${sh(d.cur)} →</span>${btn(-1, "◀")}<b class="${d.t > d.cur ? "up" : ""}">${sh(d.t)}</b>${btn(1, "▶")}</span>`;
     };
     const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label.replace("\n", " "))}">${x.label.split("\n").map(esc).join('<br><span class="ind">') + (x.label.indexOf("\n") >= 0 ? "</span>" : "")}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
-    return `<div class="wide"><h3 style="margin:0 0 6px">ビルド確認（与ダメへの寄与率）</h3>
+    return `<div class="wide"><div class="secg">
+      <section class="sec full"><h3>3分間の回数<span class="h-sub">寄与率は、この回数で合計した3分間のダメージで出します</span></h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
         ${helpTxt("rot", "自分の戦い方に合わせて、下の回数を書き換えてください。", `指名手配の3分間で、スキルと必殺技をCDが明けたらすぐ使い、残りは通常攻撃をし続けた、という想定です。実際の戦闘の回数とは違います。<br>
         ・CDは日本語Wikiの値です（セイナ(原点)はゲーム内の表示）。SPが足りずに必殺技が撃てない場合や、CDが戻る効果（ホタルの必殺技など）は入っていません。<br>
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・寄与率は、この回数で合計したダメージで出します。`, "margin-top:4px;color:#33386A")}</div>
-      <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px">${rotHtml}</div>
-      ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。素質（コア以外）は、徽章の素質レベル上昇も込みのLvで、Lv9まで選べます（Lv7〜9の値は、ゲームの画面で確かめていないものは推定です）。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 6px")}
+      <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">${rotHtml}</div></section>
+      <section class="sec full"><h3>与ダメへの寄与率</h3>
+      ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。素質（コア以外）は、徽章の素質レベル上昇も込みのLvで、Lv9まで選べます（Lv7〜9の値は、ゲームの画面で確かめていないものは推定です）。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 8px")}
       <div class="grid-in decG">
         <div class="box"><div class="bx-h"><b>素質</b><label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-act="potall"${V.potAll ? " checked" : ""}>未取得の素質も表示</label></div>${rows("素質")}</div>
         <div class="box"><b>徽章</b>${rows("徽章")}</div>
         <div class="box"><b>ロスレコ</b>${rows("ロスレコ")}</div>
-      </div></div>`;
+      </div></section></div></div>`;
   }
 
   function renderDisplay() {
@@ -970,10 +975,14 @@
       <tr class="sum"><td>合計</td><td>${fmt(sm.mult)}%</td><td>${dmgUnit === "raw" ? big(sm.non) : dmgF(sm.non)}<br>${dmgUnit === "raw" ? big(sm.crit) : dmgF(sm.crit)}</td><td>${dmgF(sm.exp)}</td></tr></table>`;
   }
 
+  // 上に残す帯（手順のタブと共通の倍率）は、見出しのすぐ下に付ける
+  function setHdrH() { const h = document.querySelector(".site-header"); if (h) document.documentElement.style.setProperty("--hdr-h", (h.offsetHeight + 8) + "px"); }
+  window.addEventListener("resize", setHdrH);
   function renderAll() {
     G.enemyOv = G.enemyOv || { res: {}, extra: {} };
     recalc();
     renderTop(); renderTiles(); renderSelectors(); renderDisplay(); renderResult(); renderPick();
+    setHdrH();
     save();
   }
 
@@ -1133,7 +1142,6 @@
       if (!v) return;
       try { navigator.clipboard.writeText(v).then(() => say("url", "コピーしました"), () => say("url", "コピーできませんでした。枠の中を選んでコピーしてください", true)); } catch (e) { say("url", "コピーできませんでした", true); }
     }
-    else if (a === "multtoggle") { multOpen = !multOpen; try { localStorage.setItem("stellasora-sim-mult", multOpen ? "1" : "0"); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "drillclose") { V.drill = null; renderAll(); }
     else if (a.indexOf("help:") === 0) { V.help = V.help || {}; V.help[a.slice(5)] = !V.help[a.slice(5)]; renderAll(); }
     else if (a.indexOf("stp|") === 0) {   // −／＋ のボタン
@@ -1164,7 +1172,6 @@
     else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
-    else if (a === "beta-close") { $("betabar").hidden = true; try { localStorage.setItem("stellasora-sim-beta2-closed", "1"); } catch (e) { /* 無視 */ } }
     else if (a === "rp-send") sendReport();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
@@ -1273,8 +1280,6 @@
   }
 
   renderAll();
-  // β版のお知らせ（閉じたら、このブラウザでは次から出さない）
-  try { if (!localStorage.getItem("stellasora-sim-beta2-closed")) $("betabar").hidden = false; } catch (e) { $("betabar").hidden = false; }
   // URLから読み込む（読み込んだらURLからは消す）: #c=共有コード（短縮URLから移動してきたとき）、#p=プリセットコード（プリセット共有サイトなどから）、#b=編成データ
   const hc = location.hash;
   if (hc.indexOf("#b=") === 0) {   // #b=編成データ（JSON を UTF-8 の Base64URL にしたもの。ほかのサイトから）
