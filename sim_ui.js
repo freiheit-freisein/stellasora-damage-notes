@@ -956,16 +956,14 @@
       return Object.values(by).sort((a, b) => (b.t === t) - (a.t === t) || b.dmg - a.dmg);
     };
     // 内訳: 押した行のすぐ下に出す。1ヒット1行（ヒット・倍率×回数・1ヒットの期待値・小計）。種類が違うヒットと、会心が違うヒットだけ補足を出す
-    // 会心率・会心ダメ: どのヒットも同じなら内訳の頭に1行で出す。ヒットごとに違うときは平均を出さず（実際にはどのヒットもその値にならないため）、ヒットごとの下に出す
-    const hitCd = r => r.critDmg != null ? r.critDmg : r.crit / r.normal;
-    const sameCrit = sm => sm.rows.every(r => Math.abs(r.rate - sm.rows[0].rate) < 0.0005 && Math.abs(hitCd(r) - hitCd(sm.rows[0])) < 0.0005);
-    const drillHtml = (sm, t) => `<div class="rs-drill">${sameCrit(sm) ? `<div class="rs-dsum">${v("cr", "会心率", p1(sm.rows[0].rate))}${v("cd", "会心ダメ", p1(hitCd(sm.rows[0])))}</div>` : ""}<table><colgroup><col><col class="c2"><col class="c3"><col class="c4"></colgroup>
+    // 会心率・会心ダメは、どの巡遊者でもヒットごとに、そのヒットの名前の下に出す（平均は、どのヒットもその値にならないので出さない）
+    const drillHtml = (sm, t) => `<div class="rs-drill"><table><colgroup><col><col class="c2"><col class="c3"><col class="c4"></colgroup>
       <tr><th>ヒット</th><th>倍率×回数</th><th>1ヒット</th><th>小計</th></tr>
       ${sm.rows.map(r => {
         const cd = r.critDmg != null ? r.critDmg : r.crit / r.normal;
         const notes = [];
         if (r.type !== t) notes.push(`${E.TYPE_NAME[r.type]}扱い（+${p1(r.B - 1)}）`);   // カッコの中は、その種類のダメージ%
-        if (!sameCrit(sm)) notes.push(`会心率: ${p1(r.rate)}　会心ダメ: ${p1(cd)}`);
+        notes.push(`会心率: ${p1(r.rate)}　会心ダメ: ${p1(cd)}`);
         const tip = esc(`非会心 ${fmt(r.normal)}／会心 ${fmt(r.crit)}／属性 ${f3(r.W)}／種別 ${f3(r.B)}／被ダメージ ${f3(r.taken)}／敵 ${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ${r.markX}` : ""}`);
         return `<tr title="${tip}"><td><b>${esc(r.name)}</b>${notes.map(n => `<small>${n}</small>`).join("")}</td><td>${(Math.round(r.mult * 10) / 10).toFixed(1)}% ×${r.count}</td><td>${dmgF(r.avg)}</td><td>${dmgF(r.total)}</td></tr>`;
       }).join("")}</table></div>`;
