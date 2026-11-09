@@ -950,7 +950,8 @@
     const mainType = key => /^(mark|supm)/.test(key) ? "mark" : key === "basic" ? "basic" : /^(ult|supu)/.test(key) ? "ult" : "skill";
     const typeB = (sm, t) => { const r = sm.rows.find(x => x.type === t) || sm.rows[0]; return r ? r.B : 1; };
     // 内訳: 押した行のすぐ下に出す。1ヒット1行（ヒット・倍率×回数・1ヒットの期待値・小計）。種類が違うヒットと、会心が違うヒットだけ補足を出す
-    const drillHtml = (sm, t) => `<div class="rs-drill"><table><colgroup><col><col class="c2"><col class="c3"><col class="c4"></colgroup>
+    // 会心率・会心ダメは内訳の頭に1行で出す（ヒットごとに違うときは、そのヒットの下にも出す）
+    const drillHtml = (sm, t) => `<div class="rs-drill"><div class="rs-dsum">${v("cr", "会心率", p1(sm.rate))}${v("cd", "会心ダメ", p1(sm.critDmg))}</div><table><colgroup><col><col class="c2"><col class="c3"><col class="c4"></colgroup>
       <tr><th>ヒット</th><th>倍率×回数</th><th>1ヒット</th><th>小計</th></tr>
       ${sm.rows.map(r => {
         const cd = r.critDmg != null ? r.critDmg : r.crit / r.normal;
@@ -975,7 +976,7 @@
         <span class="rs-mult">${fmt(sm.mult)}%</span>
         <span class="rs-dmg">${dmgF(sm.exp)}</span>
         ${cmp}<span class="rs-go" aria-hidden="true">›</span>
-        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${v("k", E.TYPE_NAME[t] + "ダメージ", "+" + p1(typeB(sm, t) - 1))}${v("cr", "会心率", p1(sm.rate))}${v("cd", "会心ダメ", p1(sm.critDmg))}</span></button>${open ? drillHtml(sm, t) : ""}`;
+        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${v("k", E.TYPE_NAME[t] + "ダメージ", "+" + p1(typeB(sm, t) - 1))}</span></button>${open ? drillHtml(sm, t) : ""}`;
     };
     // 列の名前（倍率・ダメージ・比較）は、巡遊者ごとの見出しの行に、それぞれの列の上に出す
     $("result").innerHTML = SLOTS.map(([k, l]) => {
