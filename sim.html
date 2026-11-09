@@ -158,6 +158,11 @@
   .rs-go { display: inline-block; transition: transform .15s; }
   .tile.pink { position: relative; }
   .drill-hint { position: absolute; right: 10px; bottom: 6px; font-size: 11px; font-weight: 700; color: #B05A70; }
+  /* お知らせ（読み込みなど）: 見出しのすぐ下に浮かせて出し、数秒で消える */
+  .toast { position: fixed; top: calc(var(--hdr-h, 54px) + 4px); left: 50%; transform: translate(-50%, -6px); z-index: 60; max-width: calc(100vw - 32px); padding: 8px 16px; border-radius: 999px; background: var(--indigo-fill); color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 6px 20px rgba(30,34,80,.25); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .toast { width: max-content; text-align: center; }
+  @media (max-width: 860px) { .toast { top: auto; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translate(-50%, 6px); font-size: 12px; } .toast.on { transform: translate(-50%, 0); } }
   /* 結果の見出しの行: 「今の値を記憶」と表記の切り替えを1行に */
   .panel > h2.res-h { align-items: center; flex-wrap: wrap; }
   .cmpbar { display: inline-flex; align-items: center; }
@@ -455,8 +460,7 @@
     .logo-ja { font-size: 16px; white-space: nowrap; } .logo-en { display: none; }
     .logo-h1 { gap: 6px; } .logo-star { width: 20px; height: 20px; }
     .topbar { flex: 1; min-width: 0; flex-wrap: nowrap; justify-content: flex-end; gap: 4px; }
-    .topbar #smsg { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
-    .tb-b, .topbar .sep, .topbar #smsg:empty { display: none; }
+    .tb-b, .topbar .sep { display: none; }
     .app { grid-template-columns: minmax(0, 1fr); padding: 8px; gap: 8px; }
     .panel { padding: 10px; border-radius: 14px; margin-bottom: 8px; }
     .panel > h2 { flex-wrap: wrap; }
@@ -519,6 +523,7 @@
   }
   @media (max-width: 380px) {
     .logo-star { display: none; }
+    .mi { padding: 2px 5px; gap: 3px; } .mi span { font-size: 10px; } .mi b { font-size: 13px; }
     :root { --rs-cols: minmax(0, 1fr) 70px 96px 8px; --rs-gap: 4px; --rs-pr: 8px; }
     .rs-row { padding-left: 8px; } .rs-drill { padding-left: 12px; }
     .rs-nm { white-space: nowrap; } .rs-dmg { font-size: 16px; } .rs-mult, .rs-cmp { font-size: 11px; }
@@ -597,6 +602,7 @@
   <div class="topbar" id="topbar"></div>
 </div></header>
 <nav class="mbar" id="mbar" aria-label="表示の切り替え"></nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <dialog id="pickDlg" class="dlg pick-dlg" aria-labelledby="pickDlgT"><div id="pickBody"></div></dialog>
 <dialog id="reportDlg" class="dlg" aria-labelledby="reportDlgT"><div id="reportBody"></div></dialog>
 <dialog id="logDlg" class="dlg" aria-labelledby="logDlgT"><div id="logBody"></div></dialog>

@@ -67,11 +67,22 @@
   }
 
   // ---- 上部（ビルド保存・比較） ----
+  // 読み込みなどのお知らせは、見出しのすぐ下にふわっと出して、数秒で消す（見出しの中に出すと、スマホでは切れるため）
+  let toastTimer = null;
+  function showToast() {
+    if (!shareMsg) return;
+    const t = $("toast"); if (!t) return;
+    t.textContent = shareMsg; t.hidden = false; t.classList.add("on");
+    shareMsg = "";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.classList.remove("on"); setTimeout(() => { t.hidden = true; }, 300); }, 4000);
+  }
   function renderTop() {
     let builds = {};
     try { builds = JSON.parse(localStorage.getItem(KEY_B)) || {}; } catch (e) { builds = {}; }
     const names = Object.keys(builds);
-    $("topbar").innerHTML = `<span class="muted" id="smsg">${esc(shareMsg)}</span>
+    showToast();
+    $("topbar").innerHTML = `
       <button class="btn-add" data-act="log-open">更新履歴</button><button class="btn-add" data-act="rp-open">報告</button>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
@@ -957,13 +968,13 @@
     };
     // 内訳: 押した行のすぐ下に出す。1ヒット1行（ヒット・倍率×回数・1ヒットの期待値・小計）。種類が違うヒットと、会心が違うヒットだけ補足を出す
     // 内訳: 結果の行と同じ列にそろえる（総倍率の列に「倍率×回数」、ダメージの列に「小計」。小計を足すと、上の行のダメージ（期待値）になる）
-    // ヒットの下に小さく: 種類が違うときの「スキル扱い（+x%）」、1ヒットの期待値・非会心・会心、「率ダメ: 会心率 / 会心ダメ」
+    // ヒットの下に小さく: 「率ダメ: 会心率 / 会心ダメ」、種類が違うときの「スキル扱い: +x%」、1ヒットの期待値・非会心・会心
     const drillHtml = (sm, t) => `<div class="rs-drill"><div class="rs-grid rs-dh"><span>ヒット</span><span class="rs-mult">倍率×回数</span><span class="rs-dmg">小計</span><span></span></div>
       ${sm.rows.map(r => {
         const cd = r.critDmg != null ? r.critDmg : r.crit / r.normal;
         const tip = esc(`属性 ${f3(r.W)}／種別 ${f3(r.B)}／被ダメージ ${f3(r.taken)}／敵 ${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ${r.markX}` : ""}`);
         return `<div class="rs-grid rs-dr" title="${tip}"><span class="rs-dn">${esc(r.name)}</span><span class="rs-mult">${(Math.round(r.mult * 10) / 10).toFixed(1)}% ×${r.count}</span><span class="rs-dmg">${dmgF(r.total)}</span><span></span>
-          <span class="rs-dsub">${r.type !== t ? v("ty", E.TYPE_NAME[r.type] + "扱い", "+" + p1(r.B - 1)) : ""}${v("one", "1ヒット", dmgF(r.avg))}${v("nc", "非会心", dmgF(r.normal))}${v("cc", "会心", dmgF(r.crit))}${v("rd", "率ダメ", p1(r.rate) + " / " + p1(cd))}</span></div>`;
+          <span class="rs-dsub">${v("rd", "率ダメ", p1(r.rate) + " / " + p1(cd))}${r.type !== t ? v("ty", E.TYPE_NAME[r.type] + "扱い", "+" + p1(r.B - 1)) : ""}${v("one", "1ヒット", dmgF(r.avg))}${v("nc", "非会心", dmgF(r.normal))}${v("cc", "会心", dmgF(r.crit))}</span></div>`;
       }).join("")}</div>`;
     const row = ([key, label, sm, id]) => {
       if (!sm) return "";   // その巡遊者にない攻撃（印など）は出さない
