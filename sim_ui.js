@@ -75,7 +75,7 @@
       <button class="btn-add" data-act="log-open">更新履歴</button><button class="btn-add" data-act="rp-open">報告</button>`;
     $("unitbar").innerHTML = [["raw", "そのまま"], ["k", "K表記"], ["m", "M表記"]].map(([v, l]) => `<button type="button" class="${dmgUnit === v ? "on" : ""}" aria-pressed="${dmgUnit === v}" data-act="unit:${v}">${l}</button>`).join("");
     // 今の値を覚えて、そこからの増減をタイルに出す
-    // 比較: 「今の値を記憶」の1つだけ。記憶した値からの増減は、結果の「比較」の列に出る（列の見出しの × で消す）
+    // 比較: 「今の値を記憶」の1つだけ。記憶した値からの増減は、結果の「比較」の列に出る（一度記憶したら、列は出したまま）
     $("cmpbar").innerHTML = `<button class="btn-add" data-act="memo" title="${memo ? "今の値で記憶し直します。結果の「比較」の列は、記憶した値からの増減です" : "今の値を記憶します。このあと入力を変えると、結果の「比較」の列に増減が出ます"}">今の値を記憶</button>`;
   }
 
@@ -982,7 +982,7 @@
     $("result").innerHTML = SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);
       const rows = items.filter(x => x[3] === id && (k === "main" ? !/^sup/.test(x[0]) : x[0].slice(-1) === (k === "s1" ? "1" : "2")));
-      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">総倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? `比較<button type="button" class="cmp-x" data-act="memodel" title="記憶した値を消して、比較の列を閉じます" aria-label="比較をやめる">×</button>` : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
+      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">総倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? "比較" : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
     }).join("");
     window.__cur = curVals;
     renderMobile(items);
