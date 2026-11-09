@@ -89,9 +89,10 @@
     const taken = o.ef.taken * (G.other.taken || 1) * (G.other.mult || 1) * dd.extra;
     const who = SLOTS.map(([k, l]) => `<button type="button" class="${V.tilesFor === k ? "on" : ""}" aria-pressed="${V.tilesFor === k}" data-act="tf:${k}" title="${esc(chOf(G.team[k]).jp)}">${l}</button>`).join("");
     // 1行だけの細い帯。補足（攻撃力・貫通など）は、マウスを重ねると出す
+    const d3 = n => (n == null || !isFinite(n)) ? "—" : n.toFixed(3);   // 倍率は小数3桁にそろえる（1.000 など）
     const t = (label, val, sub) => `<div class="mi" title="${esc(label + "：" + sub)}"><span>${label.replace(/^ダメージ/, "").replace(/倍率$/, "")}</span><b>${val}</b></div>`;
     $("mline").innerHTML = `<div class="ml-h"><span class="unitbar ml-who" role="group" aria-label="共通の倍率を出す巡遊者">${who}</span></div>
-      <div class="ml-items" role="group" aria-label="共通の倍率">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", "×" + f3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", "×" + f3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", f3(dd.def), "敵の防御")}${t("その他倍率", "×" + f3(taken), "被ダメージ・実測合わせ等")}</div>`;
+      <div class="ml-items" role="group" aria-label="共通の倍率">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", d3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", d3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", d3(dd.def), "敵の防御")}${t("その他倍率", d3(taken), "被ダメージ・実測合わせ等")}</div>`;
   }
 
   // ---- 選択ボタン ----
@@ -941,7 +942,7 @@
     const curVals = {};
     // 巡遊者ごとに1枚のカード。攻撃ごとに1行（名前・倍率・ダメージ・比較）。細かい値は行の下に小さく出し、押すと内訳
     // 細かい値は、桁をそろえて行ごとに縦に並ぶように（値は右寄せ・幅を固定・小数の桁を固定）
-    const v = (cls, lab, val) => `<span class="rs-v ${cls}"><i>${lab}</i><b>${val}</b></span>`;
+    const v = (cls, lab, val) => `<span class="rs-v ${cls}"><i>${lab}:</i><b>${val}</b></span>`;
     const row = ([key, label, sm, id]) => {
       if (!sm) return "";   // その巡遊者にない攻撃（印など）は出さない
       curVals[key] = sm.exp;
@@ -956,7 +957,7 @@
         <span class="rs-mult">${fmt(sm.mult)}%</span>
         <span class="rs-dmg">${dmgF(sm.exp)}</span>
         ${cmp}<span class="rs-go" aria-hidden="true">›</span>
-        <span class="rs-sub">${v("rs-mm", "倍率", fmt(sm.mult) + "%")}${v("k", "倍率", "×" + sm.B.toFixed(3))}${v("cr", "会心率", (sm.rate * 100).toFixed(1) + "%")}${v("cd", "会心ダメ", (sm.critDmg * 100).toFixed(1) + "%")}${v("dm", "非会心", dmgF(sm.non))}${v("dm", "会心", dmgF(sm.crit))}</span></button>`;
+        <span class="rs-sub">${v("rs-mm", "倍率", fmt(sm.mult) + "%")}${v("k", "倍率", sm.B.toFixed(3))}${v("cr", "会心率", (sm.rate * 100).toFixed(1) + "%")}${v("cd", "会心ダメ", (sm.critDmg * 100).toFixed(1) + "%")}${v("dm", "非会心", dmgF(sm.non))}${v("dm", "会心", dmgF(sm.crit))}</span></button>`;
     };
     $("result").innerHTML = `<div class="rs-row rs-colh" aria-hidden="true"><span>攻撃</span><span class="rs-mult">倍率</span><span class="rs-dmg">ダメージ（期待値）</span><span class="rs-cmp">${memo ? "比較" : ""}</span><span></span></div>` + SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);
