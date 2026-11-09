@@ -124,10 +124,13 @@
   .rs-row.rs-h { margin: 0; row-gap: 2px; padding-bottom: 4px; align-items: end; font-size: 15px; font-weight: 900; color: var(--indigo); border-top: 0; border-bottom: 3px solid var(--elc); background: var(--surface-soft); cursor: default; }
   .rs-row.rs-h:hover { background: var(--surface-soft); }
   .rs-hn { grid-column: 1 / -1; min-width: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rs-h .rs-mult { grid-column: 2; } .rs-h .rs-dmg { grid-column: 3; } .rs-h .rs-cmp { grid-column: 4; } .rs-h > span:last-child { grid-column: 5; }
+  .rs-h .rs-mult { grid-column: 2; } .rs-h .rs-dmg { grid-column: 3; } .rs-h > span:last-child { grid-column: 4; }
   .rs-h .rs-ch { font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; line-height: 1.2; }
   .rs-slot { font-size: 11px; font-weight: 900; padding: 1px 8px; border-radius: 999px; background: var(--elc); color: #fff; }
-  .rs-row { display: grid; grid-template-columns: minmax(0, 1fr) 80px 130px 56px 14px; gap: 2px 10px; align-items: center; width: 100%; padding: 8px 12px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+  /* 列: 名前・総倍率・ダメージ・›。行と内訳で同じ列の幅・右の余白にして、数字の右端をそろえる */
+  :root { --rs-cols: minmax(0, 1fr) 84px 150px 14px; --rs-gap: 10px; --rs-pr: 12px; }
+  .rs-grid, .rs-row { display: grid; grid-template-columns: var(--rs-cols); column-gap: var(--rs-gap); }
+  .rs-row { row-gap: 2px; align-items: center; width: 100%; padding: 8px var(--rs-pr) 8px 12px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
   .rs-row:first-of-type { border-top: 0; }
   .rs-row:hover { background: var(--dmg-soft); }
   .rs-row.sel { background: var(--dmg-soft); box-shadow: inset 4px 0 0 var(--accent); }
@@ -136,21 +139,20 @@
   .rs-nm { min-width: 0; font-size: 14px; font-weight: 900; color: var(--indigo); }
   .rs-mult { text-align: right; font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
   .rs-dmg { min-width: 0; text-align: right; font-size: 20px; font-weight: 900; color: var(--indigo); font-variant-numeric: tabular-nums; line-height: 1.2; }
-  .rs-cmp { text-align: right; font-size: 12px; font-weight: 900; }
+  .rs-cmp { display: block; text-align: right; font-size: 12px; font-weight: 900; line-height: 1.3; }   /* 比較は、ダメージの下段 */
   .rs-cmp.up { color: #05626A; } .rs-cmp.down { color: var(--danger); }
   .rs-go { color: var(--muted); font-size: 18px; font-weight: 700; }
   /* 内訳（押した行のすぐ下） */
-  .rs-drill { padding: 4px 12px 10px 16px; background: var(--dmg-soft); box-shadow: inset 4px 0 0 var(--accent); }
-  .rs-drill table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
-  .rs-drill th { font-size: 11px; font-weight: 700; color: var(--muted); text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--border); }
-  .rs-drill th:first-child, .rs-drill td:first-child { text-align: left; }
-  .rs-drill td { padding: 5px 6px; text-align: right; border-bottom: 1px solid var(--border); vertical-align: top; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .rs-drill tr:last-child td { border-bottom: 0; }
-  .rs-drill td:first-child { white-space: normal; }
-  .rs-drill td b { font-weight: 700; color: var(--indigo); }
-  .rs-drill td small { display: block; font-size: 11px; color: var(--muted); }
-  .rs-drill col.c2 { width: 84px; } .rs-drill col.c3 { width: 92px; } .rs-drill col.c4 { width: 96px; }
-  @media (max-width: 860px) { .rs-drill { padding: 4px 8px 8px 12px; } .rs-drill table { font-size: 11px; } .rs-drill col.c2 { width: 70px; } .rs-drill col.c3 { width: 64px; } .rs-drill col.c4 { width: 70px; } .rs-drill td, .rs-drill th { padding: 4px 3px; } }
+  .rs-drill { padding: 2px var(--rs-pr) 8px 24px; background: var(--dmg-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .rs-dh { padding: 6px 0 3px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--muted); }
+  .rs-dh > span, .rs-dh .rs-mult, .rs-dh .rs-dmg { white-space: nowrap; font-size: 11px; font-weight: 700; color: var(--muted); }
+  .rs-dr .rs-mult { white-space: nowrap; }
+  .rs-dr { row-gap: 1px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .rs-dr:last-child { border-bottom: 0; }
+  .rs-dn { min-width: 0; font-size: 13px; font-weight: 700; color: var(--indigo); }
+  .rs-dr .rs-mult { font-size: 12px; font-weight: 400; }
+  .rs-dr .rs-dmg { font-size: 13px; font-weight: 700; }
+  .rs-dsub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 1em; font-size: 11px; color: var(--muted); line-height: 1.5; }
   .rs-sub .rs-mm { display: none; }
   .rs-row.sel .rs-go { color: var(--accent); transform: rotate(90deg); }
   .rs-go { display: inline-block; transition: transform .15s; }
@@ -503,7 +505,9 @@
     .notes-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
     .fld { grid-template-columns: 100px minmax(0, 1fr); }
     .stp-lab { width: 100px; }
-    .rs-row { grid-template-columns: minmax(0, 1fr) 58px 104px 40px 10px; gap: 2px 6px; padding: 8px 10px; }
+    :root { --rs-cols: minmax(0, 1fr) 76px 108px 10px; --rs-gap: 6px; --rs-pr: 10px; }
+    .rs-dr .rs-mult { font-size: 11px; }
+    .rs-row { padding-left: 10px; } .rs-drill { padding-left: 16px; }
     .rs-nm { font-size: 13px; } .rs-mult { font-size: 12px; }
     .rs-dmg { font-size: 18px; }
     .wide > table { display: block; overflow-x: auto; }
@@ -515,7 +519,8 @@
   }
   @media (max-width: 380px) {
     .logo-star { display: none; }
-    .rs-row { grid-template-columns: minmax(0, 1fr) 50px 88px 38px 8px; gap: 2px 4px; padding: 8px; }
+    :root { --rs-cols: minmax(0, 1fr) 70px 96px 8px; --rs-gap: 4px; --rs-pr: 8px; }
+    .rs-row { padding-left: 8px; } .rs-drill { padding-left: 12px; }
     .rs-nm { white-space: nowrap; } .rs-dmg { font-size: 16px; } .rs-mult, .rs-cmp { font-size: 11px; }
     .rs-h .rs-ch { font-size: 10px; }
   }
