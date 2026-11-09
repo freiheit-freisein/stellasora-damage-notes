@@ -120,18 +120,20 @@
   /* 結果 */
   /* 結果: 巡遊者ごとのカードに、攻撃ごとの行（名前・倍率・ダメージ・比較）。押すと内訳 */
   .rs-card { border: 2px solid var(--border); border-radius: 14px; background: var(--surface); margin-bottom: 10px; overflow: hidden; }
-  .rs-h { margin: 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; color: var(--indigo); border-bottom: 3px solid var(--elc); background: var(--surface-soft); }
+  /* 巡遊者の見出し: 1段目に名前、2段目に列の名前（倍率・ダメージ・比較を、それぞれの列の上に） */
+  .rs-row.rs-h { margin: 0; row-gap: 2px; padding-bottom: 4px; align-items: end; font-size: 15px; font-weight: 900; color: var(--indigo); border-top: 0; border-bottom: 3px solid var(--elc); background: var(--surface-soft); cursor: default; }
+  .rs-row.rs-h:hover { background: var(--surface-soft); }
+  .rs-hn { grid-column: 1 / -1; min-width: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rs-h .rs-mult { grid-column: 2; } .rs-h .rs-dmg { grid-column: 3; } .rs-h .rs-cmp { grid-column: 4; } .rs-h > span:last-child { grid-column: 5; }
+  .rs-h .rs-ch { font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; line-height: 1.2; }
   .rs-slot { font-size: 11px; font-weight: 900; padding: 1px 8px; border-radius: 999px; background: var(--elc); color: #fff; }
-  .rs-el { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .rs-el { font-size: 12px; font-weight: 700; color: var(--muted); }
   .rs-row { display: grid; grid-template-columns: minmax(0, 1fr) 80px 130px 56px 14px; gap: 2px 10px; align-items: center; width: 100%; padding: 8px 12px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
   .rs-row:first-of-type { border-top: 0; }
   .rs-row:hover { background: var(--dmg-soft); }
   .rs-row.sel { background: var(--dmg-soft); box-shadow: inset 4px 0 0 var(--accent); }
   .rs-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 1em; font-size: 11px; color: var(--muted); line-height: 1.5; }
-  .rs-v { display: inline-flex; align-items: baseline; gap: 3px; white-space: nowrap; }
-  .rs-v i { font-style: normal; }
-  .rs-v b { display: inline-block; font-weight: 400; text-align: right; font-variant-numeric: tabular-nums; }
-  .rs-v.k b { width: 2.9em; } .rs-v.cr b { width: 2.9em; } .rs-v.cd b { width: 3.5em; } .rs-v.dm b { min-width: 3.8em; } .rs-v.rs-mm b { width: 3.5em; }
+  .rs-v { white-space: nowrap; font-variant-numeric: tabular-nums; }
   .rs-nm { min-width: 0; font-size: 14px; font-weight: 900; color: var(--indigo); }
   .rs-mult { text-align: right; font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
   .rs-dmg { min-width: 0; text-align: right; font-size: 20px; font-weight: 900; color: var(--indigo); font-variant-numeric: tabular-nums; line-height: 1.2; }
@@ -139,8 +141,6 @@
   .rs-cmp.up { color: #05626A; } .rs-cmp.down { color: var(--danger); }
   .rs-go { color: var(--muted); font-size: 18px; font-weight: 700; }
   .rs-sub .rs-mm { display: none; }
-  .rs-row.rs-colh { cursor: default; padding: 0 14px 4px; border: 0; background: none; box-shadow: none; }
-  .rs-colh > span, .rs-colh .rs-mult, .rs-colh .rs-dmg, .rs-colh .rs-cmp { font-size: 11px; font-weight: 700; color: var(--muted); }
   .rs-row.sel .rs-go { color: var(--accent); }
   .tile.pink { position: relative; }
   .drill-hint { position: absolute; right: 10px; bottom: 6px; font-size: 11px; font-weight: 700; color: #B05A70; }
@@ -502,6 +502,7 @@
     .logo-star { display: none; }
     .rs-row { grid-template-columns: minmax(0, 1fr) 50px 88px 38px 8px; gap: 2px 4px; padding: 8px; }
     .rs-nm { white-space: nowrap; } .rs-dmg { font-size: 16px; } .rs-mult, .rs-cmp { font-size: 11px; }
+    .rs-h .rs-ch { font-size: 10px; }
   }
   /* ページの見出し（見た目は今のロゴのまま）と、ページの下の「このツールについて」 */
   .logo-h1 { margin: 0; font-size: inherit; font-weight: inherit; display: inline-flex; align-items: center; gap: 10px; }
