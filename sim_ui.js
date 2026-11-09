@@ -880,14 +880,14 @@
       return `<span class="decin"><span class="muted">${sh(d.cur)} →</span>${btn(-1, "◀")}<b class="${d.t > d.cur ? "up" : ""}">${sh(d.t)}</b>${btn(1, "▶")}</span>`;
     };
     const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label.replace("\n", " "))}">${x.label.split("\n").map(esc).join('<br><span class="ind">') + (x.label.indexOf("\n") >= 0 ? "</span>" : "")}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
-    // 次に強くなる手 TOP10（入力が変わっていなければ、前の結果を使う）
+    // オススメ強化ポイント（β版）。ふだんは閉じておき、開いたときだけ計算する（入力が変わっていなければ、前の結果を使う）
     const ukey = JSON.stringify(G);
-    if (V.upKey !== ukey) { V.upKey = ukey; try { V.ups = S.contrib.calcUpgrades(G).slice(0, 10); } catch (e) { V.ups = []; } }
+    if (V.upOpen && V.upKey !== ukey) { V.upKey = ukey; try { V.ups = S.contrib.calcUpgrades(G).slice(0, 10); } catch (e) { V.ups = []; } }
     const KCLS = { 心相: "k-heart", しずく: "k-emb", 素質: "k-pot", ロスレコ: "k-lr", 音符: "k-note" };
-    const upHtml = V.ups.length ? `<ol class="up-list">${V.ups.map((u, i) => `<li><span class="up-k ${KCLS[u.kind] || ""}">${u.kind}</span><span class="up-l">${esc(u.label)}</span><b class="up-g">+${(u.gain * 100).toFixed(1)}%</b><button type="button" class="btn-add" data-act="upapply:${i}">入れてみる</button></li>`).join("")}</ol>` : '<p class="muted" style="margin:0">伸びる手が見つかりませんでした。</p>';
+    const upHtml = !V.upOpen ? '<p class="muted" style="margin:0">1つだけ変えたときに、ダメージが大きく伸びる強化を10個まで出します。「開く」で計算します。</p>' : (V.ups || []).length ? `<ol class="up-list">${V.ups.map((u, i) => `<li><span class="up-k ${KCLS[u.kind] || ""}">${u.kind}</span><span class="up-l">${esc(u.label)}</span><b class="up-g">+${(u.gain * 100).toFixed(1)}%</b><button type="button" class="btn-add" data-act="upapply:${i}">反映する</button></li>`).join("")}</ol>` : '<p class="muted" style="margin:0">伸びる手が見つかりませんでした。</p>';
     return `<div class="wide"><div class="secg">
-      <section class="sec full"><h3>次に強くなる手 TOP10<span class="h-sub">1つだけ変えたとき、下の3分間の回数で合計したダメージがどれだけ伸びるか</span></h3>${upHtml}
-        ${helpTxt("ups", "心相の凸・ロスレコの突破・しずく・素質の付け替え・音符の付け替えを、全部ためして伸びる順に並べます（伸びが0.1%未満の手は出しません）。", "・心相: 1凸上げる。<br>・ロスレコ: 突破を1つ上げる（サブは基礎攻撃力だけ変わります）。<br>・しずく: 徽章の値を1段階上げる。1枚の徽章に2回までですが、もう使った回数は分からないので、数えていません。<br>・素質の付け替え: 取った素質を1つ下げて、別の素質を1つ上げる（巡遊者をまたいでもよい。合計5まで。Lv1→0、Lv6→7はできません）。いちばん伸びる組み合わせを1つだけ出します。<br>・音符の付け替え: 取った音符を減らして、別の音符に足す（合計15個まで。1→0はできません）。1・5・10・15個を試して、いちばん伸びる組み合わせを1つだけ出します。<br>付け替えは1回ずつ出すので、「入れてみる」のあと、次の付け替えが出ます（使った数は数えていないので、合計の上限は自分で確かめてください）。<br>「入れてみる」を押すと、その変更を入力に入れます。「今の値を記憶」をしていなければ、押す前の値を記憶するので、結果の比較で伸びを確かめられます。", "margin-top:8px")}</section>
+      <section class="sec full"><h3>オススメ強化ポイント<span class="beta-s">β版</span><button type="button" class="help-btn" data-act="upopen" aria-expanded="${!!V.upOpen}">${V.upOpen ? "閉じる" : "開く"}</button>${V.upOpen ? '<span class="h-sub">1つだけ変えたとき、下の3分間の回数で合計したダメージがどれだけ伸びるか</span>' : ""}</h3>${upHtml}
+        ${!V.upOpen ? "" : helpTxt("ups", "心相の凸・ロスレコの突破・しずく・素質の付け替え・音符の付け替えを、全部ためして伸びる順に並べます（伸びが0.1%未満の手は出しません）。", "・心相: 1凸上げる。<br>・ロスレコ: 突破を1つ上げる（サブは基礎攻撃力だけ変わります）。<br>・しずく: 徽章の値を1段階上げる。1枚の徽章に2回までですが、もう使った回数は分からないので、数えていません。<br>・素質の付け替え: 取った素質を1つ下げて、別の素質を1つ上げる（巡遊者をまたいでもよい。合計5まで。Lv1→0、Lv6→7はできません）。いちばん伸びる組み合わせを1つだけ出します。<br>・音符の付け替え: 取った音符を減らして、別の音符に足す（合計15個まで。1→0はできません）。1・5・10・15個を試して、いちばん伸びる組み合わせを1つだけ出します。<br>付け替えは1回ずつ出すので、「反映する」のあと、次の付け替えが出ます（使った数は数えていないので、合計の上限は自分で確かめてください）。<br>「反映する」を押すと、その変更を入力に入れます。「今の値を記憶」をしていなければ、押す前の値を記憶するので、結果の比較で伸びを確かめられます。", "margin-top:8px")}</section>
       <section class="sec full"><h3>3分間の回数<span class="h-sub">寄与率は、この回数で合計した3分間のダメージで出します</span></h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
         ${helpTxt("rot", "自分の戦い方に合わせて、下の回数を書き換えてください。", `指名手配の3分間で、スキルと必殺技をCDが明けたらすぐ使い、残りは通常攻撃をし続けた、という想定です。実際の戦闘の回数とは違います。<br>
@@ -1206,8 +1206,9 @@
     else if (a.indexOf("upapply:") === 0) {
       const u = (V.ups || [])[+a.slice(8)]; if (!u) return;
       if (!memo) { memo = { v: clone(window.__cur || {}) }; try { localStorage.setItem(KEY_M, JSON.stringify(memo)); } catch (e) { /* 無視 */ } }   // 比べられるよう、押す前の値を記憶
-      u.apply(G); shareMsg = "入れました: " + u.label; renderAll();
+      u.apply(G); shareMsg = "反映しました: " + u.label; renderAll();
     }
+    else if (a === "upopen") { V.upOpen = !V.upOpen; renderAll(); }
     else if (a === "manopen") { const has = ["baseAtk", "baseHp", "elem", "basicDmg", "skillDmg", "atkPct"].some(k => +((G.lrManual || {})[k]) || 0); V.manOpen = !(V.manOpen != null ? V.manOpen : has); renderAll(); }
     else if (a === "bjopen") { V.bjOpen = !(V.bjOpen || DV.bjson || V.bimp); if (!V.bjOpen) { DV.bjson = ""; V.bimp = null; } renderAll(); }
     else if (a === "rp-send") sendReport();
