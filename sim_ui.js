@@ -100,7 +100,7 @@
     const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
     const b = (key, label, en, n) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${n ? `<span class="tn">${n}</span>` : ""}${label}</span></button>`;
     // 入力する順に番号を付けて並べる。ゲームの画面と数値を合わせるための画面（直接入力・補正）は、右端に「実測合わせ」としてまとめる
-    $("selectors").innerHTML = b("load", "読込", "LOAD", 1) + b("overview", "巡遊者", "TREKKERS", 2) + b("lr", "記録・ロスレコ", "RECORD", 3) + b("gimmick", "エネミー", "ENEMY", 4) + b("score", "ビルド確認", "CHECK", 5) + b("share", "共有・保存", "SHARE", 6)
+    $("selectors").innerHTML = b("load", "読込", "LOAD", 1) + b("overview", "巡遊者", "TREKKERS", 2) + b("lr", "ロスレコ", "RECORD", 3) + b("gimmick", "エネミー", "ENEMY", 4) + b("score", "ビルド確認", "CHECK", 5) + b("share", "共有・保存", "SHARE", 6)
       + `<span class="tab-sep" aria-hidden="true"></span>` + b("direct", "直接入力", "DIRECT") + b("adjust", "補正", "ADJUST");
     // スマホ: タブの列は横にスクロールするので、選んだタブを真ん中より少し左に寄せる（右に続きのタブが見えるように）
     const row = $("selectors"), on = row.querySelector('[aria-selected="true"]');
