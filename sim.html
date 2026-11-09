@@ -429,11 +429,34 @@
     .mchar .tab { flex: 1; }
     .pgrid { grid-template-columns: minmax(0, 1fr) !important; }
     .pot .pd { -webkit-line-clamp: 2; }
-    .emb-line { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr); }
+    /* 徽章の枠: 1段目に クリア・区分・項目、2段目に 値・対象の素質 */
+    .emb-line { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr); margin: 6px 0 10px; }
+    .emb-line > .obtn { white-space: nowrap; padding: 0 4px; }
+    .emb-line > :nth-child(4) { grid-column: 1 / span 2; }
+    .emb-line > :nth-child(5) { grid-column: 3; }
     .lr-cols { grid-template-columns: minmax(0, 1fr); }
     .secg, .lr-g { grid-template-columns: minmax(0, 1fr); }
     .cnt-grid .fld { grid-template-columns: 150px minmax(0, 1fr); }
-    .lr-line { grid-template-columns: 52px 64px 54px minmax(0, 1fr) 72px; }
+    /* ロスレコの枠: 1段目に 枠名・クリア・属性・突破、2段目に名前（横いっぱい） */
+    .lr-line { grid-template-columns: 52px 64px minmax(0, 1fr) 96px; grid-template-areas: "lab clr el rk" "nm nm nm nm"; row-gap: 4px; margin: 6px 0 10px; }
+    .lr-line > :nth-child(1) { grid-area: lab; } .lr-line > :nth-child(2) { grid-area: clr; } .lr-line > :nth-child(3) { grid-area: el; }
+    .lr-line > :nth-child(4) { grid-area: nm; } .lr-line > :nth-child(5) { grid-area: rk; }
+    /* カードの余白を少し詰める */
+    .secg { gap: 8px; } .sec-col { gap: 8px; }
+    .sec { padding: 10px; }
+    .sec .box { padding: 8px; }
+    /* 寄与率の表: 項目名を1段目に横いっぱい、2段目に「今 → 比べる値」と寄与率 */
+    .decT tr:first-child { display: none; }
+    .decT tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-bottom: 1px solid var(--border); padding: 4px 0; }
+    .decT td { border: 0; }
+    .decT td:first-child { grid-column: 1 / -1; width: auto; }
+    .decT td.c { text-align: left; }
+    /* 補正 */
+    .adj-list .fld { grid-template-columns: 140px minmax(0, 1fr); }
+    .adj-t td:first-child { white-space: nowrap; }
+    .adj-t input[type=number] { width: 64px !important; }
+    .man-g .fld { grid-template-columns: 150px minmax(0, 1fr); }
+    .sec .man-g { grid-template-columns: minmax(0, 1fr); }
     .notes-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
     .fld { grid-template-columns: 100px minmax(0, 1fr); }
     .stp-lab { width: 100px; }
