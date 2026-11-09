@@ -964,7 +964,7 @@
     $("result").innerHTML = SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);
       const rows = items.filter(x => x[3] === id && (k === "main" ? !/^sup/.test(x[0]) : x[0].slice(-1) === (k === "s1" ? "1" : "2")));
-      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}<span class="rs-el">${esc(c.el)}</span></span><span class="rs-mult rs-ch">倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? "比較" : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
+      return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span class="rs-cmp rs-ch">${memo ? "比較" : ""}</span><span></span></h3>${rows.map(row).join("")}</section>`;
     }).join("");
     window.__cur = curVals;
     renderDrill(items);
