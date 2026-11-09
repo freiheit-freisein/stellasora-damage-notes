@@ -358,7 +358,7 @@
   /* スクロールは画面全体で1本（結果の列だけのスクロールはしない） */
   #right { position: static; max-height: none; overflow: visible; }
   /* スマホ用の部品（PCでは出さない） */
-  .mbar, .mstrip, .m-only { display: none; }
+  .mbar, .m-only { display: none; }
   /* ステータスの表（画面・戦闘中・防衛戦直後） */
   .stt { width: 100%; font-size: 12px; table-layout: fixed; margin: 0; }
   .stt th, .stt td { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -426,13 +426,17 @@
 
   /* ---- スマホ（幅860px以下）: 下のタブで「入力・結果・内訳」を切り替え、上に結果の帯 ---- */
   @media (max-width: 860px) {
-    body { padding-bottom: 76px; font-size: 14px; }
+    body { padding-bottom: 20px; font-size: 14px; }
     .site-header { position: static; }
-    .site-header .wrap { padding: 6px 10px; gap: 6px; }
-    .topbar .btn-add { min-height: 32px; padding: 0 10px; font-size: 12px; }
+    /* 見出しは1段: ロゴの右に「更新履歴」「報告」 */
+    .site-header .wrap { padding: 6px 10px; gap: 6px; flex-wrap: nowrap; }
+    .site-header .wrap > span[style*="flex:1"] { display: none; }
+    .topbar .btn-add { min-height: 30px; padding: 0 9px; font-size: 11px; }
     .topbar input[type=text] { min-height: 32px; }
-    .logo-ja { font-size: 17px; } .logo-en { display: none; }
-    .topbar { flex-wrap: wrap; width: 100%; }
+    .logo-ja { font-size: 16px; white-space: nowrap; } .logo-en { display: none; }
+    .logo-h1 { gap: 6px; } .logo-star { width: 20px; height: 20px; }
+    .topbar { flex: 1; min-width: 0; flex-wrap: nowrap; justify-content: flex-end; gap: 4px; }
+    .topbar #smsg { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
     .tb-b, .topbar .sep, .topbar #smsg:empty { display: none; }
     .app { grid-template-columns: minmax(0, 1fr); padding: 8px; gap: 8px; }
     .panel { padding: 10px; border-radius: 14px; margin-bottom: 8px; }
@@ -488,14 +492,12 @@
     .wide > table { display: block; overflow-x: auto; }
     #drill td, #drill th { white-space: normal; overflow: visible; font-size: 11px; }
     #drill tr.d2 td:first-child { word-break: break-all; }
-    .mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: #fff; border-top: 2px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 6px; }
+    /* 入力・結果・内訳の切り替えは上に固定（ダメージは「結果」で見るので、ダメージの帯は出さない） */
+    .mbar { display: flex; position: sticky; top: 0; z-index: 40; background: #fff; border-bottom: 2px solid var(--border); padding: 6px 8px; gap: 6px; }
     .mbar .tab { flex: 1; }
-    .mstrip { display: flex; gap: 6px; overflow-x: auto; padding: 6px 10px; background: rgba(255,255,255,.95); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30; scrollbar-width: none; }
-    .mchip { flex: none; display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--dmg-line); background: var(--dmg-soft); font-size: 11px; color: var(--muted); cursor: pointer; }
-    .mchip b { font-size: 14px; color: var(--indigo); }
-    .mchip .up { color: var(--ok); } .mchip .down { color: var(--danger); }
   }
   @media (max-width: 380px) {
+    .logo-star { display: none; }
     .rs-row { grid-template-columns: minmax(0, 1fr) 50px 88px 38px 8px; gap: 2px 4px; padding: 8px; }
     .rs-nm { white-space: nowrap; } .rs-dmg { font-size: 16px; } .rs-mult, .rs-cmp { font-size: 11px; }
   }
@@ -523,7 +525,6 @@
   [data-theme="dark"] .site-header { background: rgba(19,21,43,.92); }
   [data-theme="dark"] .panel { background: rgba(27,30,56,.94); box-shadow: 0 4px 16px rgba(0,0,0,.3); }
   [data-theme="dark"] .navp { background: var(--surface); }
-  [data-theme="dark"] .mstrip { background: rgba(19,21,43,.95); }
   [data-theme="dark"] .dlg { background: var(--surface); box-shadow: 0 16px 48px rgba(0,0,0,.5); }
   [data-theme="dark"] .dlg::backdrop { background: rgba(0,0,0,.55); }
   [data-theme="dark"] .unitbar button, [data-theme="dark"] .chcol, [data-theme="dark"] .btn-add,
@@ -572,7 +573,6 @@
   <span style="flex:1"></span>
   <div class="topbar" id="topbar"></div>
 </div></header>
-<div class="mstrip" id="mstrip"></div>
 <nav class="mbar" id="mbar" aria-label="表示の切り替え"></nav>
 <dialog id="pickDlg" class="dlg pick-dlg" aria-labelledby="pickDlgT"><div id="pickBody"></div></dialog>
 <dialog id="reportDlg" class="dlg" aria-labelledby="reportDlgT"><div id="reportBody"></div></dialog>

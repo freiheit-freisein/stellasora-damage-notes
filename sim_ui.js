@@ -117,11 +117,6 @@
   function renderMobile(items) {
     const mb = (k, l, en) => `<button class="tab" aria-selected="${V.m === k}" data-act="m:${k}"><span class="te">${en}</span><span>${l}</span></button>`;
     $("mbar").innerHTML = mb("in", "入力", "INPUT") + mb("res", "結果", "RESULT") + mb("drill", "内訳", "DETAIL");
-    $("mstrip").innerHTML = items.filter(x => x[2]).map(([key, label, sm]) => {
-      let d = "";
-      if (memo && memo.v && memo.v[key] != null) { const r = sm.exp / memo.v[key] - 1; d = ` <span class="${r >= 0 ? "up" : "down"}">${r >= 0 ? "+" : ""}${Math.round(r * 1000) / 10}%</span>`; }
-      return `<button class="mchip" data-act="drill:${key}">${esc(label.replace(/（.*/, ""))}<b>${big(sm.exp)}${d}</b></button>`;
-    }).join("");
     document.body.className = "m-" + V.m;
   }
 
