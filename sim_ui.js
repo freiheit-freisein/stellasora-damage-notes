@@ -90,8 +90,8 @@
     const who = SLOTS.map(([k, l]) => `<button type="button" class="${V.tilesFor === k ? "on" : ""}" aria-pressed="${V.tilesFor === k}" data-act="tf:${k}" title="${esc(chOf(G.team[k]).jp)}">${l}</button>`).join("");
     // 1行だけの細い帯。補足（攻撃力・貫通など）は、マウスを重ねると出す
     const t = (label, val, sub) => `<div class="mi" title="${esc(label + "：" + sub)}"><span>${label.replace(/^ダメージ/, "").replace(/倍率$/, "")}</span><b>${val}</b></div>`;
-    $("mline").innerHTML = `<div class="ml-h"><span class="ml-t">共通の倍率</span><span class="unitbar ml-who" role="group" aria-label="倍率を出す巡遊者">${who}</span></div>
-      <div class="ml-items">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", "×" + f3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", "×" + f3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", f3(dd.def), "敵の防御")}${t("その他倍率", "×" + f3(taken), "被ダメージ・実測合わせ等")}</div>`;
+    $("mline").innerHTML = `<div class="ml-h"><span class="unitbar ml-who" role="group" aria-label="共通の倍率を出す巡遊者">${who}</span></div>
+      <div class="ml-items" role="group" aria-label="共通の倍率">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", "×" + f3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", "×" + f3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", f3(dd.def), "敵の防御")}${t("その他倍率", "×" + f3(taken), "被ダメージ・実測合わせ等")}</div>`;
   }
 
   // ---- 選択ボタン ----

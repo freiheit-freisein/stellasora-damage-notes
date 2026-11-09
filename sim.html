@@ -34,7 +34,6 @@
   .navp .tabs { margin: 0 0 8px; }
   .mline { display: flex; gap: 10px; align-items: center; }
   .ml-h { flex: none; display: flex; align-items: center; gap: 8px; }
-  .ml-t { font-size: 13px; font-weight: 900; color: var(--indigo); white-space: nowrap; }
   .ml-who button { min-height: 26px; padding: 0 9px; }
   .ml-items { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
   .mi { min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 6px; padding: 2px 10px; border-radius: 10px; background: var(--surface-soft); border: 2px solid var(--border); cursor: help; }
@@ -286,7 +285,12 @@
   .topbar .sep { width: 1px; height: 22px; background: var(--border-strong); margin: 0 6px; }
   .tb-b { display: contents; }
   .panel { background: rgba(255,255,255,.94); border: 2px solid var(--border); border-radius: 18px; box-shadow: 0 4px 16px rgba(75,80,130,.06); }
-  .navp { background: var(--surface); box-shadow: 0 6px 18px rgba(75,80,130,.12); }
+  /* タブの帯と中身は1つの枠に見せる（帯の下は線だけ）。中身の枠は上の角を四角に */
+  .panel.navp { background: var(--surface); margin-bottom: 0; border-bottom: 1px solid var(--border); border-radius: 18px 18px 0 0; box-shadow: none; }
+  .navp + .panel { border-top: 0; border-radius: 0 0 18px 18px; }
+  /* PC: ①〜⑥のタブは横に広げる（実測合わせの2つは右に小さく） */
+  @media (min-width: 861px) { .navp .tabs > .tab:not(.tab-sep ~ .tab) { flex: 1 1 0; } .navp .tab-sep { flex: 0 0 24px; } }
+  @media (min-width: 861px) and (max-width: 1500px) { .navp .tab { padding: 6px 8px; } .navp .tab-sep { flex-basis: 8px; min-width: 8px; } }
   .panel > h2 .en { font-size: 15px; }
   .tile, .chcol, .box, .pot, .emb-card { background: var(--surface-soft); border: 2px solid var(--border); }
   .wide { background: transparent; border: 0; padding: 0; }
