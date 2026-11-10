@@ -127,7 +127,7 @@ window.SIM = window.SIM || {};
   // まだ表も入力もない素質は、自動の下書き（data/spec_draft.js：日本語Wikiの説明文からルールで作った、確認前の内容）を使う
   const KN = { W: "属性ダメ", Bs: "スキルダメ", Bb: "通常ダメ", Bu: "必殺ダメ", mark: "印ダメ", atkPct: "攻撃力%", hpPct: "最大HP%", hpFlat: "最大HP", critRate: "会心率", critDmg: "会心ダメ",
     taken: "敵の被ダメ", takenSkill: "敵のスキル被ダメ", takenBasic: "敵の通常被ダメ", takenMark: "敵の印被ダメ", markMult: "印ダメ（別枠）", extra: "追加ヒット" };
-  const TO = { all: "全員", main: "主力", lux: "同じ属性の全員", enemy: "" };
+  const TO = { all: "全員", main: "主力", lux: "同じ属性の全員", others: "自分以外", enemy: "" };
   const summary = e => e.map(x => (KN[x.k] || x.k) + (x.to && TO[x.to] ? "（" + TO[x.to] + "）" : "") + (x.stk > 1 ? "×" + x.stk + "重" : "") + (x.k === "extra" && x.m ? " " + x.m + "%" : "")).join("・");
   (S.CH || []).forEach(c => {
     const dr = (window.SPEC_DRAFT || {})[c.en];
@@ -283,6 +283,7 @@ window.SIM = window.SIM || {};
       if (to === "all") return team.slice();
       if (to === "main") return [team[0]];
       if (to === "sup") return team.slice(1);   // 支援の巡遊者（2人）
+      if (to === "others") return team.filter(id => id !== oid);   // 自分以外の味方（例: アンズの友達の力）
       if (to === "selfNonEl") return team.filter((id, i) => id === oid || chs[i].el !== el);   // 自分と、自分と違う属性の味方（例: ウィローの砕沫の余韻）
       if (to === "nonEl") return team.filter((id, i) => id !== oid && chs[i].el !== el);   // 自分と違う属性の味方だけ
       if (to === "luxAB") return team.filter((id, i) => chs[i].el === el && (chs[i].role === "アタッカー" || chs[i].role === "バランサー"));   // 同じ属性のアタッカー・バランサー（例: ナツカの嵐の目）
@@ -384,7 +385,7 @@ window.SIM = window.SIM || {};
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）" };
   const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
     jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃" };
-  const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人" };
+  const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人", others: "自分以外の味方" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
   S.TAGJ = TAGJ; S.HTJ = HTJ;
