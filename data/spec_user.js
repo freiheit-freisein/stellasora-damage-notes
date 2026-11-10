@@ -3102,5 +3102,22 @@ window.SPEC_USER = {
    "draft": false,
    "off": true
   }
+ },
+ "Caramel": {
+  "Earcatch Riff": {
+   "done": true,
+   "e": [
+    {
+     "k": "atkPctHit",
+     "n": 0,
+     "stk": 9,
+     "tags": [
+      "minion"
+     ]
+    }
+   ],
+   "txt": "悪魔のスピーカー（従者の攻撃）だけの攻撃力%（最大9重）",
+   "note": "2026-11-10 キャラメル本人の攻撃にもかかっていたのを直した"
+  }
  }
 };
