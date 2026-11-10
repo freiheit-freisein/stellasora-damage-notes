@@ -95,7 +95,8 @@
     const id = G.team[V.tilesFor] || G.team.main;
     const o = R.team[id];
     const c = o.c, st = o.st, en = G.enemyObj;
-    const dd = E.enemyD(en, c.el, st.pen, G);
+    const ag = o.ef.ag || {}, defX = (ag.defDown || 0) + (ag.defPen || 0);   // 防御力低下・全部の攻撃の防御貫通（特定の攻撃だけの貫通は、内訳の各ヒットに入る）
+    const dd = E.enemyD(en, c.el, st.pen, G, defX);
     const ref = c.ref === "hp" ? st.hp : st.atk;
     const W = 1 + st.elemAdd + o.ef.W;
     const taken = o.ef.taken * (G.other.taken || 1) * (G.other.mult || 1) * dd.extra;
@@ -104,7 +105,7 @@
     const d3 = n => (n == null || !isFinite(n)) ? "—" : n.toFixed(3);   // 倍率は小数3桁にそろえる（1.000 など）
     const t = (label, val, sub) => `<div class="mi" title="${esc(label + "：" + sub)}"><span>${label.replace(/^ダメージ/, "").replace(/倍率$/, "")}</span><b>${val}</b></div>`;
     $("mline").innerHTML = `<div class="ml-h"><span class="unitbar ml-who" role="group" aria-label="共通の倍率を出す巡遊者">${who}</span></div>
-      <div class="ml-items" role="group" aria-label="共通の倍率">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", d3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", d3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", d3(dd.def), "敵の防御")}${t("その他倍率", d3(taken), "被ダメージ・実測合わせ等")}</div>`;
+      <div class="ml-items" role="group" aria-label="共通の倍率">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", d3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", d3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", d3(dd.def), "敵の防御" + (defX ? `（防御力低下・防御貫通 ${fmt(defX)}）` : ""))}${t("その他倍率", d3(taken), "被ダメージ・実測合わせ等")}</div>`;
   }
 
   // ---- 選択ボタン ----

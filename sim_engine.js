@@ -15,10 +15,18 @@
     if (E <= 750) return 1 - (0.35 + 0.25 * Math.pow((E - 251) / 499, 2));
     return 1 - (0.9 + 0.09 * Math.pow((E - 751) / 1249, 2));
   }
-  function enemyD(en, el, pen, G) {
+  // 防御（コミュニティの式＋空壺ノ王の実測8点で確認・2026-11-11）。係数 = 1 − 40D ÷ (32D + 24000)、D = 防御力 − 防御貫通 − 防御力低下（0より下にならない）
+  //   敵ごとの防御倍率（en.def。ボス 0.5 ＝防御力500）から防御力を逆算して、防御貫通・防御力低下（defX）を引く。防御倍率 1 の敵は防御力0なので変わらない
+  const defCoef = D => 1 - 40 * D / (32 * D + 24000);
+  const defOf = c => c >= 1 ? 0 : 24000 * (1 - c) / (32 * c + 8);
+  function defMult(c, x) {
+    if (!(x > 0)) return c;
+    return defCoef(Math.max(0, defOf(c) - x));
+  }
+  function enemyD(en, el, pen, G, defX) {
     const res = en.res[el] != null ? en.res[el] : (en.resDefault != null ? en.resDefault : 250);   // 書いていない属性は resDefault（ボスは等倍＝750）
     const weak = en.weak.indexOf(el) >= 0;
-    const parts = { def: en.def, weak: weak ? en.weakMult : 1, res: resMult(res - Math.min(pen || 0, PEN_CAP)), extra: (en.extra && en.extra[el]) || 1 };
+    const parts = { def: defMult(en.def, defX || 0), defX: defX || 0, weak: weak ? en.weakMult : 1, res: resMult(res - Math.min(pen || 0, PEN_CAP)), extra: (en.extra && en.extra[el]) || 1 };
     parts.D = parts.def * parts.weak * parts.res * parts.extra;
     return parts;
   }
@@ -230,7 +238,7 @@
       const mh = (hid && ef.hit[hid]) || {};
       const tags = h.tags || [];
       // タグで指定された効果（長剣・光刃など）
-      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0, wAdd = 0, aAdd = 0, tAdd = 0;
+      let mAdd = 0, bAdd = 0, crAdd = 0, cdAdd = 0, wAdd = 0, aAdd = 0, tAdd = 0, dpAdd = 0;
       const man = st.man || {};
       ag.mods.forEach(mo => {
         if (mo.tags && !mo.tags.some(t => tags.indexOf(t) >= 0)) return;
@@ -244,6 +252,7 @@
         else if (mo.k === "Bb" && type === "basic") bAdd += mo.v;
         else if (mo.k === "W") wAdd += mo.v;
         else if (mo.k === "taken") tAdd += mo.v;   // その攻撃だけに乗る敵の被ダメージ（被ダメージの足し算に入れる）
+        else if (mo.k === "defPen") dpAdd += mo.v;   // その攻撃だけの防御貫通（例: セイナ(原点)の極星の構え）
         else if (mo.k === "atkPctHit") aAdd += mo.v;   // そのヒットだけの攻撃力%（例: エレノアのドローン）   // 特定の攻撃だけの属性ダメージ（例: チトセの通常攻撃の6撃目だけ）
       });
       let refVal;
@@ -263,7 +272,7 @@
       if (type === "basic") taken *= ag.takenBasic || 1;
       if (type === "ult") taken *= ag.takenUlt || 1;
       (S.DEFAULT_ENEMY_TRAITS[G.enemy] || []).forEach(tr => { if (traits[tr.id] && tr.ht.indexOf(type) >= 0) taken *= tr.x; });   // 敵の特性
-      const dd = enemyD(en, c.el, st.pen, G);
+      const dd = enemyD(en, c.el, st.pen, G, (ag.defDown || 0) + (ag.defPen || 0) + dpAdd);   // 防御力低下（敵）＋防御貫通（自分の全部の攻撃）＋この攻撃だけの防御貫通
       const markX = type === "mark" && c.id === "noya" ? (en.markX || 1) : 1;   // セイナ(原点)の印だけの別枠。ほかの印にはかからない（グレイの地の印で実測）
       const mult = m / 100 * (1 + (mh.mult || 0)) * (1 + mAdd);
       const normal = refVal * mult * W * B * taken * dd.D * markX * (other.mult || 1);
@@ -327,6 +336,6 @@
     };
   }
 
-  S.engine = { calcTeam, battleView, outsideStats, stats, skillVal, enemyD, resMult, recordBonus, emblemSum, noteSum, lrSum, TYPE_NAME };
+  S.engine = { calcTeam, battleView, outsideStats, stats, skillVal, enemyD, defMult, resMult, recordBonus, emblemSum, noteSum, lrSum, TYPE_NAME };
   if (typeof module !== "undefined") module.exports = S.engine;
 })(window.SIM);

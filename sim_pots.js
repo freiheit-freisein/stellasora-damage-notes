@@ -25,7 +25,7 @@ window.SIM = window.SIM || {};
       "Sinbreaker": { txt: "特殊通常攻撃「星震の斬撃」 623%×2（通常・大剣・主力スキルのLvで伸びる）／通常攻撃の中の大剣の攻撃だけ、通常攻撃ダメージ +20%", e: [X("basic", "星震の斬撃（特殊通常攻撃）", { m: 623, lv: "main", c: 2, t: "basic", tags: ["great"] }), { k: "Bb", raw: 0.20, tags: ["great"], grp: "basic" }] },
       "Eclipse Phantom": { txt: "ジャッジメント後のフィールド 41〜165%×6（通常）＋大剣・スターフォールの通常会心率", e: [X("basic", "フィールド（Eclipse Phantom）", { n: 0, c: 6, t: "basic", tags: ["great"] }), { k: "critRate", n: 1, tags: ["great", "starfall"], ht: "basic" }] },
       "Gavel of Absolution": { txt: "スターフォール消滅時の雷撃（通常）＋通常会心率", e: [X("*", "雷撃（Gavel of Absolution）", { n: 0, t: "basic", perTag: "starfall" }), { k: "critRate", n: 1, ht: "basic" }] },
-      "Resolve: Sunder": { txt: "防御貫通（防御の式が未確認のため計算に未反映）", e: [] },
+      "Resolve: Sunder": { txt: "大剣の攻撃と星雷に防御貫通 +15〜60（空壺ノ王で実測と一致・2026-11-11）", e: [{ k: "defPen", n: 0, tags: ["great", "starfall"] }] },
       "Astral Brilliance": { txt: "光属性の人数×耐性貫通", e: [{ k: "pen", n: 0, flat: true, perLux: true }] },
       "Searing Sun": { txt: "残光の敵に光属性ダメージ＋、最大HP＋（基礎値に加算）", e: [{ k: "W", n: 0, cond: "glimmer" }, { k: "hpFlat", n: 1, flat: true }] },
       "Veteran's Grit": { txt: "最大HP＋（基礎値に加算）", e: [{ k: "hpFlat", n: 0, flat: true }] },
@@ -82,7 +82,7 @@ window.SIM = window.SIM || {};
       "Touch of Nature": { txt: "（みんな寝転んで）地属性の全員の印ダメージ＋（別枠の掛け算）。眩い正義などと重なったときの形は未確認（掛け算で計算）", e: [{ k: "markMult", n: 0, to: "lux" }] },
     },
     tilia: {
-      "Shield Counter": { txt: "主力スキル：反撃の追加 245%（スキル）", e: [X("main", "反撃（Shield Counter）", { m: 245, tags: ["counter"] })] },
+      "Shield Counter": { txt: "主力スキル：反撃の追加 245%（スキル）＋8秒間 敵の防御力 -110", e: [X("main", "反撃（Shield Counter）", { m: 245, tags: ["counter"] }), { k: "defDown", n: 1, to: "enemy" }] },
       "Perfect Triangle Formation": { txt: "防御の効果（火力には影響しない）", e: [] },
       "Bright Counter": { txt: "全員の攻撃力%（最大12重）", e: [{ k: "atkPct", n: 0, stk: 12, to: "all" }] },
       "Block Enhancement: Lux": { txt: "全員の攻撃力%", e: [{ k: "atkPct", n: 0, to: "all" }] },
@@ -126,7 +126,7 @@ window.SIM = window.SIM || {};
   });
   // まだ表も入力もない素質は、自動の下書き（data/spec_draft.js：日本語Wikiの説明文からルールで作った、確認前の内容）を使う
   const KN = { W: "属性ダメ", Bs: "スキルダメ", Bb: "通常ダメ", Bu: "必殺ダメ", mark: "印ダメ", atkPct: "攻撃力%", hpPct: "最大HP%", hpFlat: "最大HP", critRate: "会心率", critDmg: "会心ダメ",
-    taken: "敵の被ダメ", takenSkill: "敵のスキル被ダメ", takenBasic: "敵の通常被ダメ", takenMark: "敵の印被ダメ", markMult: "印ダメ（別枠）", extra: "追加ヒット" };
+    taken: "敵の被ダメ", takenSkill: "敵のスキル被ダメ", takenBasic: "敵の通常被ダメ", takenMark: "敵の印被ダメ", markMult: "印ダメ（別枠）", extra: "追加ヒット", defDown: "敵の防御低下", defPen: "防御貫通" };
   const TO = { all: "全員", main: "主力", lux: "同じ属性の全員", others: "自分以外", enemy: "" };
   const summary = e => e.map(x => (KN[x.k] || x.k) + (x.to && TO[x.to] ? "（" + TO[x.to] + "）" : "") + (x.stk > 1 ? "×" + x.stk + "重" : "") + (x.k === "extra" && x.m ? " " + x.m + "%" : "")).join("・");
   (S.CH || []).forEach(c => {
@@ -269,13 +269,14 @@ window.SIM = window.SIM || {};
     return v1 != null ? { k: c.k, m: v1 } : null;
   };
   const coreLvOf = (en, pn, m) => { const h = coreLvHit(en, pn, m); return h ? h.k : null; };
+  const DEFK = { defDown: 1, defPen: 1 };   // 実数で持つ効果（防御力低下・防御貫通）
   function collect(G, team) {
     const chs = team.map(id => S.CH.find(c => c.id === id));
     // 「光属性の全員」などは、効果を持つ巡遊者と同じ属性の全員として扱う（光チーム以外にも使えるようにした）
     const elOf = oid => chs[team.indexOf(oid)].el;
     const sameN = oid => chs.filter(c => c.el === elOf(oid)).length;
     const out = {};
-    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, markMult: 1, hpFlat: 0, atkFlat: 0, pen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
+    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, markMult: 1, hpFlat: 0, atkFlat: 0, pen: 0, defDown: 0, defPen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
     const cond = (k, oid) => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? sameN(oid) === chs.length : k === "mainSame" ? chs[0].el === elOf(oid) : true);
     const recvOf = (to, oid, e) => {
       const el = elOf(oid);
@@ -297,7 +298,7 @@ window.SIM = window.SIM || {};
       let v = 0;
       if (e.raw != null) v = e.raw;
       else if (e.arr) v = lvVal(e.arr, lv, e.over, e.ext || info.ext) / (e.k === "extra" ? 1 : 100);
-      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || info.ext) / (e.flat || e.k === "extra" ? 1 : 100);
+      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || info.ext) / (e.flat || e.k === "extra" || DEFK[e.k] ? 1 : 100);   // 防御貫通・防御力低下は実数
       const skey = key + (e.sk ? ":" + e.sk : "");
       let stk = (cs.pstk || {})[skey];
       if (stk == null || stk === "") stk = e.stk || 1;
@@ -323,6 +324,7 @@ window.SIM = window.SIM || {};
         if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
         if (e.k === "takenBasic") { a.takenBasic = (a.takenBasic || 1) * (1 + v); return; }
         if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || ((e.tags || e.grp) && (e.k === "Bs" || e.k === "Bb" || e.k === "W" || e.k === "atkPctHit"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: e.cond || null }); return; }
+        if (e.k === "defPen" && (e.tags || e.ht || e.grp)) { a.mods.push({ k: "defPen", v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: null }); return; }   // 特定の攻撃だけの防御貫通
         if (e.k === "mark") { a.markAdd += v; return; }
         if (a[e.k] != null) a[e.k] += v;
       });
@@ -382,7 +384,7 @@ window.SIM = window.SIM || {};
   // 計算に使っている中身を、そのLvの値つきの短い文にする（素質カードの「計算: …」）
   const KJ = { W: el => el + "属性ダメージ", Bs: "スキルダメージ", Bb: "通常攻撃ダメージ", Bu: "必殺技ダメージ", mark: "印ダメージ", markMult: "印ダメージ（別枠の掛け算）",
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
-    taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）" };
+    taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）", defDown: "敵の防御力低下", defPen: "防御貫通" };
   const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
     jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃" };
   const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人", others: "自分以外の味方" };
@@ -398,13 +400,13 @@ window.SIM = window.SIM || {};
       let v = 0;
       if (e.raw != null) v = e.raw;
       else if (e.arr) v = lvVal(e.arr, lv, e.over, e.ext || ext) / (e.k === "extra" ? 1 : 100);
-      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || ext) / (e.flat || e.k === "extra" ? 1 : 100);
+      else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || ext) / (e.flat || e.k === "extra" || DEFK[e.k] ? 1 : 100);
       const xh = e.k === "extra" && !e.lv ? coreLvHit(c && c.en, name, e.m != null ? e.m : v) : null, xlv = e.k === "extra" ? (e.lv || (xh && xh.k)) : null;
       if (e.k === "extra") return `追加ヒット ${r1(xh ? xh.m : (e.m != null ? e.m : v))}%${xlv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[xlv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）×${e.c || 1}`;
       if (e.k === "count") return `ヒット回数 +${e.add}`;
       if (e.k === "drop") return "";
       const kn = typeof KJ[e.k] === "function" ? KJ[e.k](e.el || c.el) : (KJ[e.k] || e.k);
-      const flat = e.flat || e.k === "hpFlat" || e.k === "atkFlat" || e.k === "pen";
+      const flat = e.flat || e.k === "hpFlat" || e.k === "atkFlat" || e.k === "pen" || DEFK[e.k];
       const tg = (e.grp ? (S.SKILL_NAME && S.SKILL_NAME[e.grp] || e.grp) + "の中の" : "") + (e.tags && e.tags.length ? e.tags.map(t => TAGJ[t] || t).join("・") + "の" : "");
       const notes = [];
       if (e.k === "taken" && !e.to) notes.push("自分の攻撃だけ");
