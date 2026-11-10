@@ -9,8 +9,18 @@
   const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
   const ST = { baseAtk: "基礎攻撃力", baseHp: "基礎HP", baseDef: "基礎防御力", elemDmg: "属性ダメージ", skillDmg: "スキルダメージ", basicDmg: "通常攻撃ダメージ", ultDmg: "必殺技ダメージ", markDmg: "印ダメージ", critRate: "会心率", critDmg: "会心ダメージ", atkPct: "攻撃力", hpPct: "最大HP" };
   const KEY = "stellasora-lr-check-v1", SELKEY = "stellasora-edit-lr";
-  let chk = {};
-  try { chk = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { chk = {}; }
+  // 取り込み済みの確認（data/lr_check.js）。版（LR_CHECK_REV）が変わったら、ブラウザに残っている同じロスレコの確認は消してファイルを使う
+  const FILE = window.LR_CHECK || {};
+  try {
+    const rev = window.LR_CHECK_REV || "", RKEY = "stellasora-lr-check-rev";
+    if (rev && localStorage.getItem(RKEY) !== rev) {
+      const sv = JSON.parse(localStorage.getItem(KEY)) || {};
+      Object.keys(FILE).forEach(id => { delete sv[id]; });
+      localStorage.setItem(KEY, JSON.stringify(sv)); localStorage.setItem(RKEY, rev);
+    }
+  } catch (e) { /* 保存なしでも動く */ }
+  let chk = JSON.parse(JSON.stringify(FILE));
+  try { Object.assign(chk, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { /* 無視 */ }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(chk)); } catch (e) { /* 無視 */ } };
   const V = { el: "", sel: null };
   try { Object.assign(V, JSON.parse(localStorage.getItem(SELKEY)) || {}); } catch (e) { /* 無視 */ }
@@ -160,6 +170,14 @@
   window.EDIT_LR = {
     render,
     // 書き出しの中身（キー: c:コア効果:数字の番号:突破、a:アシスト:効果:数字の番号:Lv、st:ステータス、nt:初期音符の番号）
-    exportText: () => !Object.keys(chk).length ? "" : "\n// ロスレコの確認（キー: c:コア効果:数字の番号:突破、a:アシスト:効果:数字の番号:Lv、st:ステータス、nt:初期の音符の番号。g=ゲーム、r=報告、fix=確定）\nwindow.LR_CHECK = " + JSON.stringify(chk) + ";\n",
+    // 取り込み済み（data/lr_check.js）から変わったロスレコだけ書き出す。消したものは名前を出す
+    exportText: () => {
+      const d = {}; Object.keys(chk).forEach(id => { if (JSON.stringify(chk[id]) !== JSON.stringify(FILE[id])) d[id] = chk[id]; });
+      const del = Object.keys(FILE).filter(id => !chk[id]);
+      if (!Object.keys(d).length && !del.length) return "";
+      const NL = "\n";
+      return NL + "// ロスレコの確認（キー: c:コア効果:数字の番号:突破、a:アシスト:効果:数字の番号:Lv、st:ステータス、nt:初期の音符の番号。g=ゲーム、r=報告、fix=確定）。取り込み済みから変わったものだけ" + NL +
+        "window.LR_CHECK = " + JSON.stringify(d) + ";" + NL + (del.length ? "// 消したロスレコの確認: " + del.join("、") + NL : "");
+    },
   };
 })();

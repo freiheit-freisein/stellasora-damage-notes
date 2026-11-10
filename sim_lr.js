@@ -151,6 +151,16 @@
       if (!it) return;
       Object.assign(it, o, { skip: false, e: o.e.map(e => { const a = e.v; return Object.assign({}, e, { v: lv => at(a, lv) }); }) });
     };
+    // FIX に加えて、説明文の数字（最大の段の値）も段ごとの値に置き換える（ゲームの画面で確かめた値）
+    const FIXV = (name, path, o) => {
+      const it = itemOf(name, path);
+      if (!it) return;
+      const a = o.e[0].v, top = a.length, t0 = typeof it.txt === "function" ? it.txt(top) : it.txt;
+      const f = x => String(Math.round(x * 1000) / 10) + "%";
+      FIX(name, path, o);
+      const re = new RegExp("(?<![0-9.])" + f(a[top - 1]).replace(".", "[.]"));
+      if (re.test(t0)) it.txt = lv => t0.replace(re, f(at(a, lv)));
+    };
     const WHY = (name, paths, why) => paths.forEach(p => { const it = itemOf(name, p); if (it) it.why = why; });
     const NA_SUMMON = "従者の与えるダメージは計算に未対応", NA_NONUM = "数値の書かれていない効果は計算に未対応", NA_ATKDOWN = "敵の攻撃力の低下は計算に未対応";
 
@@ -196,7 +206,6 @@
     FIX("風に舞う想い", "a1.0", { n: "shihen", e: [{ k: "Bu", to: "main", el: "水", v: P(0.7, 1.4, 2.1, 2.8, 3.5) }] });
     FIX("千変万花", "a0.1", { n: "yozakura", e: [{ k: "takenUlt", to: "el", el: "闇", v: P(0.6, 0.7, 0.8, 0.9, 1) }] });
     FIX("夜宴に踊る影", "a0.1", { n: "kasumi", e: [{ k: "Bs", to: "main", el: "闇", v: P(0.4, 0.5, 0.6, 0.7, 0.8) }, { k: "Bu", to: "main", el: "闇", v: P(0.4, 0.5, 0.6, 0.7, 0.8) }] });
-    FIX("似たもの同士", "c1", { n: "kouryuu", e: [{ k: "atkPct", to: "main", v: R6(1, 2) }] });
     FIX("似たもの同士", "a0.1", { n: "kouryuu", e: [{ k: "Bs", to: "main", v: P(0.4, 0.8, 1.2, 1.6, 2) }] });
     FIX("揺らめく光の向こう側", "a1.0", { n: "tide", e: [{ k: "W", to: "el", el: "水", v: P(2, 2, 2, 2, 10) }] });
     FIX("揺らめく光の向こう側", "a1.1", { n: "tide", e: [{ k: "atkPct", to: "role:サポーター", el: "水", v: P(2, 2, 2, 2, 10) }] });
@@ -208,6 +217,18 @@
     FIX("サマーマーチ", "a1.0", { n: "bigwave", e: [{ k: "atkPct", to: "main", el: "闇", v: P(2.4, 4.8, 7.2, 9.6, 12) }] });
     FIX("飛びたて、籠の鳥", "a0.1", { n: "hane", e: [{ k: "critDmgSkill", to: "main", v: P(1.5, 2, 2.5, 3, 3.5) }] });
     FIX("栄光の瞬間", "a0.1", { n: "eikou", e: [{ k: "Bs", to: "main", el: "風", v: P(0.1, 0.2, 0.3, 0.4, 0.5) }] });
+
+    // E. ゲームの画面で確かめた値（素質の確認ページ「ロスレコの確認」で採用・2026-11-11）。突破I〜VI・Lv1〜5で1段ずつ伸びる（Wikiの「I〜Vが同じ」ではない）
+    FIXV("惹かれ合う星", "c1", { n: "shinwa", e: [{ k: "W", to: "main", v: P(3, 3.6, 4.2, 4.8, 5.4, 6) }] });
+    FIXV("惹かれ合う星", "c3", { e: [{ k: "takenBasic", to: "el", el: "光", v: P(10, 12, 14, 16, 18, 20) }] });
+    FIXV("惹かれ合う星", "a0.0", { e: [{ k: "W", to: "el", el: "光", v: P(4, 8, 12, 16, 20) }] });
+    FIXV("惹かれ合う星", "a0.1", { n: "shinwa", e: [{ k: "critDmg", to: "main", v: P(2, 2.5, 3, 3.5, 4) }] });
+    FIXV("惹かれ合う星", "a1.0", { e: [{ k: "critDmg", to: "main", v: P(15, 20, 25, 30, 35) }] });
+    FIXV("惹かれ合う星", "a1.1", { e: [{ k: "critDmgSkill", to: "main", v: P(15, 20, 25, 30, 35) }] });
+    FIXV("似たもの同士", "c1", { n: "kouryuu", e: [{ k: "atkPct", to: "main", v: P(1, 1.2, 1.4, 1.6, 1.8, 2) }] });
+    FIXV("似たもの同士", "c2", { e: [{ k: "Bb", to: "main", el: "光", v: P(6, 7.2, 8.4, 9.6, 10.8, 12) }] });
+    FIXV("かけがえのない時間", "c0", { e: [{ k: "W", to: "el", el: "光", v: P(5, 8, 11, 14, 17, 20) }] });
+    FIXV("穴あきおサボり", "a1.0", { e: [{ k: "W", to: "el", el: "光", v: P(1, 2, 3, 4, 5) }] });
 
     // D. 計算に未対応（理由を出す）
     WHY("魔女の秘薬", ["a0.1", "a1.2"], NA_SUMMON);
