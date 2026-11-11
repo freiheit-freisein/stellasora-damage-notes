@@ -126,8 +126,6 @@
   });
   // ゲームの画面で確かめた初期の音符（Wikiの値と違ったもの）。2026-11-12 惹かれ合う星: 器用 Lv10・幸運 Lv4（Lv90。画面のLv70では器用8。Wikiは 幸運10・器用4 と逆だった）
   [["w45", [{ note: "器用の音符", lv: 10 }, { note: "幸運の音符", lv: 4 }]]].forEach(([id, ns]) => { const r = L.find(x => x.id === id); if (r) r.sub = Object.assign({}, r.sub, { startNotes: ns }); });
-  // Wikiにステータスが無かったもの（報告の値。基礎攻撃力は突破VIの値で持つ＝突破Iは −130×5）。惹かれ合う星: 突破I 981・突破VI 1631、光属性ダメージ15%
-  [["w45", { baseAtk: 1631, elemDmg: 0.15 }]].forEach(([id, st]) => { const r = L.find(x => x.id === id); if (r && !Object.keys(r.stats || {}).length) r.stats = st; });
   // Wikiにステータスやサブの初期の音符が無かったロスレコに、ゲームの画面で確かめた値を入れる（素質の確認ページ「ロスレコの確認」・2026-11-11）
   //   基礎攻撃力は突破VIの値（Wikiのロスレコは突破VIの値で持つ。突破I〜VIは +130 ずつ）、属性ダメージはそのロスレコの属性
   const GAME_ST = {
