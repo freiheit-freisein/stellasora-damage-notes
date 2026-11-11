@@ -175,7 +175,8 @@ for i, (name, v) in enumerate(d.items()):
     for j, a in enumerate(v['assists']):
         if not a['levels']:
             continue
-        rec['assists'].append({'id': 'a' + str(j), 'name': a['name'], 'notes': a['notes'], 'base': a['levels'][0]['need'] or 10,
+        # 解放に必要な音符: Wikiの「強擊」（字の違い）をゲームの「強撃」にそろえる
+        rec['assists'].append({'id': 'a' + str(j), 'name': a['name'], 'notes': [n.replace('擊', '撃') for n in a['notes']], 'base': a['levels'][0]['need'] or 10,
                                'items': merge_levels([l['text'] for l in a['levels']], el)})
     for it in rec['core'] + [x for a in rec['assists'] for x in a['items']]:
         cnt['items'] += 1

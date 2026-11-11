@@ -270,6 +270,9 @@
     g.lrRank = {}; g.lrMain.filter(Boolean).forEach(rid => { g.lrRank[rid] = 1; });   // 突破は I から（持っている突破は分からないので）
     g.notes = {};
     SLOTS.forEach(([k]) => { const cs = g.chars[g.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
+    // アシスト効果の条件付きの効果（「必殺技の発動時から」など）は、既定ではオフ。ビルドを作るときは、条件を満たしている前提でオンにして選ぶ
+    g.lrOn = Object.assign({}, g.lrOn);
+    g.lrMain.filter(Boolean).forEach(rid => { const fx = S.LR_FX[rid]; if (fx) fx.assists.forEach(a => a.items.forEach(it => { if (it.off && !it.skip) g.lrOn[rid + ":" + a.id + ":" + it.id] = true; })); });
     const row = (window.RECORD_LEVELS || []).find(x => x[0] === +opts.recordLv);
     const budget = row ? row[1] : 0, log = [], memo = new Map();
     const nm = (id, key) => JA((Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === key)) || key, id);
@@ -299,6 +302,7 @@
       const evalC = cd => {
         const x = clone(g); cd.fn(x);
         const cost = recordScore(x) - s0; if (cost <= 0 || s0 + cost > budget) return { r: -1, cost };
+        if (S.NOTE_ALL.some(n => (+((x.notes || {})[n]) || 0) > 99)) return { r: -1, cost };   // 音符は1種類99個まで（入力欄と同じ）
         const gain = sum3(dmgParts(x)) - d0;
         return { r: gain > 0 ? gain / cost : -1, cost };
       };
