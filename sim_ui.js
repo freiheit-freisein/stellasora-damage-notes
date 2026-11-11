@@ -781,6 +781,13 @@
       <div class="secg" style="margin-top:12px"><div class="sec"><h3>音符</h3><ul class="wz-pots">${notes || "<li>なし</li>"}</ul></div><div class="sec"><h3>ロスレコ</h3><ul class="wz-pots">${asl}</ul></div></div>
       <div class="foot"><button class="btn-add" data-act="wiz:lv">戻る</button><button type="button" class="btn-add pri" data-act="wiz-apply">このビルドで始める</button></div>`;
   }
+  // 「条件を指定してビルドを作る」は試作なので隠しておく。手元で開いたとき、または URL に ?wizard=1 を付けて開いたとき（このブラウザに覚える）だけ出す。?wizard=0 で消す
+  const WIZ_ON = (() => {
+    const q = new URLSearchParams(location.search).get("wizard");
+    try { if (q === "1") localStorage.setItem("stellasora-sim-wizard", "1"); if (q === "0") localStorage.removeItem("stellasora-sim-wizard"); } catch (e) { /* 無視 */ }
+    let on = false; try { on = localStorage.getItem("stellasora-sim-wizard") === "1"; } catch (e) { /* 無視 */ }
+    return on || q === "1" || location.protocol === "file:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  })();
   function renderPick() {
     const dlg = $("pickDlg"); if (!dlg || !dlg.open) return;
     const p = V.pick3 = V.pick3 || { main: null, s1: null, s2: null };
@@ -798,7 +805,7 @@
       ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「計算に選んだ巡遊者を反映する」を押してください（入力中のデータは、すべて初期値に戻ります）。「条件を指定してビルドを作る」では、ロスレコと記録レベルを選ぶと、素質と音符を割り振ったビルドを作ります（試作）。")}
       <div class="pk-bar">${chosen}<span style="flex:1"></span><span class="unitbar" role="group" aria-label="並び順"><button type="button" class="${pkSort === "rel" ? "on" : ""}" aria-pressed="${pkSort === "rel"}" data-act="pksort:rel">実装順</button><button type="button" class="${pkSort === "kana" ? "on" : ""}" aria-pressed="${pkSort === "kana"}" data-act="pksort:kana">あいうえお順</button></span></div>
       <div class="pk-list">${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}</div>
-      ${msgOf("pick")}<div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button><button type="button" class="btn-add" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して反映する" : "計算に選んだ巡遊者を反映する"}</button><button type="button" class="btn-add pri" data-act="wiz:lr"${full ? "" : " disabled"}>条件を指定してビルドを作る<span class="beta-s" style="margin-left:6px">試作</span></button></div>`;
+      ${msgOf("pick")}<div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button><button type="button" class="btn-add" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して反映する" : "計算に選んだ巡遊者を反映する"}</button>${WIZ_ON ? `<button type="button" class="btn-add pri" data-act="wiz:lr"${full ? "" : " disabled"}>条件を指定してビルドを作る<span class="beta-s" style="margin-left:6px">試作</span></button>` : ""}</div>`;
     const ls2 = dlg.querySelector(".pk-list"); if (ls2) ls2.scrollTop = keep; dlg.scrollTop = keepD;
   }
   function renderLoad() {
