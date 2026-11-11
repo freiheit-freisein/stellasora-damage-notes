@@ -295,7 +295,12 @@
   };
 
   // 突破を選べないロスレコの表記。メインは、コア効果を計算している突破（画面で確かめた突破）で固定。サブ（★4以下）は基礎ステータスが突破で変わらない
-  S.lrFixedTxt = (G, rid, arr) => arr === "lrMain" && S.LR_FX[rid] ? `突破${S.lrRoman(S.lrRankOf(G, rid).rank)}で固定` : "突破で変わらない";
+  // ★5でもステータスが入っていないもの（Wikiに無い）は、突破で何が変わるか分からないので「ステータス未登録」
+  S.lrFixedTxt = (G, rid, arr) => {
+    const r = L.find(x => x.id === rid);
+    if (r && r.rarity >= 5 && !(r.stats || {}).baseAtk) return "ステータス未登録";
+    return arr === "lrMain" && S.LR_FX[rid] ? `突破${S.lrRoman(S.lrRankOf(G, rid).rank)}で固定` : "突破で変わらない";
+  };
   S.lrRankOf = (G, rid) => {
     const fx = S.LR_FX[rid], r = L.find(x => x.id === rid);
     const v = +((G.lrRank || {})[rid]);
