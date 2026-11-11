@@ -527,7 +527,7 @@
       const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメージ") : "";
       return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>
         ${noteEq(`notes.${n}`, ini, t, from.length ? "サブのロスレコの初期: " + from.join("・") : "サブのロスレコの初期: なし")}
-        <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div><div class="note-per">1Lvで +${d ? Math.round(d.perLv * 10000) / 100 : 0}%</div></div>`;
+        <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div></div>`;
     };
     // 1段目: ステータスの音符、2段目: 属性の音符（6属性）
     const noteIn = `<div class="notes-row">${S.NOTE_BASE.map(noteCell).join("")}</div>

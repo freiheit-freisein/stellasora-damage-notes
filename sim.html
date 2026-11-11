@@ -469,15 +469,15 @@
   .note-nm { font-size: 12px; font-weight: 900; color: var(--indigo); }
   .note-cell input[type=number] { width: 100%; text-align: center; min-height: 34px; font-weight: 900; font-size: 16px; padding: 0 4px; margin: 2px 0; }
   /* 初期 ＋ 獲得 ＝ 合計: 5列×3段。中の段の3つの数字は、同じ大きさ・同じ高さ（28px）で1行にそろえる */
-  .note-eq { display: grid; grid-template-columns: 1fr 12px 38px 12px 1fr; grid-template-rows: 14px 28px 14px; align-items: center; justify-items: center; column-gap: 2px; margin: 4px 0; }
-  .ne-l { font-size: 9px; font-weight: 700; color: var(--muted); line-height: 14px; }
+  .note-eq { display: grid; grid-template-columns: 1fr 12px 44px 12px 1fr; grid-template-rows: 22px 28px 22px; row-gap: 2px; align-items: center; justify-items: center; column-gap: 2px; margin: 4px 0; }
+  .ne-l { font-size: 9px; font-weight: 700; color: var(--muted); line-height: 22px; }
   .ne-n { font-family: var(--font-en); font-size: 17px; font-weight: 900; line-height: 28px; height: 28px; }
   .ne-ini { color: var(--muted); cursor: help; }
   .ne-ini.zero { opacity: .45; }
   .ne-tot { color: var(--nc); }
   .ne-op { font-size: 12px; font-weight: 900; color: var(--muted); line-height: 28px; }
-  .note-eq .vs-b { width: 38px; height: 14px; font-size: 8px; line-height: 14px; border-radius: 4px; }
-  .note-cell .note-eq input[type=number] { width: 38px; height: 28px; min-height: 0; margin: 0; padding: 0; border: 2px solid var(--border); border-radius: 6px; text-align: center; font-family: var(--font-en); font-size: 17px; font-weight: 900; line-height: 24px; -moz-appearance: textfield; }
+  .note-eq .vs-b { width: 44px; height: 22px; font-size: 12px; line-height: 22px; border-radius: 6px; }
+  .note-cell .note-eq input[type=number] { width: 44px; height: 28px; min-height: 0; margin: 0; padding: 0; border: 2px solid var(--border); border-radius: 6px; text-align: center; font-family: var(--font-en); font-size: 17px; font-weight: 900; line-height: 24px; -moz-appearance: textfield; }
   .note-eq input::-webkit-outer-spin-button, .note-eq input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .stp-b { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
   .note-fx { font-size: 11px; color: var(--muted); line-height: 1.35; min-height: 30px; }
