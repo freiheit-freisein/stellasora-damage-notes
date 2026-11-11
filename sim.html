@@ -147,8 +147,9 @@
   .tag-ng { font-size: 11px; background: var(--pink-soft); color: var(--text); border-radius: 999px; padding: 0 8px; font-weight: 700; margin-left: 4px; }
   /* 結果 */
   /* 結果: 巡遊者ごとのカードに、攻撃ごとの行（名前・倍率・ダメージ・比較）。押すと内訳 */
-  .rs-score { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; padding: 10px 14px; border: 2px solid var(--border); border-radius: 14px; background: var(--surface-soft); cursor: help; }
-  .rs-score span { font-size: 13px; font-weight: 900; color: var(--indigo); }
+  .rs-score { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; margin-bottom: 10px; padding: 10px 14px; border: 2px solid var(--border); border-radius: 14px; background: var(--surface-soft); cursor: help; }
+  .rs-score span { font-size: 15px; font-weight: 900; color: var(--indigo); }
+  .rs-score small { flex-basis: 100%; font-size: 11px; color: var(--muted); }
   .rs-score b { font-size: 22px; font-weight: 900; color: var(--indigo); font-variant-numeric: tabular-nums; }
   .rs-card { border: 2px solid var(--border); border-radius: 14px; background: var(--surface); margin-bottom: 10px; overflow: hidden; }
   /* 巡遊者の見出し: 1段目に名前、2段目に列の名前（倍率・ダメージ・比較を、それぞれの列の上に） */

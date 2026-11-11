@@ -1058,7 +1058,7 @@
     let scoreHtml = "";
     if (en.scoreRate && /指名手配/.test(en.name || "")) {
       const tot = S.contrib.sum3(S.contrib.dmgParts(G));
-      scoreHtml = `<div class="rs-score" title="3分間の回数（⑤ビルド確認）で合計したダメージ ${fmt(tot)} ÷ ${fmt(en.scoreRate)}（シーズン${en.season}の1ptあたりのダメージ）。テクニックスコアは含めません"><span>指名手配想定スコア</span><b>${fmt(tot / en.scoreRate)} pt</b></div>`;
+      scoreHtml = `<div class="rs-score" title="3分間の回数（⑤ビルド確認）で合計したダメージ ${fmt(tot)} ÷ ${fmt(en.scoreRate)}（シーズン${en.season}の1ptあたりのダメージ）。テクニックスコアは含めません"><span>指名手配想定スコア（テスト版）</span><b>${fmt(tot / en.scoreRate)} pt</b><small>テクニックスコアは対象外です。シーズン${en.season}のレート: ${fmt(en.scoreRate)}dmg = 1pt</small></div>`;
     }
     $("result").innerHTML = scoreHtml + SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);
