@@ -750,11 +750,11 @@
     if (w.step === "lr") {
       if (!w.rec) { const g = defState(); g.team = team; w.rec = S.contrib.recommendLR(g); }
       const sel = w.lr || [];
-      const rows = w.rec.slice(0, w.more ? 999 : 15).map((r, i) => `<label class="wz-lr${sel.indexOf(r.id) >= 0 ? " on" : ""}"><input type="checkbox" data-act="wiz-lr:${esc(r.id)}"${sel.indexOf(r.id) >= 0 ? " checked" : ""}${sel.length >= 3 && sel.indexOf(r.id) < 0 ? " disabled" : ""}><span class="wz-n">${i + 1}</span><span class="wz-nm">${esc(r.name)}<small>★${r.rarity}・${esc(r.el)}</small></span><b>+${(r.gain * 100).toFixed(1)}%</b></label>`).join("");
+      const rows = w.rec.slice(0, w.more ? 999 : 15).map((r, i) => `<label class="wz-lr${sel.indexOf(r.id) >= 0 ? " on" : ""}"><input type="checkbox" data-act="wiz-lr:${esc(r.id)}"${sel.indexOf(r.id) >= 0 ? " checked" : ""}><span class="wz-n">${i + 1}</span><span class="wz-nm">${esc(r.name)}<small>★${r.rarity}・${esc(r.el)}</small></span><b>+${(r.gain * 100).toFixed(1)}%</b></label>`).join("");
       return `${head(1, "ロスレコを選ぶ")}
-        ${helpTxt("wz-lr", "巡遊者の属性に合うロスレコを、メインに1枚入れたときにダメージが大きく伸びる順に並べています。持っているものを3枚まで選んでください。", "伸びは、突破I・素質なし・音符なしで、そのロスレコ1枚だけを入れたときの値です。アシスト効果は、次の段で音符をそろえたときに入ります。")}
+        ${helpTxt("wz-lr", "巡遊者の属性に合うロスレコを、メインに1枚入れたときにダメージが大きく伸びる順に並べています。持っているものに、いくつでもチェックを付けてください（メイン3枚・サブ3枚は自動で選びます）。", "伸びは、突破I・素質なし・音符なしで、そのロスレコ1枚だけを入れたときの値です。チェックしたものから、メインに3枚、残りからサブに3枚を、1枚ずつダメージがいちばん伸びるものを選んで入れます（サブは基礎ステータスと初期の音符だけが効きます）。アシスト効果は、次の段で音符をそろえたときに入ります。")}
         <div class="wz-list">${rows}</div>${w.rec.length > 15 && !w.more ? `<button type="button" class="help-btn" data-act="wiz-more" style="margin-top:6px">ほかのロスレコも出す（${w.rec.length - 15}枚）</button>` : ""}
-        <div class="foot"><button class="btn-add" data-act="wiz:pick">戻る</button><button type="button" class="btn-add pri" data-act="wiz:lv"${sel.length ? "" : " disabled"}>次へ（${sel.length}/3枚）</button></div>`;
+        <div class="foot"><button class="btn-add" data-act="wiz:pick">戻る</button><button type="button" class="btn-add pri" data-act="wiz:lv"${sel.length ? "" : " disabled"}>次へ（${sel.length}枚）</button></div>`;
     }
     if (w.step === "lv") {
       const opts = (RECORD_LEVELS || []).map(x => `<option value="${x[0]}"${+w.lv === x[0] ? " selected" : ""}>記録Lv${x[0]}（スコア ${fmt(x[1])}）</option>`).join("");
@@ -764,7 +764,7 @@
         <div class="foot"><button class="btn-add" data-act="wiz:lr">戻る</button><button type="button" class="btn-add pri" data-act="wiz:done">ビルドを作る</button></div>`;
     }
     // できたビルド
-    if (!w.plan) { const g = defState(); g.team = team; w.plan = S.contrib.planBuild(g, { lrMain: w.lr, recordLv: +w.lv }); }
+    if (!w.plan) { const g = defState(); g.team = team; w.plan = S.contrib.planBuild(g, { owned: w.lr, recordLv: +w.lv }); }
     const pl = w.plan, g = pl.g, LR = LOSTRECORDS;
     const potsOf = id => { const cs = g.chars[id]; return Object.keys(cs.pots2).filter(k => cs.pots2[k] > 0).map(k => ({ k, lv: cs.pots2[k], nm: (Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === k)) || k })); };
     const isCore = (id, k) => { const tk = TK(chOf(id).en), role = g.team.main === id ? "main" : "support"; return ((tk && tk.potentials[role]) || []).some(gr => gr.potentials.some(x => x.type === 1 && S.potKey(x.name) === k)); };
@@ -772,7 +772,7 @@
       return `<div class="sec"><h3>${l}：${esc(chOf(id).jp)}</h3>${ps.length ? `<ul class="wz-pots">${ps.sort((a, b) => isCore(id, b.k) - isCore(id, a.k) || b.lv - a.lv).map(x => `<li>${esc(JA(x.nm, id))}<b>${isCore(id, x.k) ? "コア" : "Lv" + x.lv}</b></li>`).join("")}</ul>` : '<p class="muted" style="margin:0">素質なし</p>'}</div>`; }).join("");
     const notes = S.NOTE_ALL.filter(n => +(g.notes || {})[n] > 0).map(n => `<li>${n.replace("の音符", "")}<b>${g.notes[n]}</b></li>`).join("");
     const nt = S.notesTotal(g);
-    const asl = g.lrMain.filter(Boolean).map(rid => { const fx = S.LR_FX[rid], r = LR.find(x => x.id === rid); return `<li>${esc(r ? r.name : rid)}<b>突破I</b>${fx ? fx.assists.map(a => { const lv = S.lrAssistLv(nt, a); return `<small>${esc(a.name)} ${lv ? "Lv" + lv : "未発動"}</small>`; }).join("") : ""}</li>`; }).join("");
+    const asl = g.lrMain.filter(Boolean).map(rid => { const fx = S.LR_FX[rid], r = LR.find(x => x.id === rid); return `<li>メイン：${esc(r ? r.name : rid)}<b>突破I</b>${fx ? fx.assists.map(a => { const lv = S.lrAssistLv(nt, a); return `<small>${esc(a.name)} ${lv ? "Lv" + lv : "未発動"}</small>`; }).join("") : ""}</li>`; }).join("") + g.lrSub.filter(Boolean).map(rid => { const r = LR.find(x => x.id === rid); return `<li>サブ：${esc(r ? r.name : rid)}<b>突破I</b>${r && r.sub && r.sub.length ? `<small>初期の音符 ${r.sub.map(x => `${esc(String(x.note).replace("の音符", ""))}+${x.lv}`).join("・")}</small>` : ""}</li>`; }).join("");
     return `${head(3, "できたビルド")}
       ${helpTxt("wz-done", `記録Lv${w.lv}（スコア ${fmt(pl.budget)}）で、ダメージがいちばん伸びるように割り振った目安です。最初はこれを目指してビルドしてみてください（試作）。`, "素質は、取れるかどうかは考えずに、ダメージの伸びだけで選んでいます。音符は、ロスレコのアシスト効果が発動するところも見ています。ロスレコの突破はIで計算しています。")}
       <p style="margin:6px 0 10px;font-weight:700">スコア ${fmt(pl.score)} / ${fmt(pl.budget)}</p>
@@ -1229,7 +1229,7 @@
       V.wiz.lv = V.wiz.lv || G.recordLv || 10;
       V.wiz.step = st; renderPick(); $("pickDlg").scrollTop = 0;
     }
-    else if (a.indexOf("wiz-lr:") === 0) { const id = a.slice(7), l = V.wiz.lr = V.wiz.lr || []; const i = l.indexOf(id); if (i >= 0) l.splice(i, 1); else if (l.length < 3) l.push(id); renderPick(); }
+    else if (a.indexOf("wiz-lr:") === 0) { const id = a.slice(7), l = V.wiz.lr = V.wiz.lr || []; const i = l.indexOf(id); if (i >= 0) l.splice(i, 1); else l.push(id); renderPick(); }
     else if (a === "wiz-more") { V.wiz.more = true; renderPick(); }
     else if (a === "wiz-apply") {
       const pl = V.wiz.plan; if (!pl) return;

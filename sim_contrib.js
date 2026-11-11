@@ -264,10 +264,27 @@
   }
   // 記録Lvの必要スコアを予算にして、「1点あたりのダメージの伸び」が大きいものから取っていく（素質・音符・アシストの発動）
   // opts: { lrMain: [id…], recordLv }。返り値 { g, score, budget, log: [{ label, cost }] }
+  // 持っているロスレコから、メイン3枚・サブ3枚を選ぶ（1枚ずつ、入れたときにいちばんダメージが伸びるものを足していく。突破I・素質なし・音符なし）
+  function pickLR(G, owned) {
+    const g = clone(G);
+    g.notes = {}; g.lrMain = ["", "", ""]; g.lrSub = ["", "", ""]; g.lrRank = {};
+    SLOTS.forEach(([k]) => { const cs = g.chars[g.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
+    owned.forEach(rid => { g.lrRank[rid] = 1; });
+    const left = owned.slice();
+    ["lrMain", "lrSub"].forEach(arr => {
+      for (let i = 0; i < 3 && left.length; i++) {
+        let best = null;
+        left.forEach(rid => { const x = clone(g); x[arr][i] = rid; const d = sum3(dmgParts(x)); if (!best || d > best.d) best = { rid, d }; });
+        g[arr][i] = best.rid; left.splice(left.indexOf(best.rid), 1);
+      }
+    });
+    return { lrMain: g.lrMain.filter(Boolean), lrSub: g.lrSub.filter(Boolean) };
+  }
   function planBuild(G, opts) {
     const g = clone(G);
-    g.recordLv = opts.recordLv; g.lrMain = (opts.lrMain || []).concat(["", "", ""]).slice(0, 3); g.lrSub = ["", "", ""];
-    g.lrRank = {}; g.lrMain.filter(Boolean).forEach(rid => { g.lrRank[rid] = 1; });   // 突破は I から（持っている突破は分からないので）
+    if (opts.owned) Object.assign(opts, pickLR(G, opts.owned));
+    g.recordLv = opts.recordLv; g.lrMain = (opts.lrMain || []).concat(["", "", ""]).slice(0, 3); g.lrSub = (opts.lrSub || []).concat(["", "", ""]).slice(0, 3);
+    g.lrRank = {}; g.lrMain.concat(g.lrSub).filter(Boolean).forEach(rid => { g.lrRank[rid] = 1; });   // 突破は I から（持っている突破は分からないので）
     g.notes = {};
     SLOTS.forEach(([k]) => { const cs = g.chars[g.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
     // アシスト効果の条件付きの効果（「必殺技の発動時から」など）は、既定ではオフ。ビルドを作るときは、条件を満たしている前提でオンにして選ぶ
