@@ -1226,7 +1226,7 @@
       if (st === "lr" && !V.wiz.team) V.wiz.team = 1;
       if (st === "done") V.wiz.plan = null;
       if (st === "lr" && V.wiz.teamKey !== JSON.stringify(V.pick3)) { V.wiz.rec = null; V.wiz.lr = []; V.wiz.teamKey = JSON.stringify(V.pick3); }
-      V.wiz.lv = V.wiz.lv || G.recordLv || 10;
+      V.wiz.lv = V.wiz.lv || 33;   // 記録レベルの最初の値は33（ユーザーの指定）
       V.wiz.step = st; renderPick(); $("pickDlg").scrollTop = 0;
     }
     else if (a.indexOf("wiz-lr:") === 0) { const id = a.slice(7), l = V.wiz.lr = V.wiz.lr || []; const i = l.indexOf(id); if (i >= 0) l.splice(i, 1); else l.push(id); renderPick(); }
