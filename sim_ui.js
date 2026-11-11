@@ -1053,7 +1053,14 @@
         <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${typeList(sm, t).map(x => v("k", E.TYPE_NAME[x.t] + "ダメージ", "+" + p1(x.B - 1))).join("")}</span></button>${open ? drillHtml(sm, t) : ""}`;
     };
     // 列の名前（倍率・ダメージ・比較）は、巡遊者ごとの見出しの行に、それぞれの列の上に出す
-    $("result").innerHTML = SLOTS.map(([k, l]) => {
+    // 指名手配の想定スコア: 3分間の回数で合計したダメージ ÷ シーズンのレート（テクニックスコアは含めない）。レートを入れてある敵のときだけ
+    const en = G.enemyObj || {};
+    let scoreHtml = "";
+    if (en.scoreRate && /指名手配/.test(en.name || "")) {
+      const tot = S.contrib.sum3(S.contrib.dmgParts(G));
+      scoreHtml = `<div class="rs-score" title="3分間の回数（⑤ビルド確認）で合計したダメージ ${fmt(tot)} ÷ ${fmt(en.scoreRate)}（シーズン${en.season}の1ptあたりのダメージ）。テクニックスコアは含めません"><span>指名手配想定スコア</span><b>${fmt(tot / en.scoreRate)} pt</b></div>`;
+    }
+    $("result").innerHTML = scoreHtml + SLOTS.map(([k, l]) => {
       const id = G.team[k], c = chOf(id);
       const rows = items.filter(x => x[3] === id && (k === "main" ? !/^sup/.test(x[0]) : x[0].slice(-1) === (k === "s1" ? "1" : "2")));
       return `<section class="rs-card" style="--elc:${EL_COLOR[c.el] || "#4B5082"}"><h3 class="rs-row rs-h"><span class="rs-hn"><span class="rs-slot">${l}</span>${esc(c.jp)}</span><span class="rs-mult rs-ch">総倍率</span><span class="rs-dmg rs-ch">ダメージ（期待値）</span><span></span></h3>${rows.map(row).join("")}</section>`;
