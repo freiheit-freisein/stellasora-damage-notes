@@ -1098,10 +1098,17 @@
   window.addEventListener("resize", setHdrH);
   function renderAll() {
     G.enemyOv = G.enemyOv || { res: {}, extra: {} };
+    // 描き直すと入力欄が作り直されるので、フォーカスしていた欄（data-p が同じ欄）に、フォーカスとカーソルの位置を戻す（上下キーで続けて増減できるように）
+    const ae = document.activeElement, fp = ae && ae.getAttribute && ae.getAttribute("data-p");
+    let sel = null; try { sel = fp && ae.selectionStart != null ? [ae.selectionStart, ae.selectionEnd] : null; } catch (e) { sel = null; }
     recalc();
     renderTop(); renderTiles(); renderSelectors(); renderDisplay(); renderResult(); renderPick();
     setHdrH();
     save();
+    if (fp && !document.body.contains(ae)) {
+      const el = [...document.querySelectorAll("[data-p]")].find(x => x.getAttribute("data-p") === fp);
+      if (el) { el.focus({ preventScroll: true }); try { if (sel) el.setSelectionRange(sel[0], sel[1]); } catch (e) { /* number の欄は選択範囲を持てない */ } }
+    }
   }
 
   // ---- イベント ----
