@@ -124,6 +124,8 @@
     addRec({ id: r.id, name: r.name, rarity: r.rarity, element: r.element, level: 90, levelMax: 90, stats: r.stats, core: { name: r.coreName, rank: "?" }, sub: { startNotes: r.sub }, auto: true });
     S.LR_FX[r.id] = autoFx(r);
   });
+  // ゲームの画面で確かめた初期の音符（Wikiの値と違ったもの）。2026-11-12 惹かれ合う星: 器用 Lv10・幸運 Lv4（Lv90。画面のLv70では器用8。Wikiは 幸運10・器用4 と逆だった）
+  [["w45", [{ note: "器用の音符", lv: 10 }, { note: "幸運の音符", lv: 4 }]]].forEach(([id, ns]) => { const r = L.find(x => x.id === id); if (r) r.sub = Object.assign({}, r.sub, { startNotes: ns }); });
   // Wikiにステータスやサブの初期の音符が無かったロスレコに、ゲームの画面で確かめた値を入れる（素質の確認ページ「ロスレコの確認」・2026-11-11）
   //   基礎攻撃力は突破VIの値（Wikiのロスレコは突破VIの値で持つ。突破I〜VIは +130 ずつ）、属性ダメージはそのロスレコの属性
   const GAME_ST = {
