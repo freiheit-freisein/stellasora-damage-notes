@@ -240,7 +240,7 @@
     FIXV("惹かれ合う星", "c3", { e: [{ k: "takenBasic", to: "el", el: "光", v: P(10, 12, 14, 16, 18, 20) }] });
     FIXV("惹かれ合う星", "a0.0", { e: [{ k: "W", to: "el", el: "光", v: P(4, 8, 12, 16, 20) }] });
     FIXV("惹かれ合う星", "a0.1", { n: "shinwa", e: [{ k: "critDmg", to: "main", v: P(2, 2.5, 3, 3.5, 4) }] });
-    FIXV("惹かれ合う星", "a1.0", { e: [{ k: "critDmg", to: "main", v: P(15, 20, 25, 30, 35) }] });
+    FIXV("惹かれ合う星", "a1.0", { e: [{ k: "critDmgUlt", to: "main", v: P(15, 20, 25, 30, 35) }] });   // 必殺技の会心ダメージだけ（前はすべての攻撃に入れていた）
     FIXV("惹かれ合う星", "a1.1", { e: [{ k: "critDmgSkill", to: "main", v: P(15, 20, 25, 30, 35) }] });
     FIXV("似たもの同士", "c1", { n: "kouryuu", e: [{ k: "atkPct", to: "main", v: P(1, 1.2, 1.4, 1.6, 1.8, 2) }] });
     FIXV("似たもの同士", "c2", { e: [{ k: "Bb", to: "main", el: "光", v: P(6, 7.2, 8.4, 9.6, 10.8, 12) }] });
@@ -350,6 +350,7 @@
       if (!a || !v) return;
       if (e.k === "critRate" || e.k === "critDmg") a.mods.push({ k: e.k, v, tags: null, ht: null, cond: null });
       else if (e.k === "critDmgSkill") a.mods.push({ k: "critDmg", v, tags: null, ht: "skill", cond: null });
+      else if (e.k === "critDmgUlt") a.mods.push({ k: "critDmg", v, tags: null, ht: "ult", cond: null });
       else if (e.k === "takenSkill") a.takenSkill *= 1 + v;
       else if (e.k === "takenBasic") a.takenBasic = (a.takenBasic || 1) * (1 + v);
       else if (e.k === "takenUlt") a.takenUlt = (a.takenUlt || 1) * (1 + v);
