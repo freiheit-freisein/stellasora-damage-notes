@@ -230,6 +230,92 @@
     return out;   // 付け替え（src あり）の重なりを外すかどうかは、画面の側で決める（すべての種類を出すときだけ1つにまとめる）
   }
 
+  // ---- 記録レベルからビルドを作る（試作）----
+  // 記録のスコア = コア素質×180 + サブ素質のLv合計×60 + 音符×15 + アシスト効果のLv合計×120（ユーザーの記録Lv34ほか4件で検算済み）
+  const SC = { core: 180, sub: 60, note: 15, assist: 120 };
+  function potList(G, k) {   // 巡遊者の素質（その位置で取れるもの）: [{ key, core }]
+    const id = G.team[k], tk = TK(chOf(id).en), role = k === "main" ? "main" : "support";
+    const out = [];
+    ((tk && tk.potentials && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { const key = S.potKey(p.name); if (!out.some(x => x.key === key)) out.push({ key, core: p.type === 1 }); }));
+    return out;
+  }
+  function recordScore(G) {
+    let s = 0;
+    SLOTS.forEach(([k]) => {
+      const cs = G.chars[G.team[k]], pl = potList(G, k);
+      pl.forEach(p => { const lv = +((cs.pots2 || {})[p.key]) || 0; if (lv > 0) s += p.core ? SC.core : lv * SC.sub; });
+    });
+    S.NOTE_ALL.forEach(n => { s += (+((G.notes || {})[n]) || 0) * SC.note; });
+    const nt = S.notesTotal(G);
+    (G.lrMain || []).filter(Boolean).forEach(rid => { const fx = S.LR_FX[rid]; if (fx) fx.assists.forEach(a => { s += S.lrAssistLv(nt, a) * SC.assist; }); });
+    return s;
+  }
+  // ロスレコのおすすめ順: 巡遊者の属性（と属性なし）のロスレコを、メインに1枚だけ入れたときのダメージの大きい順（突破I・音符なし・素質なし）
+  function recommendLR(G) {
+    const els = new Set(SLOTS.map(([k]) => chOf(G.team[k]).el).concat(["なし"]));
+    const base = clone(G);
+    base.notes = {}; base.lrMain = ["", "", ""]; base.lrSub = ["", "", ""]; base.lrRank = {};
+    SLOTS.forEach(([k]) => { const cs = base.chars[base.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
+    const t0 = sum3(dmgParts(base));
+    return (window.LOSTRECORDS || []).filter(r => els.has(r.element)).map(r => {
+      const g = clone(base); g.lrMain = [r.id, "", ""]; g.lrRank = { [r.id]: 1 };
+      return { id: r.id, name: r.name, el: r.element, rarity: r.rarity, gain: t0 > 0 ? sum3(dmgParts(g)) / t0 - 1 : 0 };
+    }).sort((a, b) => b.gain - a.gain);
+  }
+  // 記録Lvの必要スコアを予算にして、「1点あたりのダメージの伸び」が大きいものから取っていく（素質・音符・アシストの発動）
+  // opts: { lrMain: [id…], recordLv }。返り値 { g, score, budget, log: [{ label, cost }] }
+  function planBuild(G, opts) {
+    const g = clone(G);
+    g.recordLv = opts.recordLv; g.lrMain = (opts.lrMain || []).concat(["", "", ""]).slice(0, 3); g.lrSub = ["", "", ""];
+    g.lrRank = {}; g.lrMain.filter(Boolean).forEach(rid => { g.lrRank[rid] = 1; });   // 突破は I から（持っている突破は分からないので）
+    g.notes = {};
+    SLOTS.forEach(([k]) => { const cs = g.chars[g.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
+    const row = (window.RECORD_LEVELS || []).find(x => x[0] === +opts.recordLv);
+    const budget = row ? row[1] : 0, log = [], memo = new Map();
+    const nm = (id, key) => JA((Object.keys(S.POT_SPEC[id] || {}).find(n => S.potKey(n) === key)) || key, id);
+    for (let step = 0; step < 400; step++) {
+      const s0 = recordScore(g), d0 = sum3(dmgParts(g));
+      if (s0 >= budget) break;
+      const cands = [];
+      SLOTS.forEach(([k]) => {
+        const id = g.team[k], cs = g.chars[id], pl = potList(g, k), c = chOf(id);
+        const nCore = pl.filter(p => p.core && +cs.pots2[p.key] > 0).length;
+        pl.forEach(p => {
+          const lv = +cs.pots2[p.key] || 0;
+          if (p.core ? (lv > 0 || nCore >= 2) : lv >= POT_LV_MAX) return;
+          cands.push({ key: `p:${id}:${p.key}`, label: `${c.jp}：${nm(id, p.key)}${p.core ? "（コア）" : ` Lv${lv + 1}`}`, fn: x => { x.chars[id].pots2[p.key] = lv + 1; } });
+        });
+      });
+      S.NOTE_ALL.forEach(n => [1, 5].forEach(m => cands.push({ key: `n:${n}:${m}`, label: `${n.replace("の音符", "")}の音符 +${m}`, fn: x => { x.notes = Object.assign({}, x.notes); x.notes[n] = (+x.notes[n] || 0) + m; } })));
+      // アシスト効果の次のLvまで、足りない音符をまとめて足す（片方の音符だけ足しても発動しないため）
+      const nt = S.notesTotal(g);
+      g.lrMain.filter(Boolean).forEach(rid => { const fx = S.LR_FX[rid], r = (window.LOSTRECORDS || []).find(x => x.id === rid); if (fx) fx.assists.forEach(a => {
+        const lv = S.lrAssistLv(nt, a); if (lv >= 5) return;
+        const need = a.base + 15 * lv;
+        cands.push({ key: `a:${rid}:${a.id}`, label: `${r ? r.name : rid}：${a.name} Lv${lv + 1}（音符をそろえる）`, fn: x => { x.notes = Object.assign({}, x.notes); a.notes.forEach(k => { const cur = S.notesTotal(x)[k] || 0; if (cur < need) x.notes[k] = (+x.notes[k] || 0) + (need - cur); }); } });
+      }); });
+      // 速くするため、前の段で出した「1点あたりの伸び」を覚えておき、大きそうな順に計算し直す（伸びはふつう段ごとに小さくなるので、
+      // 計算し直した値が、まだ計算し直していない候補の前の値より大きければ、それより下は調べなくてよい）
+      const evalC = cd => {
+        const x = clone(g); cd.fn(x);
+        const cost = recordScore(x) - s0; if (cost <= 0 || s0 + cost > budget) return { r: -1, cost };
+        const gain = sum3(dmgParts(x)) - d0;
+        return { r: gain > 0 ? gain / cost : -1, cost };
+      };
+      cands.forEach(cd => { cd.stale = memo.has(cd.key) ? memo.get(cd.key) : Infinity; });
+      cands.sort((a, b) => b.stale - a.stale);
+      let best = null;
+      for (const cd of cands) {
+        if (best && cd.stale <= best.r) break;
+        const e = evalC(cd); memo.set(cd.key, e.r);
+        if (e.r > 0 && (!best || e.r > best.r)) best = { r: e.r, cd, cost: e.cost };
+      }
+      if (!best) break;
+      best.cd.fn(g); log.push({ label: best.cd.label, cost: best.cost });
+    }
+    return { g, score: recordScore(g), budget, log };
+  }
+
   S.contrib = { SLOTS, KIND_NAME, EMB_CATS, catOfKey, potTargets, POT_LV_MAX, POT_LV_EMB_MAX, defChar, defState, merge, optOf, LV_Q, isLv, lvAmt, qualOf, qVal, valTxt, embShort,
-    rotDefault, rotCount, dmgParts, sum3, cmpOf, calcContrib, calcUpgrades };
+    rotDefault, rotCount, dmgParts, sum3, cmpOf, calcContrib, calcUpgrades, recordScore, recommendLR, planBuild };
 })(window.SIM);
