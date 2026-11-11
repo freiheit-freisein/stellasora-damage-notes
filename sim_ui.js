@@ -1069,7 +1069,8 @@
     renderMobile(items);
   }
   // 上に残す帯（手順のタブと共通の倍率）は、見出しのすぐ下に付ける
-  function setHdrH() { const h = document.querySelector(".site-header"); if (h) document.documentElement.style.setProperty("--hdr-h", (h.offsetHeight + 8) + "px"); }
+  // 見出しのすぐ下に付ける（すき間があると、スクロールした中身が見える）
+  function setHdrH() { const h = document.querySelector(".site-header"); if (h) document.documentElement.style.setProperty("--hdr-h", (h.offsetHeight - 1) + "px"); }
   window.addEventListener("resize", setHdrH);
   function renderAll() {
     G.enemyOv = G.enemyOv || { res: {}, extra: {} };
