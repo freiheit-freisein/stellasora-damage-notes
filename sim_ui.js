@@ -904,6 +904,9 @@
       </div></div>`;
   }
 
+  // 3分間の回数の欄は、注意書きを読んだとチェックした人だけに出す（このブラウザに覚える）
+  let rotRead = false;
+  try { rotRead = localStorage.getItem("stellasora-sim-rotread") === "1"; } catch (e) { /* 無視 */ }
   function renderScore() {
     // 3分間の回数（目安）の入力
     const rotIn = (id, k, label, d) => fld(label, stepper(`rot.${id}.${k}`, 0, 999, d[k] || 0),
@@ -944,7 +947,8 @@
         ・CDは日本語Wikiの値です（セイナ(原点)はゲーム内の表示）。SPが足りずに必殺技が撃てない場合や、CDが戻る効果（ホタルの必殺技など）は入っていません。<br>
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・寄与率は、この回数で合計したダメージで出します。`, "margin-top:4px;color:#33386A")}</div>
-      <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">${rotHtml}</div></section>
+      <label class="check" style="font-weight:700;margin:0 0 8px"><input type="checkbox" data-act="rotread"${rotRead ? " checked" : ""}>上の注意書きを読みました（回数を変える欄を出す）</label>
+      ${rotRead ? `<div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">${rotHtml}</div>` : ""}</section>
       <section class="sec full"><h3>オススメ強化ポイント<span class="beta-s">β版</span><button type="button" class="help-btn" data-act="upopen" aria-expanded="${!!V.upOpen}">${V.upOpen ? "閉じる" : "計算する"}</button><span class="h-sub">まだテスト版なので目安程度にお願いします。</span></h3>${upFilter}${upHtml}
         ${!V.upOpen ? "" : helpTxt("ups", "※ロスレコの入れ替えには対応していません。比較項目は右の詳しくをクリックして確認できます。", "心相の凸・ロスレコの突破・しずく・素質の付け替え・音符の付け替えを、全部ためして、上の3分間の回数で合計したダメージが伸びる順に10個まで並べます（伸びが0.1%未満の組み合わせは除外します）<br>・心相: 凸を1つすすめます。<br>・ロスレコ: 突破を1つすすめます（サブは基礎攻撃力だけ変わります）<br>・しずく: 徽章の値を1段階上げます。1枚の徽章に2回までですが、既に使った回数は分からないので、考慮外になっています。<br>・素質の付け替え: 取った素質を1つ下げて、別の素質を1つ上げて伸びる組み合わせを1つ出します。<br>・音符の付け替え: 取った音符を減らして、別の音符に足してアシスト効果の伸びなどを見て、いちばん伸びる組み合わせを1つだけ出します。<br>上のボタンで種類を選ぶと、その種類だけを伸びる順に10個まで出します（複数選べます）。種類を選んだときは、付け替えもいくつも出します。<br>付け替えは1回ずつ出すので、「反映する」のあと、次の付け替えが出ます（使った数は数えていないので、合計の上限は自分で確かめてください）<br>「反映する」を押すと、その変更をビルドに反映します。「今の値を記憶」をしていなければ、押す前の値を記憶するので、結果の比較で伸びを確かめられます。", "margin-top:8px")}</section>
       <section class="sec full"><h3>与ダメへの寄与率</h3>
@@ -1302,6 +1306,7 @@
       u.apply(G); shareMsg = "反映しました: " + u.label; renderAll();
     }
     else if (a.indexOf("pksort:") === 0) { pkSort = a.slice(7); try { localStorage.setItem("stellasora-sim-pksort", pkSort); } catch (e) { /* 無視 */ } renderPick(); }
+    else if (a === "rotread") { rotRead = !rotRead; try { localStorage.setItem("stellasora-sim-rotread", rotRead ? "1" : "0"); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a === "upopen") { V.upOpen = !V.upOpen; renderAll(); }
     else if (a === "manopen") { const has = ["baseAtk", "baseHp", "elem", "basicDmg", "skillDmg", "atkPct"].some(k => +((G.lrManual || {})[k]) || 0); V.manOpen = !(V.manOpen != null ? V.manOpen : has); renderAll(); }
     else if (a === "bjopen") { V.bjOpen = !(V.bjOpen || DV.bjson || V.bimp); if (!V.bjOpen) { DV.bjson = ""; V.bimp = null; } renderAll(); }
