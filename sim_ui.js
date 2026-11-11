@@ -1159,12 +1159,12 @@
     const a = t.getAttribute("data-act");
     if (a.indexOf("panel:") === 0) {
       V.panel = a.slice(6); V.pick = null; V.lrPick = null; renderAll();
-      // 下までスクロールしたままタブを替えると、新しい画面の途中から見えてしまうので、中身の頭が上の帯に隠れていれば、頭まで戻す
-      const d = $("display"), nav = $("navp");
-      if (d && nav) {
-        const fixed = getComputedStyle(nav).position === "sticky" ? nav.getBoundingClientRect().bottom : 0;
-        const top = d.getBoundingClientRect().top;
-        if (top < fixed) window.scrollTo(0, window.scrollY + top - fixed - 12);
+      // 下までスクロールしたままタブを替えると、新しい画面の途中から見えてしまうので、手順のタブが見えるところまで戻す（帯はページと一緒にスクロールする）
+      const nav = $("navp"), hd = document.querySelector(".site-header");
+      if (nav) {
+        const below = hd && getComputedStyle(hd).position === "sticky" ? hd.getBoundingClientRect().bottom : 0;
+        const top = nav.getBoundingClientRect().top;
+        if (top < below) window.scrollTo(0, window.scrollY + top - below - 8);
       }
       return;
     }

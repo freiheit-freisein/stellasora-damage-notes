@@ -31,7 +31,7 @@
   .unitbar button.on { background: #4B5082; color: #fff; }
   .panel > h2 .en { font-family: var(--font-en); font-weight: 400; font-size: 13px; letter-spacing: .14em; color: var(--link); }
   /* 手順のタブと共通の倍率（スクロールしても見出しの下に残す） */
-  .navp { position: sticky; top: var(--hdr-h, 54px); z-index: 25; padding: 10px 14px; }
+  .navp { position: relative; z-index: 25; padding: 10px 14px; }   /* 手順のタブと共通の倍率は、ページと一緒にスクロールする（ユーザーの指定 2026-11-11） */
   .navp .tabs { margin: 0 0 8px; }
   .mline { display: flex; gap: 10px; align-items: center; }
   .ml-h { flex: none; display: flex; align-items: center; gap: 8px; }
