@@ -177,7 +177,7 @@
   function lvRow(id, key, label, note) {
     const bonus = emx(id).lv[key];
     const extra = (bonus ? `+${bonus} → Lv${(G.chars[id].skillLv[key] || 10) + bonus}` : "") + (note ? (bonus ? "／" : "") + note : "");
-    return `<div class="stp-row"><span class="stp-lab">${label}</span>${stepper(`chars.${id}.skillLv.${key}`, 1, 13, 10)}${extra ? `<span class="muted stp-note">${extra}</span>` : ""}</div>`;
+    return `<div class="stp-row"><span class="stp-lab">${label}</span>${stepper(`chars.${id}.skillLv.${key}`, 1, 10, 10)}${extra ? `<span class="muted stp-note">${extra}</span>` : ""}</div>`;
   }
   // 心相・徽章・素質・その他のボタンに出す、今の状態
   function charSummary(k) {
@@ -511,11 +511,23 @@
     const STN = { atkPct: "攻撃力", critRate: "会心率", critDmg: "会心ダメージ", hpPct: "最大HP", basicDmg: "通常攻撃ダメージ", skillDmg: "スキルダメージ", ultDmg: "必殺技ダメージ" };
     const tot = S.notesTotal(G);
     const r1 = x => (Math.round(x * 1000) / 10).toFixed(1);
+    // サブのロスレコごとの初期の音符（マウスを重ねたときに、どのロスレコの分か出す）
+    const subFrom = n => (G.lrSub || []).filter(Boolean).map(id => { const r = LOSTRECORDS.find(x => x.id === id), x = ((r && r.sub && r.sub.startNotes) || []).find(q => q.note === n); return x ? `${r.name} ${x.lv}` : ""; }).filter(Boolean);
+    // 「初期 ＋ 獲得 ＝ 合計」: 3段の表（上: 見出しと▲、中: 数字、下: ▼）にして、3つの数字を同じ高さ・同じ大きさで1行にそろえる
+    const noteEq = (path, ini, t, tip) => {
+      const v = getPath(path), cur = v == null || v === "" ? 0 : +v;
+      const b = (d, ch, dis) => `<button type="button" class="stp-b vs-b" data-act="stp|${d}|0|99|0|${path}"${dis ? " disabled" : ""} aria-label="${d > 0 ? "1つ上げる" : "1つ下げる"}">${ch}</button>`;
+      return `<div class="note-eq"><small class="ne-l">初期</small><span></span>${b(1, "▲", cur >= 99)}<span></span><small class="ne-l">合計</small>
+        <b class="ne-n ne-ini${ini ? "" : " zero"}" title="${esc(tip)}">${ini}</b><span class="ne-op">＋</span><input type="number" data-p="${path}" data-t="n" min="0" max="99" step="1" value="${cur}" aria-label="獲得した数"><span class="ne-op">＝</span><b class="ne-n ne-tot">${t}</b>
+        <span></span><span></span>${b(-1, "▼", cur <= 0)}<span></span><span></span></div>`;
+    };
+    // 1枚: 名前 → 初期（サブ）＋ 獲得（▲▼で入力）＝ 合計 → 効果（合計で計算）
     const noteCell = n => {
-      const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, own = (G.notes || {})[n] || 0;
+      const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, own = +((G.notes || {})[n] || 0), ini = t - own, from = subFrom(n);
       const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメージ") : "";
-      return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>${stepper(`notes.${n}`, 0, 99, 0, "sm")}
-        <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div><div class="note-per">1Lvで +${d ? Math.round(d.perLv * 10000) / 100 : 0}%${t !== own ? `<br>サブの初期 +${t - own}` : ""}</div></div>`;
+      return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>
+        ${noteEq(`notes.${n}`, ini, t, from.length ? "サブのロスレコの初期: " + from.join("・") : "サブのロスレコの初期: なし")}
+        <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div><div class="note-per">1Lvで +${d ? Math.round(d.perLv * 10000) / 100 : 0}%</div></div>`;
     };
     // 1段目: ステータスの音符、2段目: 属性の音符（6属性）
     const noteIn = `<div class="notes-row">${S.NOTE_BASE.map(noteCell).join("")}</div>
@@ -562,7 +574,7 @@
         <section class="sec"><h3>効果の数</h3><div class="muted help" style="margin:0 0 6px">暁光・星願など。戦闘中のある時点を想定して入力します。</div>
           ${counts ? `<div class="cnt-list">${counts}</div>` : '<p class="muted" style="margin:0">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}</section>
       </div>
-      <section class="sec full"><h3>音符<span class="h-sub">探索で獲得した数を入力します。サブのロスレコの初期音符は自動で足します</span></h3>${noteIn}</section>
+      <section class="sec full"><h3>音符<span class="h-sub">初期（サブのロスレコ）＋ 獲得（探索で獲得した数を入力）＝ 合計。効果は合計で計算します</span></h3>${noteIn}</section>
       <section class="sec full"><h3>メインのロスレコの効果</h3>
         <div class="grid-in" style="grid-template-columns:1fr">${fxHtml || '<span class="muted">メインのロスレコを選ぶと、効果が出ます</span>'}</div></section>
       <section class="sec full"><h3>一覧にないロスレコ・サブの合計（手入力）<button type="button" class="help-btn" data-act="manopen" aria-expanded="${manOpen}">${manOpen ? "閉じる" : "開く"}</button>${manHas ? '<span class="tag-ok">入力あり</span>' : ""}</h3>
@@ -1165,6 +1177,28 @@
     if (!sl) return;
     sl.k = ""; sl.cat = ""; delete sl.t;
   }
+  // −／＋ のボタン: 押したら1つ動かし、押しっぱなしなら少し待ってから速く続けて動かす
+  function stepOnce(a) {
+    const m = /^stp\|(-?1)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);
+    if (!m) return false;
+    const v = getPath(m[5]), cur = v == null || v === "" ? +m[4] : +v, nv = Math.min(+m[3], Math.max(+m[2], cur + +m[1]));
+    if (nv === cur) return false;
+    setPath(m[5], nv); renderAll(); return true;
+  }
+  let holdT = null;
+  const holdStop = () => { if (holdT) { clearTimeout(holdT); holdT = null; } };
+  document.addEventListener("pointerdown", ev => {
+    const b = ev.target.closest && ev.target.closest(".stp-b");
+    if (!b || b.disabled || ev.button !== 0) return;
+    const a = b.getAttribute("data-act");
+    ev.preventDefault();
+    holdStop();
+    if (!stepOnce(a)) return;
+    let n = 0;
+    const tick = () => { n++; if (!stepOnce(a)) { holdStop(); return; } holdT = setTimeout(tick, n < 10 ? 90 : 40); };
+    holdT = setTimeout(tick, 400);
+  });
+  ["pointerup", "pointercancel", "blur"].forEach(e => (e === "blur" ? window : document).addEventListener(e, holdStop));
   document.addEventListener("click", ev => {
     const t = ev.target.closest("[data-act]");
     if (!t) return;
@@ -1275,10 +1309,7 @@
       try { navigator.clipboard.writeText(v).then(() => say("url", "コピーしました"), () => say("url", "コピーできませんでした。枠の中を選んでコピーしてください", true)); } catch (e) { say("url", "コピーできませんでした", true); }
     }
     else if (a.indexOf("help:") === 0) { V.help = V.help || {}; V.help[a.slice(5)] = !V.help[a.slice(5)]; renderAll(); }
-    else if (a.indexOf("stp|") === 0) {   // −／＋ のボタン
-      const m = /^stp\|(-?1)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);
-      if (m) { const v = getPath(m[5]), cur = v == null || v === "" ? +m[4] : +v; setPath(m[5], Math.min(+m[3], Math.max(+m[2], cur + +m[1]))); renderAll(); }
-    }
+    else if (a.indexOf("stp|") === 0) { if (ev.detail === 0) stepOnce(a); }   // −／＋ のボタン（マウス・指は pointerdown で動かす。ここはキーボードで押したときだけ）
     else if (a.indexOf("unit:") === 0) { dmgUnit = a.slice(5); try { localStorage.setItem("stellasora-sim-unit", dmgUnit); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a.indexOf("plv|") === 0) { const m = /^plv\|(\d+)\|(.+)$/.exec(a); if (m) { setPath(m[2], +m[1]); renderAll(); } }   // 素質のLv
     else if (a.indexOf("pcore|") === 0) {   // コア素質: 取得／外す（1人2つまで。外すのはいつでもできる）

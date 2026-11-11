@@ -462,10 +462,24 @@
   .cnt-grid .fld { grid-template-columns: 210px 1fr; }
   /* 音符（ゲームと同じく、色と名前の下に数、その下に効果） */
   .notes-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+  /* 「初期＋獲得＝合計」が入る幅（1枚128px）が取れない画面では、1行の数を減らす */
+  @media (max-width: 1660px) { .notes-row { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); } }
   .note-cell { text-align: center; padding: 8px 4px; border-radius: 14px; background: #fff; border: 2px solid var(--border); border-top: 4px solid var(--nc); }
   .note-ic { width: 30px; height: 30px; margin: 0 auto 2px; border-radius: 50%; background: var(--nc); color: #fff; font-weight: 900; line-height: 30px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.15); }
   .note-nm { font-size: 12px; font-weight: 900; color: var(--indigo); }
   .note-cell input[type=number] { width: 100%; text-align: center; min-height: 34px; font-weight: 900; font-size: 16px; padding: 0 4px; margin: 2px 0; }
+  /* 初期 ＋ 獲得 ＝ 合計: 5列×3段。中の段の3つの数字は、同じ大きさ・同じ高さ（28px）で1行にそろえる */
+  .note-eq { display: grid; grid-template-columns: 1fr 12px 38px 12px 1fr; grid-template-rows: 14px 28px 14px; align-items: center; justify-items: center; column-gap: 2px; margin: 4px 0; }
+  .ne-l { font-size: 9px; font-weight: 700; color: var(--muted); line-height: 14px; }
+  .ne-n { font-family: var(--font-en); font-size: 17px; font-weight: 900; line-height: 28px; height: 28px; }
+  .ne-ini { color: var(--muted); cursor: help; }
+  .ne-ini.zero { opacity: .45; }
+  .ne-tot { color: var(--nc); }
+  .ne-op { font-size: 12px; font-weight: 900; color: var(--muted); line-height: 28px; }
+  .note-eq .vs-b { width: 38px; height: 14px; font-size: 8px; line-height: 14px; border-radius: 4px; }
+  .note-cell .note-eq input[type=number] { width: 38px; height: 28px; min-height: 0; margin: 0; padding: 0; border: 2px solid var(--border); border-radius: 6px; text-align: center; font-family: var(--font-en); font-size: 17px; font-weight: 900; line-height: 24px; -moz-appearance: textfield; }
+  .note-eq input::-webkit-outer-spin-button, .note-eq input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .stp-b { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
   .note-fx { font-size: 11px; color: var(--muted); line-height: 1.35; min-height: 30px; }
   .note-fx b { font-size: 13px; color: var(--indigo); }
   .note-per { font-size: 10px; color: var(--muted); }
@@ -539,7 +553,7 @@
     .adj-t input[type=number] { width: 64px !important; }
     .man-g .fld { grid-template-columns: 150px minmax(0, 1fr); }
     .sec .man-g { grid-template-columns: minmax(0, 1fr); }
-    .notes-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .notes-row { gap: 6px; }
     .fld { grid-template-columns: 100px minmax(0, 1fr); }
     .stp-lab { width: 100px; }
     :root { --rs-cols: minmax(0, 1fr) 76px 108px 10px; --rs-gap: 6px; --rs-pr: 10px; }
