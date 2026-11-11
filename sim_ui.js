@@ -1048,9 +1048,9 @@
       return `<button type="button" class="rs-row${open ? " sel" : ""}" data-act="drill:${key}" aria-expanded="${open}" title="${open ? "押すと内訳を閉じます" : "押すと内訳を出します"}">
         <span class="rs-nm">${esc(nm)}</span>
         <span class="rs-mult">${fmt(sm.mult)}%</span>
-        <span class="rs-dmg">${dmgF(sm.exp)}${cmp}</span>
+        <span class="rs-dmg">${dmgF(sm.exp)}</span>
         <span class="rs-go" aria-hidden="true">›</span>
-        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${typeList(sm, t).map(x => v("k", E.TYPE_NAME[x.t] + "ダメージ", "+" + p1(x.B - 1))).join("")}</span></button>${open ? drillHtml(sm, t) : ""}`;
+        <span class="rs-sub">${v("rs-mm", "総倍率", fmt(sm.mult) + "%")}${typeList(sm, t).map(x => v("k", E.TYPE_NAME[x.t] + "ダメージ", "+" + p1(x.B - 1))).join("")}</span>${cmp}</button>${open ? drillHtml(sm, t) : ""}`;
     };
     // 列の名前（倍率・ダメージ・比較）は、巡遊者ごとの見出しの行に、それぞれの列の上に出す
     // 指名手配の想定スコア: 3分間の回数で合計したダメージ ÷ シーズンのレート（テクニックスコアは含めない）。レートを入れてある敵のときだけ

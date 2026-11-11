@@ -166,12 +166,13 @@
   .rs-row:first-of-type { border-top: 0; }
   .rs-row:hover { background: var(--dmg-soft); }
   .rs-row.sel { background: var(--dmg-soft); box-shadow: inset 4px 0 0 var(--accent); }
-  .rs-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 1em; font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .rs-sub { grid-column: 1 / 3; display: flex; flex-wrap: wrap; gap: 0 1em; font-size: 11px; color: var(--muted); line-height: 1.5; }
   .rs-v { white-space: nowrap; font-variant-numeric: tabular-nums; }
   .rs-nm { min-width: 0; font-size: 14px; font-weight: 900; color: var(--indigo); }
   .rs-mult { text-align: right; font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
   .rs-dmg { min-width: 0; text-align: right; font-size: 20px; font-weight: 900; color: var(--indigo); font-variant-numeric: tabular-nums; line-height: 1.2; }
-  .rs-cmp { display: block; text-align: right; font-size: 12px; font-weight: 900; line-height: 1.3; }   /* 比較は、ダメージの下段 */
+  .rs-cmp { display: block; text-align: right; font-size: 12px; font-weight: 900; line-height: 1.5; }
+  .rs-row > .rs-cmp { grid-column: 3; grid-row: 2; align-self: baseline; }   /* 比較は、下段の行のダメージの列に（下段の文字と高さをそろえる） */
   .rs-cmp.up { color: #05626A; } .rs-cmp.down { color: var(--danger); }
   .rs-go { color: var(--muted); font-size: 18px; font-weight: 700; }
   /* 内訳（押した行のすぐ下） */
