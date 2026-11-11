@@ -535,7 +535,7 @@
     // 効果の数は、選んでいるメインのロスレコの効果が使うものだけ出す
     const usedN = new Set();
     (G.lrMain || []).filter(Boolean).forEach(id => { const fx = S.LR_FX[id]; if (!fx) return; fx.core.concat(...fx.assists.map(a => a.items)).forEach(it => { if (it.n) usedN.add(it.n); if (it.need) usedN.add(it.need[0]); }); });
-    const counts = S.LR_COUNTS.filter(c => usedN.has(c.key)).map(c => fld(c.label, stepper(`lrN.${c.key}`, 0, c.max, 0), c.noMax ? "" : `最大 ${c.max}`)).join("");
+    const counts = S.LR_COUNTS.filter(c => usedN.has(c.key)).map(c => fld(c.label, stepper(`lrN.${c.key}`, 0, c.max, 0) + `<span class="muted cnt-max">${c.noMax ? "" : `最大 ${c.max}`}</span>`)).join("");   // 「最大」の欄は幅を固定し、−／＋の位置を縦にそろえる
     // メインのロスレコの効果
     const fxHtml = (G.lrMain || []).filter(Boolean).map(id => {
       const fx = S.LR_FX[id], r = L.find(x => x.id === id);
