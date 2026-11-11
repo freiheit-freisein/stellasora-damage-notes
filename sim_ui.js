@@ -722,9 +722,14 @@
   const EL_ORDER = ["水", "火", "風", "地", "光", "闇"];
   // 巡遊者のドロップダウン用: その属性の巡遊者を、あいうえお順で
   const chOfEl = el => S.CH.filter(c => c.el === el).sort((a, b) => a.jp.localeCompare(b.jp, "ja"));
+  // 巡遊者の一覧の並び: 属性ごとに、実装順（新しい順）か、あいうえお順。選んだ並びはこのブラウザに覚える
+  let pkSort = "rel";
+  try { if (localStorage.getItem("stellasora-sim-pksort") === "kana") pkSort = "kana"; } catch (e) { /* 無視 */ }
   function pickList() {
-    const info = c => { const t = TK(c.en) || {}; return { c, rar: t.rarity || 0, rel: t.release || "" }; };
-    return EL_ORDER.map(el => ({ el, list: S.CH.filter(c => c.el === el).map(info).sort((a, b) => (b.rar - a.rar) || String(b.rel).localeCompare(String(a.rel))).map(x => x.c) })).filter(g => g.list.length);
+    const info = c => { const t = TK(c.en) || {}; return { c, rar: t.rarity || 0, rel: t.release || "", id: t.id || 0 }; };
+    const cmp = pkSort === "kana" ? (a, b) => a.c.jp.localeCompare(b.c.jp, "ja")
+      : (a, b) => String(b.rel).localeCompare(String(a.rel)) || (b.id - a.id);   // 実装日が同じなら、ゲームの番号の大きいほうを先に
+    return EL_ORDER.map(el => ({ el, list: S.CH.filter(c => c.el === el).map(info).sort(cmp).map(x => x.c) })).filter(g => g.list.length);
   }
   // 押すと、空いている枠の一番前（主力 → 支援1 → 支援2）に入る。選んである人を押すと、その枠が空く
   function pickToggle(id) {
@@ -751,7 +756,7 @@
     const ls = dlg.querySelector(".pk-list"), keep = ls ? ls.scrollTop : 0, keepD = dlg.scrollTop;   // 描き直しても、一覧のスクロールの位置を保つ
     $("pickBody").innerHTML = `<h2 id="pickDlgT"><span class="en">NEW</span>巡遊者を選んで作る</h2>
       ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「この3人で作る」を押してください。入力中のデータは、すべて初期値に戻ります。")}
-      <div class="pk-bar">${chosen}</div>
+      <div class="pk-bar">${chosen}<span style="flex:1"></span><span class="unitbar" role="group" aria-label="並び順"><button type="button" class="${pkSort === "rel" ? "on" : ""}" aria-pressed="${pkSort === "rel"}" data-act="pksort:rel">実装順</button><button type="button" class="${pkSort === "kana" ? "on" : ""}" aria-pressed="${pkSort === "kana"}" data-act="pksort:kana">あいうえお順</button></span></div>
       <div class="pk-list">${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}</div>
       ${msgOf("pick")}<div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button><button type="button" class="btn-add pri" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して作る" : "この3人で作る"}</button></div>`;
     const ls2 = dlg.querySelector(".pk-list"); if (ls2) ls2.scrollTop = keep; dlg.scrollTop = keepD;
@@ -1231,6 +1236,7 @@
       if (!memo) { memo = { v: clone(window.__cur || {}) }; try { localStorage.setItem(KEY_M, JSON.stringify(memo)); } catch (e) { /* 無視 */ } }   // 比べられるよう、押す前の値を記憶
       u.apply(G); shareMsg = "反映しました: " + u.label; renderAll();
     }
+    else if (a.indexOf("pksort:") === 0) { pkSort = a.slice(7); try { localStorage.setItem("stellasora-sim-pksort", pkSort); } catch (e) { /* 無視 */ } renderPick(); }
     else if (a === "upopen") { V.upOpen = !V.upOpen; renderAll(); }
     else if (a === "manopen") { const has = ["baseAtk", "baseHp", "elem", "basicDmg", "skillDmg", "atkPct"].some(k => +((G.lrManual || {})[k]) || 0); V.manOpen = !(V.manOpen != null ? V.manOpen : has); renderAll(); }
     else if (a === "bjopen") { V.bjOpen = !(V.bjOpen || DV.bjson || V.bimp); if (!V.bjOpen) { DV.bjson = ""; V.bimp = null; } renderAll(); }
