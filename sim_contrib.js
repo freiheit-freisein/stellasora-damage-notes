@@ -227,9 +227,7 @@
       });
     });
     out.sort((x, y) => y.gain - x.gain);
-    // 付け替えは、似た手ばかり並ばないように、素質・音符それぞれ、いちばん伸びる1つだけ残す（入れてみると、次の手が出る）
-    const seen = new Set();
-    return out.filter(x => { if (!x.src) return true; if (seen.has(x.src)) return false; seen.add(x.src); return true; });
+    return out;   // 付け替え（src あり）の重なりを外すかどうかは、画面の側で決める（すべての種類を出すときだけ1つにまとめる）
   }
 
   S.contrib = { SLOTS, KIND_NAME, EMB_CATS, catOfKey, potTargets, POT_LV_MAX, POT_LV_EMB_MAX, defChar, defState, merge, optOf, LV_Q, isLv, lvAmt, qualOf, qVal, valTxt, embShort,

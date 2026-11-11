@@ -883,7 +883,14 @@
     const rows = kind => { const it = items.filter(x => x.kind === kind); return it.length ? `<table class="stt decT"><tr><th style="text-align:left">項目</th><th>今 → 比べる値</th><th>与ダメ寄与率</th></tr>${it.map(x => `<tr><td title="${esc(x.label.replace("\n", " "))}">${x.label.split("\n").map(esc).join('<br><span class="ind">') + (x.label.indexOf("\n") >= 0 ? "</span>" : "")}</td><td class="c">${decIn(x.cmp)}</td><td class="v">${pc(x.team)}</td></tr>`).join("")}</table>` : '<p class="muted">入っていません</p>'; };
     // オススメ強化ポイント（β版）。ふだんは閉じておき、開いたときだけ計算する（入力が変わっていなければ、前の結果を使う）
     const ukey = JSON.stringify(G);
-    if (V.upOpen && V.upKey !== ukey) { V.upKey = ukey; try { V.ups = S.contrib.calcUpgrades(G).slice(0, 10); } catch (e) { V.ups = []; } }
+    if (V.upOpen && V.upKey !== ukey) { V.upKey = ukey; try { V.upAll = S.contrib.calcUpgrades(G); } catch (e) { V.upAll = []; } }
+    // 種類のフィルタ（何も選んでいなければ全部）。全部のときは、付け替え（素質・音符）を種類ごとにいちばん伸びる1つにまとめる（似た手ばかり並ばないように）
+    const UPK = ["心相", "ロスレコ", "しずく", "素質", "音符"], upF = V.upF || [];
+    if (V.upOpen) {
+      const seen = new Set();
+      V.ups = (V.upAll || []).filter(u => upF.length ? upF.indexOf(u.kind) >= 0 : (!u.src || (!seen.has(u.src) && seen.add(u.src)))).slice(0, 10);
+    }
+    const upFilter = !V.upOpen ? "" : `<div class="up-f" role="group" aria-label="種類で絞り込む"><button type="button" class="${upF.length ? "" : "on"}" aria-pressed="${!upF.length}" data-act="upf:">すべて</button>${UPK.map(k => `<button type="button" class="${upF.indexOf(k) >= 0 ? "on" : ""}" aria-pressed="${upF.indexOf(k) >= 0}" data-act="upf:${k}">${k}</button>`).join("")}</div>`;
     const KCLS = { 心相: "k-heart", しずく: "k-emb", 素質: "k-pot", ロスレコ: "k-lr", 音符: "k-note" };
     const upHtml = !V.upOpen ? '<p class="muted" style="margin:0">1つだけ変えたときに、3分間のダメージが大きく伸びる強化を10個まで出します。</p>' : (V.ups || []).length ? `<ol class="up-list">${V.ups.map((u, i) => `<li><span class="up-k ${KCLS[u.kind] || ""}">${u.kind}</span><span class="up-l">${esc(u.label)}</span><b class="up-g">+${(u.gain * 100).toFixed(1)}%</b><button type="button" class="btn-add" data-act="upapply:${i}">反映する</button></li>`).join("")}</ol>` : '<p class="muted" style="margin:0">伸びる手が見つかりませんでした。</p>';
     return `<div class="wide"><div class="secg">
@@ -894,8 +901,8 @@
         ・通常攻撃は「3分 ÷ 1ローテの秒数」で、スキル中やダッシュで中断される分を引いていません。1ローテの秒数を測ったのはセイナ(原点)（約5秒、目で見た値）だけで、ほかは仮に5秒です。<br>
         ・寄与率は、この回数で合計したダメージで出します。`, "margin-top:4px;color:#33386A")}</div>
       <div class="grid-in" style="grid-template-columns:repeat(3,minmax(0,1fr))">${rotHtml}</div></section>
-      <section class="sec full"><h3>オススメ強化ポイント<span class="beta-s">β版</span><button type="button" class="help-btn" data-act="upopen" aria-expanded="${!!V.upOpen}">${V.upOpen ? "閉じる" : "計算する"}</button><span class="h-sub">まだテスト版なので目安程度にお願いします。</span></h3>${upHtml}
-        ${!V.upOpen ? "" : helpTxt("ups", "※ロスレコの入れ替えには対応していません。比較項目は右の詳しくをクリックして確認できます。", "心相の凸・ロスレコの突破・しずく・素質の付け替え・音符の付け替えを、全部ためして、上の3分間の回数で合計したダメージが伸びる順に10個まで並べます（伸びが0.1%未満の組み合わせは除外します）<br>・心相: 凸を1つすすめます。<br>・ロスレコ: 突破を1つすすめます（サブは基礎攻撃力だけ変わります）<br>・しずく: 徽章の値を1段階上げます。1枚の徽章に2回までですが、既に使った回数は分からないので、考慮外になっています。<br>・素質の付け替え: 取った素質を1つ下げて、別の素質を1つ上げて伸びる組み合わせを1つ出します。<br>・音符の付け替え: 取った音符を減らして、別の音符に足してアシスト効果の伸びなどを見て、いちばん伸びる組み合わせを1つだけ出します。<br>付け替えは1回ずつ出すので、「反映する」のあと、次の付け替えが出ます（使った数は数えていないので、合計の上限は自分で確かめてください）<br>「反映する」を押すと、その変更をビルドに反映します。「今の値を記憶」をしていなければ、押す前の値を記憶するので、結果の比較で伸びを確かめられます。", "margin-top:8px")}</section>
+      <section class="sec full"><h3>オススメ強化ポイント<span class="beta-s">β版</span><button type="button" class="help-btn" data-act="upopen" aria-expanded="${!!V.upOpen}">${V.upOpen ? "閉じる" : "計算する"}</button><span class="h-sub">まだテスト版なので目安程度にお願いします。</span></h3>${upFilter}${upHtml}
+        ${!V.upOpen ? "" : helpTxt("ups", "※ロスレコの入れ替えには対応していません。比較項目は右の詳しくをクリックして確認できます。", "心相の凸・ロスレコの突破・しずく・素質の付け替え・音符の付け替えを、全部ためして、上の3分間の回数で合計したダメージが伸びる順に10個まで並べます（伸びが0.1%未満の組み合わせは除外します）<br>・心相: 凸を1つすすめます。<br>・ロスレコ: 突破を1つすすめます（サブは基礎攻撃力だけ変わります）<br>・しずく: 徽章の値を1段階上げます。1枚の徽章に2回までですが、既に使った回数は分からないので、考慮外になっています。<br>・素質の付け替え: 取った素質を1つ下げて、別の素質を1つ上げて伸びる組み合わせを1つ出します。<br>・音符の付け替え: 取った音符を減らして、別の音符に足してアシスト効果の伸びなどを見て、いちばん伸びる組み合わせを1つだけ出します。<br>上のボタンで種類を選ぶと、その種類だけを伸びる順に10個まで出します（複数選べます）。種類を選んだときは、付け替えもいくつも出します。<br>付け替えは1回ずつ出すので、「反映する」のあと、次の付け替えが出ます（使った数は数えていないので、合計の上限は自分で確かめてください）<br>「反映する」を押すと、その変更をビルドに反映します。「今の値を記憶」をしていなければ、押す前の値を記憶するので、結果の比較で伸びを確かめられます。", "margin-top:8px")}</section>
       <section class="sec full"><h3>与ダメへの寄与率</h3>
       ${helpTxt("verify", "1つの項目だけ変えたときに、3分間のダメージが何%変わるかです。", "「今 → 比べる値」は、今のLv（コア効果は突破）と、比べる値です。既定は1つ下で、◀▶で変えられます。Lv0まで下げると、まるごと外したときの値です。今より上にすると、上げたときにどれだけ伸びるか（+）が出ます。素質（コア以外）は、徽章の素質レベル上昇も込みのLvで、Lv9まで選べます（Lv7〜9の値は、ゲームの画面で確かめていないものは推定です）。徽章は、1枠を外したときです。<br><b>与ダメ寄与率</b>は編成の合計（主力の通常・主力スキル・必殺技（印を含む）＋支援2人の支援スキル、それぞれ上の回数ぶん）に対する値です。<br>SP獲得効率は、回数を上で決める形なので反映されません（「影響なし」になります）。直接入力を優先しているときは、ステータスに効く項目も動きません。ロスレコは、メインの3枚だけです（サブは初期音符だけで、効果はありません）。", "margin:0 0 8px")}
       <div class="grid-in decG">
@@ -1214,6 +1221,11 @@
     else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
+    else if (a.indexOf("upf:") === 0) {   // 種類のフィルタ（複数選べる。「すべて」で解除）
+      const k = a.slice(4); let f = (V.upF || []).slice();
+      if (!k) f = []; else f = f.indexOf(k) >= 0 ? f.filter(x => x !== k) : f.concat(k);
+      V.upF = f; renderAll();
+    }
     else if (a.indexOf("upapply:") === 0) {
       const u = (V.ups || [])[+a.slice(8)]; if (!u) return;
       if (!memo) { memo = { v: clone(window.__cur || {}) }; try { localStorage.setItem(KEY_M, JSON.stringify(memo)); } catch (e) { /* 無視 */ } }   // 比べられるよう、押す前の値を記憶
