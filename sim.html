@@ -431,6 +431,23 @@
   .stt th.bt { color: var(--link); }
   /* 素質カード: 見出し・説明・操作を上下にそろえる */
   .pot { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  /* メインのロスレコの効果（ゲームの画面に合わせ、帯＋白いカード。色は薄め） */
+  .lrfx { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 2px solid var(--border); border-radius: 12px; background: var(--surface-soft); font-size: 12px; }
+  .lrfx-h { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+  .lrfx-h b { font-size: 14px; color: var(--text); }
+  .lrfx-band { align-self: flex-start; padding: 1px 14px 1px 10px; border-radius: 4px 0 0 4px; background: linear-gradient(90deg, var(--tag-bg) 75%, transparent); color: var(--tag-text); font-weight: 900; font-size: 12px; letter-spacing: .05em; }
+  .lrfx-band span { margin-left: 8px; font-weight: 400; font-size: 11px; color: var(--muted); letter-spacing: 0; }
+  .lrfx-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+  .lrfx-card.off { opacity: .7; }
+  .lrfx-ah { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .lrfx-ah b { font-size: 13px; color: var(--text); }
+  .lrfx-lv { font-family: var(--font-en); font-size: 13px; letter-spacing: .03em; padding: 0 8px; border-radius: 999px; background: var(--surface-soft); color: var(--indigo); }
+  .lrfx-lv.off { font-family: var(--font); font-size: 11px; font-weight: 700; background: var(--pink-soft); color: var(--text); }
+  .lrfx-it { margin: 3px 0; line-height: 1.6; color: var(--text); }
+  .lrfx-it.skip { color: var(--muted); }
+  .lrfx-num { font-style: normal; font-weight: 700; color: var(--lrfx-num, #D9772B); }
+  [data-theme="dark"] .lrfx-num { color: #F2A766; }
+  .lrfx-need { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--border); font-size: 11px; color: var(--muted); }
   .pot .ph { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   .pot .ph b { margin-right: 2px; }
   .pot .ph select { width: auto; min-height: 28px; padding: 0 6px; }

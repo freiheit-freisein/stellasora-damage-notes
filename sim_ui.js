@@ -541,14 +541,16 @@
       const fx = S.LR_FX[id], r = L.find(x => x.id === id);
       if (!r) return "";
       if (!fx) return `<div class="pot"><b>${esc(lrName(r))}</b><span class="tag-ng">効果は計算に未対応（基礎攻撃力・基礎HP・属性ダメージだけ計算に入れます）</span></div>`;
+      // 文の中の効果量（「12%」「+0.3%」）を、ゲームの画面と同じように色を付けて目立たせる
+      const hl = t => esc(t).replace(/[+＋]?\d+(?:\.\d+)?%/g, m0 => `<em class="lrfx-num">${m0}</em>`);
       const item = (key, it, lv, mul) => {
         let txt = typeof it.txt === "function" ? it.txt(lv) : it.txt;
         if (mul && mul !== 1) txt = txt.replace(/\+([0-9.]+)%/g, (m0, n) => "+" + Math.round(+n * mul * 100) / 100 + "%");   // 手で入れたロスレコの突破
-        if (it.skip) return `<div style="margin:3px 0;color:var(--muted)">${esc(txt)} ${it.why === "info" ? '<span class="muted">（火力に関係しない）</span>' : `<span class="tag-ng"${it.why ? ` title="${esc(it.why)}"` : ""}>計算に未対応</span>`}</div>`;
+        if (it.skip) return `<div class="lrfx-it skip">${esc(txt)} ${it.why === "info" ? '<span class="muted">（火力に関係しない）</span>' : `<span class="tag-ng"${it.why ? ` title="${esc(it.why)}"` : ""}>計算に未対応</span>`}</div>`;
         const stk = (it.e || []).find(e => e.stk > 1);
         const isOn = (G.lrOn || {})[key] == null ? !it.off : (G.lrOn || {})[key];
         const tog = it.off ? ` 反映 <input type="checkbox" data-p="lrOn.${key}" data-t="b"${isOn ? " checked" : ""}>` : (it.need ? ` <span class="muted">条件: ${(S.LR_COUNTS.find(c => c.key === it.need[0]) || {}).label} が ${it.need[1]} 以上</span>` : (it.n ? ` <span class="muted">数: ${(S.LR_COUNTS.find(c => c.key === it.n) || {}).label}</span>` : ` <span class="tag-ok">常時</span>`));
-        return `<div style="margin:3px 0">${esc(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}${it.note ? ` <span class="muted">（${esc(it.note)}）</span>` : ""}</div>`;
+        return `<div class="lrfx-it">${hl(txt)}${stk ? `（最大${stk.stk}重で計算）` : ""}${tog}${it.note ? ` <span class="muted">（${esc(it.note)}）</span>` : ""}</div>`;
       };
       const rk = S.lrRankOf(G, id);
       const rankSel = rk.can ? ` <span class="muted">突破${S.lrRoman(rk.rank)}${rk.r0 ? `（画面で確かめた値は突破${S.lrRoman(rk.r0)}。ほかの突破はWikiの伸び方で計算）` : ""}</span>` : "";
@@ -556,10 +558,13 @@
       const as = fx.assists.map(a => {
         const lv = S.lrAssistLv(S.notesTotal(G), a);
         const need = a.notes.map(n => n.replace("の音符", "")).join("・");
-        return `<div style="margin-top:6px"><b>${esc(a.name)}</b> ${lv ? `<span class="tag-ok">Lv${lv} 発動</span>` : '<span class="tag-ng">未発動</span>'}<span class="muted"> 解放: ${need} ${a.base}以上（Lvごとに+15）</span>
-          ${lv ? a.items.map(it => item(id + ":" + a.id + ":" + it.id, it, lv)).join("") : ""}</div>`;
+        return `<div class="lrfx-card${lv ? "" : " off"}"><div class="lrfx-ah"><b>${esc(a.name)}</b>${lv ? `<span class="lrfx-lv">Lv.${lv}</span>` : '<span class="lrfx-lv off">未発動</span>'}</div>
+          ${lv ? a.items.map(it => item(id + ":" + a.id + ":" + it.id, it, lv)).join("") : ""}<div class="lrfx-need">解放条件：${need} ${a.base}以上（Lvごとに+15）</div></div>`;
       }).join("");
-      return `<div class="pot core" style="grid-column:1/-1"><div class="ph"><b>${esc(lrName(r))}</b> <span class="muted">コア効果</span>${rankSel}</div>${core}${as ? `<div class="muted" style="margin-top:6px">アシスト効果（音符のレベルで自動で解放）</div>${as}` : ""}</div>`;
+      // ゲームのロスレコの画面と同じ並び: 名前 → 「コア効果」の帯と白いカード → 「アシスト効果」の帯と効果ごとのカード（色は薄めにする）
+      return `<div class="lrfx" style="grid-column:1/-1"><div class="lrfx-h"><b>${esc(lrName(r))}</b>${rankSel}</div>
+        <div class="lrfx-band">コア効果</div><div class="lrfx-card">${core || '<div class="lrfx-it skip">登録されていません</div>'}</div>
+        ${as ? `<div class="lrfx-band">アシスト効果<span>音符のレベルで自動で解放</span></div>${as}` : ""}</div>`;
     }).join("");
     const rb = E.recordBonus(G.recordLv);
     const recOpts = (RECORD_LEVELS || []).map(x => [x[0], `Lv${x[0]}（攻撃+${x[2]} / HP+${x[3]}）`]);
