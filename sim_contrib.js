@@ -323,7 +323,8 @@
         const gain = sum3(dmgParts(x)) - d0;
         return { r: gain > 0 ? gain / cost : -1, cost };
       };
-      cands.forEach(cd => { cd.stale = memo.has(cd.key) ? memo.get(cd.key) : Infinity; });
+      // アシスト効果をそろえる手は、ほかの音符が増えるほど安くなる（伸びが段ごとに小さくなるとは限らない）ので、毎回計算し直す
+      cands.forEach(cd => { cd.stale = memo.has(cd.key) && cd.key[0] !== "a" ? memo.get(cd.key) : Infinity; });
       cands.sort((a, b) => b.stale - a.stale);
       let best = null;
       for (const cd of cands) {

@@ -1233,7 +1233,9 @@
     else if (a === "wiz-more") { V.wiz.more = true; renderPick(); }
     else if (a === "wiz-apply") {
       const pl = V.wiz.plan; if (!pl) return;
-      G = merge(defState(), clone(pl.g)); V.pick3 = null; V.wiz = null; $("pickDlg").close();
+      G = merge(defState(), clone(pl.g));
+      G.notes = clone(pl.g.notes);   // 初期値の音符と混ざらないように、音符は作ったビルドのものだけにする
+      V.pick3 = null; V.wiz = null; $("pickDlg").close();
       shareMsg = "条件を指定してビルドを作りました"; V.panel = "overview"; renderAll();
     }
     else if (a === "pick-open") { V.wiz = null; V.pickSure = false; DM.pick = null; $("pickDlg").showModal(); renderPick(); }
