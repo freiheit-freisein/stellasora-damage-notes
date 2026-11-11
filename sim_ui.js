@@ -479,6 +479,7 @@
     LR_ST.forEach(([k, lab]) => { const v = st[k]; if (!v) return;
       if (k === "baseAtk" && S.lrAtkScalable(r)) { const mx = S.lrAtkMax(r); return parts.push(`${lab} ${mx - 650}-${mx}`); }   // 突破I〜VI
       parts.push(k === "elemDmg" ? `${r.element}属性ダメージ${Math.round(v * 1000) / 10}%` : /Dmg$/.test(k) ? `${lab}${Math.round(v * 1000) / 10}%` : `${lab} ${Math.round(v)}`); });
+    if (parts.length <= 1 && !Object.keys(st).length) parts.push("ステータス未登録");   // ステータスが1つも入っていないもの（★だけになるので）
     return `${r.name}${r.auto || r.autoFx ? "*" : ""}${parts.length ? `（${parts.join(" / ")}）` : ""}`;
   };
   function renderLr() {
