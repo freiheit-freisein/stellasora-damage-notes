@@ -82,19 +82,21 @@
     //  現在＝計算機が使う値（★5の基礎攻撃力は 突破1つごとに +130・突破VI＝最大。ほかは突破で変わらない扱い）
     //  控え＝最大Lvのステータス（突破I）＋凸ごとの増え方
     const RK = [1, 2, 3, 4, 5, 6];
-    const rkKeys = [...new Set([Object.keys(st)[0], "baseAtk"])].filter(k => k && st[k] != null && !(st[k] > 0 && st[k] < 1));
+    // ステータスが1つも登録されていないロスレコ（Wikiに無いもの）も、基礎攻撃力を突破ごとに入れられるようにする
+    const noSt = !Object.keys(st).length;
+    const rkKeys = noSt ? ["baseAtk"] : [...new Set([Object.keys(st)[0], "baseAtk"])].filter(k => k && st[k] != null && !(st[k] > 0 && st[k] < 1));
     const rfS = (window.REF_LOCAL_LR || {})[r.name] || null;
     const fxS = (chk[r.id] || {}).fix || {};
     const rkRows = rkKeys.map(k => {
       const up = k === "baseAtk" && S.lrAtkScalable && S.lrAtkScalable(r);
-      const reg = {}; RK.forEach(n => { reg[n] = String(up ? S.lrAtkMax(r) - 130 * (6 - n) : st[k]); });
+      const reg = {}; if (st[k] != null) RK.forEach(n => { reg[n] = String(up ? S.lrAtkMax(r) - 130 * (6 - n) : st[k]); });
       const RKEY = { baseAtk: "ATK", baseHp: "HP", baseDef: "DEF" }[k];
       let ref = null;
       if (RKEY && rfS && rfS.statMax && rfS.statMax[RKEY] != null) { const b0 = +rfS.statMax[RKEY]; ref = { 1: String(b0) }; (rfS.dupe || []).forEach((d, j) => { ref[j + 2] = String(b0 + (+d[RKEY] || 0)); }); }
       return { i: "st:" + k, label: ST[k] || k, reg, ref };
     });
     const rankTable = rkRows.length ? CMP.table({ lvs: RK, head: n => "突破" + ROMAN[n - 1], rows: rkRows, get: (kd, i, lv) => kd === "g" && lv === (ROMAN.indexOf(String((r.core || {}).rank)) + 1) ? val("g", i) : null, attr: (kd, i, lv) => `data-lk="${kd === "f" ? "f:" : ""}${i}:${lv}"`, fix: i => fxS[i] }) : "";
-    const stRows = Object.keys(st).filter(k => rkKeys.indexOf(k) < 0).map(k => { const v = st[k], pct = v > 0 && v < 1; return `<tr><td>${esc(ST[k] || k)}</td><td style="text-align:center">${pct ? Math.round(v * 1000) / 10 + "%" : v}</td><td class="ck-in">${inp("st:" + k)}</td></tr>`; }).join("");
+    const stRows = (noSt ? ["elemDmg"] : Object.keys(st)).filter(k => rkKeys.indexOf(k) < 0).map(k => { const v = st[k], pct = v > 0 && v < 1; return `<tr><td>${esc(ST[k] || k)}</td><td style="text-align:center">${v == null ? "—" : pct ? Math.round(v * 1000) / 10 + "%" : v}</td><td class="ck-in">${inp("st:" + k)}</td></tr>`; }).join("");
     const notes = ((r.sub && r.sub.startNotes) || []);
     const ntRows = notes.map((n, i) => `<tr><td>${esc(n.note)}</td><td style="text-align:center">Lv${n.lv}</td><td class="ck-in">${inp("nt:" + i)}</td></tr>`).join("");
     ROWS = [];
