@@ -489,7 +489,7 @@
     const rankSel = (arr, id) => {
       const r = id && L.find(x => x.id === id);
       const fxCan = arr === "lrMain" && id && S.lrRankOf(G, id).can, atkCan = S.lrAtkScalable(r);
-      if (!fxCan && !atkCan) return `<span class="muted" style="font-size:11px">${id ? "突破は固定" : ""}</span>`;
+      if (!fxCan && !atkCan) return `<span class="muted" style="font-size:11px">${id ? S.lrFixedTxt(G, id, arr) : ""}</span>`;
       const now = S.lrRankNow(G, id);
       return `<select data-p="lrRank.${id}" data-t="n" title="突破">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === now ? " selected" : ""}>突破${S.lrRoman(n)}</option>`).join("")}</select>`;
     };

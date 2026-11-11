@@ -86,7 +86,7 @@
       const r = id && LRS().find(x => x.id === id);
       if (!r) return { t: "—", can: false };
       const can = (arr === "lrMain" && S.lrRankOf(g, id).can) || S.lrAtkScalable(r);
-      return { t: can ? "突破" + S.lrRoman(S.lrRankNow(g, id)) : "突破は固定", can };   // 計算ノートの突破の欄と同じ値
+      return { t: can ? "突破" + S.lrRoman(S.lrRankNow(g, id)) : S.lrFixedTxt(g, id, arr), can };   // 計算ノートの突破の欄と同じ値
     };
     [["lrMain", "メイン"], ["lrSub", "サブ"]].forEach(([arr, lab]) => [0, 1, 2].forEach(i => {
       const ia = (ga[arr] || [])[i] || "", ib = (gb[arr] || [])[i] || "";
