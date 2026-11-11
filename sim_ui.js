@@ -892,7 +892,7 @@
     }
     const upFilter = !V.upOpen ? "" : `<div class="up-f" role="group" aria-label="種類で絞り込む"><button type="button" class="${upF.length ? "" : "on"}" aria-pressed="${!upF.length}" data-act="upf:">すべて</button>${UPK.map(k => `<button type="button" class="${upF.indexOf(k) >= 0 ? "on" : ""}" aria-pressed="${upF.indexOf(k) >= 0}" data-act="upf:${k}">${k}</button>`).join("")}</div>`;
     const KCLS = { 心相: "k-heart", しずく: "k-emb", 素質: "k-pot", ロスレコ: "k-lr", 音符: "k-note" };
-    const upHtml = !V.upOpen ? '<p class="muted" style="margin:0">1つだけ変えたときに、3分間のダメージが大きく伸びる強化を10個まで出します。</p>' : (V.ups || []).length ? `<ol class="up-list">${V.ups.map((u, i) => `<li><span class="up-k ${KCLS[u.kind] || ""}">${u.kind}</span><span class="up-l">${esc(u.label)}</span><b class="up-g">+${(u.gain * 100).toFixed(1)}%</b><button type="button" class="btn-add" data-act="upapply:${i}">反映する</button></li>`).join("")}</ol>` : '<p class="muted" style="margin:0">伸びる手が見つかりませんでした。</p>';
+    const upHtml = !V.upOpen ? '<p class="muted" style="margin:0">1つだけ変えたときに、3分間のダメージが大きく伸びる強化を10個まで出します。</p>' : (V.ups || []).length ? `<ol class="up-list">${V.ups.map((u, i) => `<li><span class="up-k ${KCLS[u.kind] || ""}">${u.kind}</span><span class="up-l">${esc(u.label)}</span><b class="up-g">+${(u.gain * 100).toFixed(1)}%</b><button type="button" class="btn-add" data-act="upapply:${i}">反映する</button></li>`).join("")}</ol>` : '<p class="muted" style="margin:0">強化ポイントが見つかりませんでした。</p>';
     return `<div class="wide"><div class="secg">
       <section class="sec full"><h3>3分間の回数<span class="h-sub">寄与率は、この回数で合計した3分間のダメージで出します</span></h3>
       <div class="box" style="border-color:#E5533D;background:#FFF4F2;margin:0 0 8px"><b style="color:#C0392B">⚠ 3分間の回数は、かなり雑な目安です</b>
