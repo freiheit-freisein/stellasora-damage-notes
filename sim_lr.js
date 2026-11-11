@@ -124,6 +124,22 @@
     addRec({ id: r.id, name: r.name, rarity: r.rarity, element: r.element, level: 90, levelMax: 90, stats: r.stats, core: { name: r.coreName, rank: "?" }, sub: { startNotes: r.sub }, auto: true });
     S.LR_FX[r.id] = autoFx(r);
   });
+  // Wikiにステータスやサブの初期の音符が無かったロスレコに、ゲームの画面で確かめた値を入れる（素質の確認ページ「ロスレコの確認」・2026-11-11）
+  //   基礎攻撃力は突破VIの値（Wikiのロスレコは突破VIの値で持つ。突破I〜VIは +130 ずつ）、属性ダメージはそのロスレコの属性
+  const GAME_ST = {
+    "迷いを断つ拳": { baseAtk: 1533, elemDmg: 0.12 },
+    "風に舞う想い": { baseAtk: 1533, elemDmg: 0.12 },
+    "私と君の楽園": { baseAtk: 1631, elemDmg: 0.15, notes: ["地の音符", "器用の音符"] },
+    "奇跡の創造": { baseAtk: 1533, elemDmg: 0.12, notes: ["必殺の音符", "集中の音符"] },
+    "欲しかったもの": { baseAtk: 1631, elemDmg: 0.15, notes: ["器用の音符", "火の音符"] },
+    "団らんのひととき": { baseAtk: 1533, elemDmg: 0.12, notes: ["必殺の音符", "集中の音符"] },
+  };
+  Object.keys(GAME_ST).forEach(name => {
+    const r = L.find(x => x.name === name), o = GAME_ST[name];
+    if (!r) return;
+    if (!(r.stats || {}).baseAtk) r.stats = Object.assign({}, r.stats, { baseAtk: o.baseAtk, elemDmg: o.elemDmg });
+    if (o.notes && r.sub && r.sub.startNotes) r.sub.startNotes = r.sub.startNotes.map((x, i) => /〇〇/.test(x.note) ? Object.assign({}, x, { note: o.notes[i] }) : x);
+  });
   // 惹かれ合う星（w45）: Wikiの取り込みで外れていた「親和力1につき」の2つを、親和力の数の入力で入れる（値はWikiの説明文のまま）
   (fx => {
     if (!fx) return;
