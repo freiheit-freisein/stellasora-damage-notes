@@ -133,6 +133,7 @@
     "奇跡の創造": { baseAtk: 1533, elemDmg: 0.12, notes: ["必殺の音符", "集中の音符"] },
     "欲しかったもの": { baseAtk: 1631, elemDmg: 0.15, notes: ["器用の音符", "火の音符"] },
     "団らんのひととき": { baseAtk: 1533, elemDmg: 0.12, notes: ["必殺の音符", "集中の音符"] },
+    "惹かれ合う星": { baseAtk: 1631, elemDmg: 0.15 },
   };
   Object.keys(GAME_ST).forEach(name => {
     const r = L.find(x => x.name === name), o = GAME_ST[name];
