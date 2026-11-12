@@ -185,7 +185,8 @@
     const emb = (cs.emb || []).filter((e, i) => cs.embOn[i] && e.slots.some(sl => sl.k)).length;
     const pc = potCount(potItems(k));
     const add = Object.keys(cs.add || {}).filter(x => +cs.add[x]).length;
-    return { heart: `${Math.floor((cs.talent || 0) / 10)}凸`, emb: emb ? `${emb}枚` : "なし", pot: pc.core || pc.normal ? `コア${pc.core}・通常${pc.normal}` : "なし", add: add ? `加算 ${add}件` : "なし" };
+    const hn = Math.floor((cs.talent || 0) / 10), hReg = !!(S.HEART_SPEC || {})[id];   // 心相の戦闘中の効果が未登録なら、凸があっても効果が入っていないことを出す
+    return { heart: hn && !hReg ? `${hn}凸（効果は未登録）` : `${hn}凸`, emb: emb ? `${emb}枚` : "なし", pot: pc.core || pc.normal ? `コア${pc.core}・通常${pc.normal}` : "なし", add: add ? `加算 ${add}件` : "なし" };
   }
   function renderOverview() {
     const col = ([k, l]) => {
