@@ -67,14 +67,14 @@ window.SIM = window.SIM || {};
         support: [H(2, 0, 4, "skill", "スイープスラッシュ×4", "sSweep", ["support", "sweepSlash"]), H(2, 1, 1, "skill", "アイシクルスラッシュ", "sIcicle", ["support", "icicle"]), H(2, 2, 1, "skill", "氷晶", "sCrystal", ["support", "crystal"])],
         ult: [H(3, 0, 1, "ult", "一掃（1段目）", "uDust", ["ult", "dust"]), H(3, 2, 1, "ult", "粛清（2段目）", "uPurge", ["ult", "purge"])],
       } },
-    // トーナ（2026-11-13）。自動のヒットでは支援スキルの矢とカスケードルートの区別がなかったので、素質の効き先が分かるように手で書く。主力スキルは4秒ごと・12秒間で3回、必殺技は0.5秒ごと・6秒間で12回（2026-11-13）
+    // トーナ（2026-11-13）。自動のヒットでは支援スキルの矢とカスケードルートの区別がなかったので、素質の効き先が分かるように手で書く。主力スキルは4秒ごと・12秒間で3回、必殺技は13回（ゲームで13発を確認・2026-11-14）
     { id: "donna", en: "Donna", jp: "トーナ", el: "水", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
       hits: {
         basic: [H(0, 0, 1, "basic", "通常攻撃", "b1", ["basic"]), H(0, 1, 1, "basic", "通常攻撃（速達状態）", "b2", ["basic", "agile"])],
         main: [H(1, 0, 3, "skill", "呼び込みトーナちゃん（4秒ごと・12秒間）", "mDoll", ["main", "minion"])],
         support: [H(2, 0, 1, "skill", "スプラッシュアロー 1本目", "sA1", ["support", "arrow"]), H(2, 1, 2, "skill", "スプラッシュアロー 2〜3本目", "sA2", ["support", "arrow"]), H(2, 2, 3, "skill", "スプラッシュアロー 4〜6本目", "sA3", ["support", "arrow"]),
           H(2, 3, 2, "skill", "スプラッシュアロー 7〜8本目", "sA4", ["support", "arrow"]), H(2, 4, 1, "skill", "スプラッシュアロー 9本目", "sA5", ["support", "arrow"]), H(2, 5, 1, "skill", "カスケードルート", "sCascade", ["support", "cascade"])],
-        ult: [H(3, 0, 12, "ult", "アローレイン（0.5秒ごと・6秒間）", "uRain", ["ult"])],
+        ult: [H(3, 0, 13, "ult", "アローレイン（0.5秒ごと・6秒間。最初の1発を入れて13回）", "uRain", ["ult"])],
       } },
     // シャトン・フリージア・ミネルバ（2026-11-13）。素質の効き先（ネコ神爆弾・魔痕・貫通弾・星芒など）が分かるように手で書く。繰り返しの回数は説明文の秒数から（例: 0.3秒ごと・3秒間 = 10回）
     { id: "chaton", en: "Chaton", jp: "シャトン", el: "火", ref: "atk", role: "ヴァンガード", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
