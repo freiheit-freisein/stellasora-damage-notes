@@ -270,6 +270,8 @@ window.SIM = window.SIM || {};
   };
   const coreLvOf = (en, pn, m) => { const h = coreLvHit(en, pn, m); return h ? h.k : null; };
   const DEFK = { defDown: 1, defPen: 1 };   // 実数で持つ効果（防御力低下・防御貫通）
+  // 確率: prob = 決まった確率、probN = 素質の数値の番号（Lvで変わる確率。probOver でLvごとに上書き）
+  const probOf = (e, lv, info) => e.prob != null ? e.prob : e.probN != null ? lvVal(info.nums[e.probN] || [0], lv, e.probOver, e.ext || info.ext) / 100 : null;
   function collect(G, team) {
     const chs = team.map(id => S.CH.find(c => c.id === id));
     // 「光属性の全員」などは、効果を持つ巡遊者と同じ属性の全員として扱う（光チーム以外にも使えるようにした）
@@ -304,6 +306,7 @@ window.SIM = window.SIM || {};
       if (stk == null || stk === "") stk = e.stk0 != null ? e.stk0 : (e.stk || 1);   // stk0 = 既定の重複数（最大の stk と違うとき）
       v *= stk;
       if (e.perLux) v *= sameN(oid);
+      const pr = probOf(e, lv, info); if (pr != null) v *= pr;   // 確率で起きる効果は期待値（例: フリージアの反証論破 50%）
       recvOf(e.to, oid, e).forEach(rid => {
         const a = out[rid];
         if (e.k === "count") { a.count[e.hit] = (a.count[e.hit] || 0) + e.add; return; }
@@ -390,7 +393,7 @@ window.SIM = window.SIM || {};
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）", defDown: "敵の防御力低下", defPen: "防御貫通" };
   const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
-    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", shitsuke: "ママのしつけ", iceBlade: "氷刃", iceEdge: "アイスエッジ", frostBloom: "追加の華", sweepSlash: "スイープスラッシュ", icicle: "アイシクルスラッシュ", crystal: "氷晶", dust: "一掃", purge: "粛清", purgeX: "粛清の残像", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃", arrow: "スプラッシュアロー", cascade: "カスケードルート", tail: "矢尾への追加ダメージ", pullOut: "矢尾の引き抜き", pursuit: "追い打ち", track: "トラッキングウェーブ", agile: "速達状態", minion: "従者", gust: "突風", vortex: "旋風", counter: "反撃" };
+    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", shitsuke: "ママのしつけ", iceBlade: "氷刃", iceEdge: "アイスエッジ", frostBloom: "追加の華", sweepSlash: "スイープスラッシュ", icicle: "アイシクルスラッシュ", crystal: "氷晶", dust: "一掃", purge: "粛清", purgeX: "粛清の残像", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃", arrow: "スプラッシュアロー", cascade: "カスケードルート", tail: "矢尾への追加ダメージ", pullOut: "矢尾の引き抜き", pursuit: "追い打ち", track: "トラッキングウェーブ", agile: "速達状態", minion: "従者", gust: "突風", vortex: "旋風", counter: "反撃", bomb: "ネコ神爆弾", bombLand: "爆弾の着地", bombKai: "ネコ神爆弾改", fall: "空に堕ちる焔", scar: "魔痕", flare: "インフィニティフレア", glare: "アビスグレア", curse: "覗き込む闇", markDark: "漆黒の刻印", roll: "ローリング射撃", pierce: "貫通弾", pierceX: "追加の貫通弾", split: "小型貫通弾", puni: "ぷにぷにボム", bless: "黒き祝福", eye: "魔眼の射手", normal: "通常（狂化でない）", berserk: "狂化中の通常攻撃", flower: "氷華", seed: "氷の種", triple: "三塁打", double: "二塁打", noRespite: "連続打撃の追加ダメージ", glowBurst: "光輝炸裂", thunder: "落雷", moon: "フォルモント・ネールモント", star: "星芒", shutout: "完封欲求", arc: "ジャストミート", b5: "通常攻撃5撃目" };
   const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人", others: "自分以外の味方" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき", isMain: "主力のとき" };
@@ -414,7 +417,7 @@ window.SIM = window.SIM || {};
       }
       if (e.k === "count" || e.k === "countMul") {
         const hh = c && Object.values(c.hits || {}).flat().find(h => h.id === e.hit), cn = e.cond ? "（" + (CONDJ[e.cond] || e.cond) + "）" : "";
-        return `${hh ? hh.name + "の" : ""}ヒット回数 ${e.k === "count" ? "+" + e.add : "×" + e.mul}${cn}`;
+        return `${hh ? hh.name + "の" : ""}ヒット回数 ${e.k === "count" ? "+" + e.add : "×" + Math.round(e.mul * 100) / 100}${cn}`;
       }
       if (e.k === "drop") return "";
       if (e.k === "retype") return `${(e.tags || []).map(t => TAGJ[t] || t).join("・")}のダメージを${HTJ[e.t] || e.t}ダメージに変換${e.cond ? "（" + (CONDJ[e.cond] || e.cond) + "）" : ""}`;
@@ -428,6 +431,7 @@ window.SIM = window.SIM || {};
       else if (!e.to && !/^taken/.test(e.k)) notes.push("自分");
       if (e.perLux) notes.push("同じ属性の人数ぶん");
       if (e.stk > 1) notes.push(`最大${e.stk}重${e.stk0 != null ? `・既定${e.stk0}重` : ""}`);
+      { const pr = probOf(e, lv, Object.assign({}, info, { ext })); if (pr != null) notes.push(`確率${r1(pr * 100)}%の期待値で計算`); }
       if (e.ht) notes.push(`${HTJ[e.ht] || e.ht}だけ`);
       if (e.cond) notes.push(CONDJ[e.cond] || e.cond);
       return `${tg}${kn} ${v < 0 ? "" : "+"}${flat ? r1(v) : r1(v * 100) + "%"}${notes.length ? "（" + notes.join("・") + "）" : ""}`;

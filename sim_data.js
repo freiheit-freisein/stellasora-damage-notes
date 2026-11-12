@@ -76,6 +76,33 @@ window.SIM = window.SIM || {};
           H(2, 3, 2, "skill", "スプラッシュアロー 7〜8本目", "sA4", ["support", "arrow"]), H(2, 4, 1, "skill", "スプラッシュアロー 9本目", "sA5", ["support", "arrow"]), H(2, 5, 1, "skill", "カスケードルート", "sCascade", ["support", "cascade"])],
         ult: [H(3, 0, 12, "ult", "アローレイン（0.5秒ごと・6秒間）", "uRain", ["ult"])],
       } },
+    // シャトン・フリージア・ミネルバ（2026-11-13）。素質の効き先（ネコ神爆弾・魔痕・貫通弾・星芒など）が分かるように手で書く。繰り返しの回数は説明文の秒数から（例: 0.3秒ごと・3秒間 = 10回）
+    { id: "chaton", en: "Chaton", jp: "シャトン", el: "火", ref: "atk", role: "ヴァンガード", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 1, "basic", "オートトリガー", "bAuto", ["basic"]), H(0, 1, 1, "ult", "インフィニティフレア（魔眼解放中）", "bFlare", ["basic", "flare"])],
+        main: [H(1, 0, 1, "skill", "ポジトロンシュート（空に堕ちる焔・タップ）", "mShot", ["main", "fall"]), H(1, 1, 1, "skill", "魔痕（2秒ごと・1回分）", "mScar", ["main", "scar"]),
+          H(1, 2, 2, "skill", "ネコ神爆弾×2（ネコ神への祈り・長押し）", "mBomb", ["main", "bomb"])],
+        support: [H(2, 0, 3, "skill", "貫通弾（ローリング×3）", "sRoll", ["support", "pierce", "roll"])],
+        ult: [H(3, 0, 8, "ult", "掃射×8", "uSweep", ["ult", "sweep"]), H(3, 1, 1, "ult", "アビスグレアの爆発", "uGlare", ["ult", "glare"])],
+      } },
+    { id: "freesia", en: "Freesia", jp: "フリージア", el: "水", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 1, "basic", "1撃目", "b1", ["basic", "normal"]), H(0, 1, 1, "basic", "2撃目", "b2", ["basic", "normal"]), H(0, 2, 2, "basic", "3撃目×2", "b3", ["basic", "normal"]),
+          H(0, 3, 3, "basic", "4撃目×3", "b4", ["basic", "normal"]), H(0, 4, 1, "basic", "5撃目", "b5", ["basic", "normal"]),
+          H(0, 5, 2, "basic", "狂化 1撃目×2", "k1", ["basic", "berserk"]), H(0, 6, 2, "basic", "狂化 2撃目×2", "k2", ["basic", "berserk"]), H(0, 7, 1, "basic", "狂化 3撃目", "k3", ["basic", "berserk"]),
+          H(0, 8, 4, "basic", "狂化 3撃目×4", "k4", ["basic", "berserk"]), H(0, 9, 1, "basic", "狂化 3撃目（最後）", "k5", ["basic", "berserk"])],
+        main: [H(1, 0, 12, "skill", "旋風斬り（0.3秒ごと・最大チャージ3.6秒）", "mSwirl", ["main"])],
+        support: [H(2, 0, 1, "skill", "氷華", "sFlower", ["support", "flower"]), H(2, 1, 1, "skill", "氷華の爆発", "sBurst", ["support", "flower"])],
+        ult: [H(3, 0, 1, "ult", "咆哮 1", "u1", ["ult"]), H(3, 1, 1, "ult", "咆哮 2", "u2", ["ult"]), H(3, 2, 1, "ult", "咆哮 3", "u3", ["ult"])],
+      } },
+    { id: "minova", en: "Minova", jp: "ミネルバ", el: "光", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 1, "basic", "1撃目", "b1", ["basic"]), H(0, 1, 1, "basic", "2撃目", "b2", ["basic"]), H(0, 2, 1, "basic", "3撃目", "b3", ["basic"]),
+          H(0, 3, 1, "basic", "4撃目", "b4", ["basic"]), H(0, 4, 6, "basic", "4撃目×6", "b4x", ["basic"]), H(0, 5, 1, "basic", "5撃目", "b5", ["basic", "b5"])],
+        main: [H(1, 0, 1, "skill", "バットの一撃", "mBat", ["main"]), H(1, 1, 10, "skill", "二塁打 乱れ打ち（0.3秒ごと・3秒間）", "mDouble", ["main", "double"]), H(1, 2, 1, "skill", "二塁打 強打", "mSmash", ["main", "double"])],
+        support: [H(2, 0, 1, "skill", "星光", "sLight", ["support"]), H(2, 1, 2, "skill", "星芒（2つ・1回分ずつ）", "sStar", ["support", "star"])],
+        ult: [H(3, 0, 16, "ult", "ウィンドアッシュの攻撃（0.3秒ごと・5秒間）", "uAsh", ["ult"])],
+      } },
   ];
   // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
   (window.SIM_CHARS_AUTO || []).forEach(c => { if (!S.CH.some(x => x.en === c.en)) S.CH.push(c); });
