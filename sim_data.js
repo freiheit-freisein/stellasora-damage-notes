@@ -67,14 +67,14 @@ window.SIM = window.SIM || {};
         support: [H(2, 0, 4, "skill", "スイープスラッシュ×4", "sSweep", ["support", "sweepSlash"]), H(2, 1, 1, "skill", "アイシクルスラッシュ", "sIcicle", ["support", "icicle"]), H(2, 2, 1, "skill", "氷晶", "sCrystal", ["support", "crystal"])],
         ult: [H(3, 0, 1, "ult", "一掃（1段目）", "uDust", ["ult", "dust"]), H(3, 2, 1, "ult", "粛清（2段目）", "uPurge", ["ult", "purge"])],
       } },
-    // トーナ（2026-11-13）。自動のヒットでは支援スキルの矢とカスケードルートの区別がなかったので、素質の効き先が分かるように手で書く。回数は自動と同じ（毎秒などは1回分）
+    // トーナ（2026-11-13）。自動のヒットでは支援スキルの矢とカスケードルートの区別がなかったので、素質の効き先が分かるように手で書く。主力スキルは4秒ごと・12秒間で3回、必殺技は0.5秒ごと・6秒間で12回（2026-11-13）
     { id: "donna", en: "Donna", jp: "トーナ", el: "水", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
       hits: {
         basic: [H(0, 0, 1, "basic", "通常攻撃", "b1", ["basic"]), H(0, 1, 1, "basic", "通常攻撃（速達状態）", "b2", ["basic", "agile"])],
-        main: [H(1, 0, 1, "skill", "呼び込みトーナちゃん（1回分）", "mDoll", ["main", "minion"])],
+        main: [H(1, 0, 3, "skill", "呼び込みトーナちゃん（4秒ごと・12秒間）", "mDoll", ["main", "minion"])],
         support: [H(2, 0, 1, "skill", "スプラッシュアロー 1本目", "sA1", ["support", "arrow"]), H(2, 1, 2, "skill", "スプラッシュアロー 2〜3本目", "sA2", ["support", "arrow"]), H(2, 2, 3, "skill", "スプラッシュアロー 4〜6本目", "sA3", ["support", "arrow"]),
           H(2, 3, 2, "skill", "スプラッシュアロー 7〜8本目", "sA4", ["support", "arrow"]), H(2, 4, 1, "skill", "スプラッシュアロー 9本目", "sA5", ["support", "arrow"]), H(2, 5, 1, "skill", "カスケードルート", "sCascade", ["support", "cascade"])],
-        ult: [H(3, 0, 1, "ult", "アローレイン（1回分）", "uRain", ["ult"])],
+        ult: [H(3, 0, 12, "ult", "アローレイン（0.5秒ごと・6秒間）", "uRain", ["ult"])],
       } },
   ];
   // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
