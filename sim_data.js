@@ -95,6 +95,25 @@ window.SIM = window.SIM || {};
         support: [H(2, 0, 1, "skill", "氷華", "sFlower", ["support", "flower"]), H(2, 1, 1, "skill", "氷華の爆発", "sBurst", ["support", "flower"])],
         ult: [H(3, 0, 1, "ult", "咆哮 1", "u1", ["ult"]), H(3, 1, 1, "ult", "咆哮 2", "u2", ["ult"]), H(3, 2, 1, "ult", "咆哮 3", "u3", ["ult"])],
       } },
+    // レイセン・ラール（聖夜）（2026-11-13）。素質の効き先（種子・種子の雨・種球、ウィップコマンド・おもちゃ・プレゼント砲弾など）が分かるように手で書く
+    { id: "ridge", en: "Ridge", jp: "レイセン", el: "地", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 1, "basic", "エネルギー弾", "bBullet", ["basic", "bullet"]), H(0, 1, 1, "basic", "シャベル砲（近くの敵）", "bShovel", ["basic"])],
+        main: [H(1, 0, 1, "skill", "シャベル砲", "mShovel", ["main"]), H(1, 1, 1, "skill", "種子", "mSeed", ["main", "seed"])],
+        support: [H(2, 0, 6, "skill", "種子の雨×6", "sRain", ["support", "rain"]), H(2, 1, 1, "skill", "種球", "sBulb", ["support", "bulb"])],
+        ult: [H(3, 0, 5, "ult", "連続攻撃×5", "u1", ["ult"]), H(3, 1, 1, "ult", "最終撃", "u2", ["ult", "final"])],
+      } },
+    { id: "snowish_laru", en: "Snowish Laru", jp: "ラール（聖夜）", el: "火", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 1, "basic", "1撃目", "b1", ["basic"]), H(0, 1, 1, "basic", "2撃目", "b2", ["basic"]), H(0, 2, 1, "basic", "3撃目", "b3", ["basic"]),
+          H(0, 3, 5, "basic", "4撃目×5", "b4", ["basic"]), H(0, 4, 3, "basic", "5撃目×3", "b5", ["basic"]),
+          H(0, 5, 1, "skill", "クルミ大佐の攻撃（従者）", "bKurumi", ["basic", "minion", "kurumi"]), H(0, 6, 2, "skill", "巻き毛将軍の攻撃×2（従者）", "bGeneral", ["basic", "minion", "general"])],
+        main: [H(1, 0, 1, "skill", "ウィップコマンド", "mWhip", ["main", "whip"]), H(1, 1, 1, "skill", "クルミ大佐の連携作戦（従者）", "mKurumi", ["main", "minion", "kurumi", "coop"]),
+          H(1, 2, 2, "skill", "巻き毛将軍の連携作戦×2（従者）", "mGeneral", ["main", "minion", "general", "coop"])],
+        support: [H(2, 0, 4, "skill", "プレゼント砲弾×4", "sShell", ["support", "shell"]), H(2, 1, 1, "skill", "プレゼント砲弾の爆発", "sBlast", ["support", "shell", "blast"]),
+          H(2, 2, 1, "skill", "クルミ大佐（召喚・従者）", "sKurumi", ["support", "minion", "kurumi"])],
+        ult: [H(3, 0, 1, "ult", "ラール人形の銃撃", "uShot", ["ult", "doll"]), H(3, 1, 5, "ult", "キャンディ乱射×5", "uCandy", ["ult", "candy"])],
+      } },
     { id: "minova", en: "Minova", jp: "ミネルバ", el: "光", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
       hits: {
         basic: [H(0, 0, 1, "basic", "1撃目", "b1", ["basic"]), H(0, 1, 1, "basic", "2撃目", "b2", ["basic"]), H(0, 2, 1, "basic", "3撃目", "b3", ["basic"]),
