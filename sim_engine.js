@@ -233,7 +233,8 @@
     let totMult = 0, totExp = 0, totNon = 0, totCrit = 0;
     const rows = defs.map(h => {
       const m = h.fixed != null ? h.fixed : skillVal(c, h.s, h.n, lv);
-      const type = h.t;
+      const rt = (ag.retype || []).find(r => (h.tags || []).some(t => r.tags.indexOf(t) >= 0));   // ダメージの種類の変換（例: エリーの断捨離タイムで通常攻撃・一掃が印ダメージに）
+      const type = rt ? rt.t : h.t;
       const hid = h.id || null;
       const mh = (hid && ef.hit[hid]) || {};
       const tags = h.tags || [];
@@ -265,7 +266,7 @@
       if (type === "basic") B = 1 + st.basicAdd + (man.basic ? 0 : ef.Bb) + (mh.Bb || 0) + bAdd;
       else if (type === "skill") B = 1 + st.skillAdd + (man.skill ? 0 : ef.Bs) + (mh.Bs || 0) + bAdd;
       else if (type === "ult") B = 1 + st.ultAdd + (man.ult ? 0 : ef.Bu);
-      else B = 1 + st.markAdd + (man.mark ? 0 : ag.markAdd);
+      else B = 1 + st.markAdd + (man.mark ? 0 : ag.markAdd) + (ag.markFromBb ? Math.min(ag.markFromBb.cap, (st.basicAdd + (man.basic ? 0 : ef.Bb)) * ag.markFromBb.r) : 0);   // 通常攻撃ダメージの増加ぶんを印ダメージにも（エリーの断捨離タイム）
       let taken = (ef.taken + tAdd) * (mh.taken || 1) * (other.taken || 1);
       if (type === "mark") taken *= ag.takenMark * (ag.markMult || 1);
       if (type === "skill") taken *= ag.takenSkill;

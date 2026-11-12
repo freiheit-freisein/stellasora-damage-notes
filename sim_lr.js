@@ -403,6 +403,11 @@
       { id: "support", skill: "support", idx: 2, n: 1, k: "atkPct", to: "all", off: true, txt: v => `盾がダメージを与えると、チーム全員の攻撃力 +${v}%（10秒）` },
     ],
   };
+  // エリー: 主力スキルの愛のしるし（1つにつき自身の水属性ダメージ +3.3%・最大3。母の愛で5まで）、必殺技1段目「一掃」のおしおきモード（自身の攻撃力、15秒）
+  S.SKILL_FX.allie = [
+    { id: "love", skill: "main", idx: 1, n: 2, k: "W", to: "self", mul: 3, nodict: true, txt: v => `愛のしるし3つ：自身の水属性ダメージ +${Math.round(v * 3 * 10) / 10}%（1つ +${v}%。母の愛で増える4・5つ目は素質の側で足す）` },
+    { id: "ult", skill: "ult", idx: 3, n: 1, k: "atkPct", to: "self", nodict: true, txt: v => `一掃のおしおきモード：自身の攻撃力 +${v}%（15秒）` },
+  ];
   S.SKILL_NAME = { basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" };
 
   S.skillCollect = function (G, team, chs, out) {
@@ -419,8 +424,8 @@
         const on = (G.skOn || {})[key] == null ? !fx.off : G.skOn[key];
         if (!on) return;
         const lv = (((cs.skillLv || {})[fx.skill]) || 10) + (lvB[fx.skill] || 0);
-        const v = S.engine.skillVal(c, fx.idx, fx.n, lv) / 100;
-        const rec = fx.to === "main" ? [team[0]] : fx.to === "lux" ? luxIds : team.slice();
+        const v = S.engine.skillVal(c, fx.idx, fx.n, lv) / 100 * (fx.mul || 1);
+        const rec = fx.to === "main" ? [team[0]] : fx.to === "self" ? [id] : fx.to === "lux" ? luxIds : team.slice();
         rec.forEach(rid => {
           const a = out[rid];
           if (!a) return;

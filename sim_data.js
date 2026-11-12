@@ -58,6 +58,15 @@ window.SIM = window.SIM || {};
         support: [H(2, 0, 6, "skill", "盾（1回跳ねるごと）", "shield")],
         ult: [H(3, 0, 1, "ult", "叩きつけ"), H(3, 1, 1, "skill", "光球")],
       } },
+    // エリー（2026-11-12）。自動のヒットでは一掃・粛清の区別がなかったので、素質の効き先（一掃・粛清・スイープスラッシュなど）が分かるように手で書く
+    { id: "allie", en: "Allie", jp: "エリー", el: "水", ref: "atk", role: "ヴァンガード", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 1, "basic", "1段目 1撃目", "b1", ["basic"]), H(0, 1, 1, "basic", "1段目 2撃目", "b2", ["basic"]), H(0, 2, 1, "basic", "2段目", "b3", ["basic"]), H(0, 3, 2, "basic", "3段目×2", "b4", ["basic"]),
+          H(0, 4, 1, "basic", "4段目 1撃目", "b5", ["basic"]), H(0, 5, 1, "basic", "4段目 2撃目", "b6", ["basic"]), H(0, 6, 1, "basic", "4段目 3撃目", "b7", ["basic"]), H(0, 7, 1, "basic", "5段目", "b8", ["basic"])],
+        main: [H(1, 0, 3, "skill", "ママのしつけ 前半×3", "m1", ["main", "shitsuke"]), H(1, 1, 3, "skill", "ママのしつけ 後半×3", "m2", ["main", "shitsuke"])],
+        support: [H(2, 0, 4, "skill", "スイープスラッシュ×4", "sSweep", ["support", "sweepSlash"]), H(2, 1, 1, "skill", "アイシクルスラッシュ", "sIcicle", ["support", "icicle"]), H(2, 2, 1, "skill", "氷晶", "sCrystal", ["support", "crystal"])],
+        ult: [H(3, 0, 1, "ult", "一掃（1段目）", "uDust", ["ult", "dust"]), H(3, 2, 1, "ult", "粛清（2段目）", "uPurge", ["ult", "purge"])],
+      } },
   ];
   // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
   (window.SIM_CHARS_AUTO || []).forEach(c => { if (!S.CH.some(x => x.en === c.en)) S.CH.push(c); });

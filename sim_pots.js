@@ -276,8 +276,8 @@ window.SIM = window.SIM || {};
     const elOf = oid => chs[team.indexOf(oid)].el;
     const sameN = oid => chs.filter(c => c.el === elOf(oid)).length;
     const out = {};
-    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, markMult: 1, hpFlat: 0, atkFlat: 0, pen: 0, defDown: 0, defPen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, applied: [] }; });
-    const cond = (k, oid) => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? sameN(oid) === chs.length : k === "mainSame" ? chs[0].el === elOf(oid) : true);
+    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, markMult: 1, hpFlat: 0, atkFlat: 0, pen: 0, defDown: 0, defPen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, retype: [], markFromBb: null, applied: [] }; });
+    const cond = (k, oid) => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? sameN(oid) === chs.length : k === "mainSame" ? chs[0].el === elOf(oid) : k === "isMain" ? team[0] === oid : true);
     const recvOf = (to, oid, e) => {
       const el = elOf(oid);
       if (to === "lux") return team.filter((id, i) => chs[i].el === el);
@@ -308,6 +308,8 @@ window.SIM = window.SIM || {};
         const a = out[rid];
         if (e.k === "count") { a.count[e.hit] = (a.count[e.hit] || 0) + e.add; return; }
         if (e.k === "drop") { a.drop[e.hit] = true; return; }
+        if (e.k === "retype") { a.retype.push({ tags: e.tags, t: e.t }); return; }   // ダメージの種類の変換（tags のヒットを t の種類に）
+        if (e.k === "markFromBb") { a.markFromBb = { r: e.ratio, cap: v }; return; }   // 通常攻撃ダメージ ×ratio を印ダメージに（最大 v）
         if (e.k === "extra") {
           let cnt = e.c;
           const cc = (cs.pcnt || {})[key + "#" + ei];
@@ -386,10 +388,10 @@ window.SIM = window.SIM || {};
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）", defDown: "敵の防御力低下", defPen: "防御貫通" };
   const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
-    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃" };
+    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", shitsuke: "ママのしつけ", iceBlade: "氷刃", iceEdge: "アイスエッジ", frostBloom: "追加の華", sweepSlash: "スイープスラッシュ", icicle: "アイシクルスラッシュ", crystal: "氷晶", dust: "一掃", purge: "粛清", purgeX: "粛清の残像", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃" };
   const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人", others: "自分以外の味方" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
-  const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき" };
+  const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき", isMain: "主力のとき" };
   S.TAGJ = TAGJ; S.HTJ = HTJ;
   S.potCalcText = (cid, name, lv) => {
     const sp = (S.POT_SPEC[cid] || {})[name];
@@ -405,6 +407,8 @@ window.SIM = window.SIM || {};
       if (e.k === "extra") return `追加ヒット ${r1(xh ? xh.m : (e.m != null ? e.m : v))}%${xlv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[xlv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）×${e.c || 1}`;
       if (e.k === "count") return `ヒット回数 +${e.add}`;
       if (e.k === "drop") return "";
+      if (e.k === "retype") return `${(e.tags || []).map(t => TAGJ[t] || t).join("・")}のダメージを${HTJ[e.t] || e.t}ダメージに変換${e.cond ? "（" + (CONDJ[e.cond] || e.cond) + "）" : ""}`;
+      if (e.k === "markFromBb") return `通常攻撃ダメージ ${r1(100 / e.ratio / 100)}%ごとに印ダメージ +1%（最大 +${r1(v * 100)}%）`;
       const kn = typeof KJ[e.k] === "function" ? KJ[e.k](e.el || c.el) : (KJ[e.k] || e.k);
       const flat = e.flat || e.k === "hpFlat" || e.k === "atkFlat" || e.k === "pen" || DEFK[e.k];
       const tg = (e.grp ? (S.SKILL_NAME && S.SKILL_NAME[e.grp] || e.grp) + "の中の" : "") + (e.tags && e.tags.length ? e.tags.map(t => TAGJ[t] || t).join("・") + "の" : "");
@@ -416,7 +420,7 @@ window.SIM = window.SIM || {};
       if (e.stk > 1) notes.push(`最大${e.stk}重`);
       if (e.ht) notes.push(`${HTJ[e.ht] || e.ht}だけ`);
       if (e.cond) notes.push(CONDJ[e.cond] || e.cond);
-      return `${tg}${kn} +${flat ? r1(v) : r1(v * 100) + "%"}${notes.length ? "（" + notes.join("・") + "）" : ""}`;
+      return `${tg}${kn} ${v < 0 ? "" : "+"}${flat ? r1(v) : r1(v * 100) + "%"}${notes.length ? "（" + notes.join("・") + "）" : ""}`;
     }).filter(Boolean).join("、");
   };
 })(window.SIM);
