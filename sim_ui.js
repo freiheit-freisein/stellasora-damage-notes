@@ -413,7 +413,7 @@
         else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
         if (sp.off) it.tags.push(tg("条件付き（既定はオフ）"));
         const seen = {};
-        sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${stepper(`${p}.pstk.${sk}`, 0, e.stk, e.stk, "sm")}<span class="muted">/${e.stk}</span></span>`); } });
+        sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${stepper(`${p}.pstk.${sk}`, 0, e.stk, e.stk0 != null ? e.stk0 : e.stk, "sm")}<span class="muted">/${e.stk}</span></span>`); } });
         sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${stepper(`${p}.pcnt.${key}#${ei}`, 0, 99, e.c, "sm")}</span>`); });
         it.ctl = ctl.join("");
       }

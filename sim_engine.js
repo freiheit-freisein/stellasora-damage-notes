@@ -217,17 +217,20 @@
     const en = G.enemyObj;
     const ag = ef.ag || { mods: [], xhits: [], count: {}, drop: {}, markAdd: 0, takenMark: 1, takenSkill: 1 };
     // ヒットの一覧: 基本のヒット（置き換え・回数の加算を反映）＋素質の追加ヒット
-    const defs = (c.hits[group] || []).filter(h => !(h.id && ag.drop[h.id])).map(h => Object.assign({}, h, { c: h.c + ((h.id && ag.count[h.id]) || 0) }));
+    const defs = (c.hits[group] || []).filter(h => !(h.id && ag.drop[h.id])).map(h => Object.assign({}, h, { c: (h.c + ((h.id && ag.count[h.id]) || 0)) * ((h.id && (ag.countMul || {})[h.id]) || 1) }));
     const xs = ag.xhits.filter(x => x.group === group || x.group === "*");
     // コア素質の追加ヒット（lvOf）は、つながるスキルのLv（徽章込み）で伸ばす（m は Lv10 の値）
     const lvScale = k => { const i = { basic: 0, main: 1, support: 2, ult: 3 }[k], L = ((cs.skillLv || {})[k] || 10) + ((st.lvBonus && st.lvBonus[k]) || 0); return skillVal(c, i, 0, L) / skillVal(c, i, 0, 10); };
     xs.forEach(x => { if (x.lvOf) x = Object.assign(x, { m0: x.m0 != null ? x.m0 : x.m }), x.m = x.m0 * lvScale(x.lvOf); });
-    xs.filter(x => !x.perGlow && !x.perTag).forEach(x => defs.push({ fixed: x.m, c: x.c, t: x.t, name: x.name, tags: x.tags, extra: true }));
+    xs.filter(x => !x.perGlow && !x.perTag && !x.tagBonus).forEach(x => defs.push({ fixed: x.m, c: x.c, t: x.t, name: x.name, tags: x.tags, extra: true }));
     const tagCount = tag => defs.reduce((n, h) => n + ((h.tags || []).indexOf(tag) >= 0 ? h.c : 0), 0);
     xs.filter(x => x.perGlow || x.perTag).forEach(x => {
-      const n = tagCount(x.perGlow ? "glow" : x.perTag);
+      let n = tagCount(x.perGlow ? "glow" : x.perTag);
+      if (x.tagAdd || x.tagDiv || x.tagMul) n = Math.floor(Math.max(0, n + x.tagAdd) / (x.tagDiv || 1)) * (x.tagMul || 1);   // 例: 3回当たるごとに1回（tagDiv）、1回につき3つ（tagMul）
       if (n > 0) defs.push({ fixed: x.m, c: n, t: x.t, name: x.name, tags: x.tags, extra: true });
     });
+    // 回数に応じて倍率が上がるヒット（例: トーナのお届けターゲット。矢尾1本につき +10%、最大30本）
+    xs.filter(x => x.tagBonus).forEach(x => defs.push({ fixed: x.m * (1 + x.tagBonus.r * Math.min(x.tagBonus.cap || 1e9, tagCount(x.tagBonus.tag))), c: x.c, t: x.t, name: x.name, tags: x.tags, extra: true }));
     const other = G.other || {};
     const traits = G.traits || {};
     let totMult = 0, totExp = 0, totNon = 0, totCrit = 0;

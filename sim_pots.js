@@ -276,7 +276,7 @@ window.SIM = window.SIM || {};
     const elOf = oid => chs[team.indexOf(oid)].el;
     const sameN = oid => chs.filter(c => c.el === elOf(oid)).length;
     const out = {};
-    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, markMult: 1, hpFlat: 0, atkFlat: 0, pen: 0, defDown: 0, defPen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, drop: {}, retype: [], markFromBb: null, applied: [] }; });
+    team.forEach(id => { out[id] = { atkPct: 0, W: 0, Bs: 0, Bb: 0, Bu: 0, markAdd: 0, markMult: 1, hpFlat: 0, atkFlat: 0, pen: 0, defDown: 0, defPen: 0, takenAdd: 0, taken: 1, takenMark: 1, takenSkill: 1, takenBasic: 1, hpPct: 0, mods: [], xhits: [], count: {}, countMul: {}, drop: {}, retype: [], markFromBb: null, applied: [] }; });
     const cond = (k, oid) => !k || (k === "glimmer" ? G.glimmer !== false : k === "allLux" ? sameN(oid) === chs.length : k === "mainSame" ? chs[0].el === elOf(oid) : k === "isMain" ? team[0] === oid : true);
     const recvOf = (to, oid, e) => {
       const el = elOf(oid);
@@ -301,12 +301,13 @@ window.SIM = window.SIM || {};
       else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || info.ext) / (e.flat || e.k === "extra" || DEFK[e.k] ? 1 : 100);   // 防御貫通・防御力低下は実数
       const skey = key + (e.sk ? ":" + e.sk : "");
       let stk = (cs.pstk || {})[skey];
-      if (stk == null || stk === "") stk = e.stk || 1;
+      if (stk == null || stk === "") stk = e.stk0 != null ? e.stk0 : (e.stk || 1);   // stk0 = 既定の重複数（最大の stk と違うとき）
       v *= stk;
       if (e.perLux) v *= sameN(oid);
       recvOf(e.to, oid, e).forEach(rid => {
         const a = out[rid];
         if (e.k === "count") { a.count[e.hit] = (a.count[e.hit] || 0) + e.add; return; }
+        if (e.k === "countMul") { a.countMul[e.hit] = (a.countMul[e.hit] || 1) * e.mul; return; }   // ヒット回数を何倍かに（例: ナツカの持続時間+100%・間隔-50%）
         if (e.k === "drop") { a.drop[e.hit] = true; return; }
         if (e.k === "retype") { a.retype.push({ tags: e.tags, t: e.t }); return; }   // ダメージの種類の変換（tags のヒットを t の種類に）
         if (e.k === "markFromBb") { a.markFromBb = { r: e.ratio, cap: v }; return; }   // 通常攻撃ダメージ ×ratio を印ダメージに（最大 v）
@@ -314,9 +315,10 @@ window.SIM = window.SIM || {};
           let cnt = e.c;
           const cc = (cs.pcnt || {})[key + "#" + ei];
           if (cc != null && cc !== "") cnt = +cc;
+          else if (e.perLuxOther) cnt *= Math.max(0, sameN(oid) - 1);   // 自分以外の同じ属性の人数ぶん（例: トーナのオマケの一矢）
           let m = e.m != null ? e.m : v, lvOf = e.lv || null;
           if (!lvOf) { const h = coreLvHit(chs[team.indexOf(oid)].en, info.pn, m); if (h) { lvOf = h.k; m = h.m; } }   // m はスキルLv10の値、計算のときに今のスキルLvに直す
-          a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, lvOf, owner: oid, key: key + "#" + ei });
+          a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, tagDiv: e.tagDiv || 0, tagAdd: e.tagAdd || 0, tagMul: e.tagMul || 0, tagBonus: e.tagBonus || null, lvOf, owner: oid, key: key + "#" + ei });
           return;
         }
         if (e.k === "taken" && e.tags) { a.mods.push({ k: "taken", v, tags: e.tags, ht: null, grp: null, cond: null }); return; }   // 特定の攻撃だけに乗る被ダメージ（例: ナツカの花の海・波紋）。同じ被ダメージの足し算に入る
@@ -388,7 +390,7 @@ window.SIM = window.SIM || {};
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）", defDown: "敵の防御力低下", defPen: "防御貫通" };
   const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
-    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", shitsuke: "ママのしつけ", iceBlade: "氷刃", iceEdge: "アイスエッジ", frostBloom: "追加の華", sweepSlash: "スイープスラッシュ", icicle: "アイシクルスラッシュ", crystal: "氷晶", dust: "一掃", purge: "粛清", purgeX: "粛清の残像", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃" };
+    jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", shitsuke: "ママのしつけ", iceBlade: "氷刃", iceEdge: "アイスエッジ", frostBloom: "追加の華", sweepSlash: "スイープスラッシュ", icicle: "アイシクルスラッシュ", crystal: "氷晶", dust: "一掃", purge: "粛清", purgeX: "粛清の残像", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃", arrow: "スプラッシュアロー", cascade: "カスケードルート", tail: "矢尾への追加ダメージ", pullOut: "矢尾の引き抜き", pursuit: "追い打ち", track: "トラッキングウェーブ", agile: "速達状態", minion: "従者", gust: "突風", vortex: "旋風", counter: "反撃" };
   const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人", others: "自分以外の味方" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
   const CONDJ = { allLux: "全員が同じ属性のとき", mainSame: "主力が同じ属性のとき", glimmer: "敵に残光が付いているとき", isMain: "主力のとき" };
@@ -404,8 +406,16 @@ window.SIM = window.SIM || {};
       else if (e.arr) v = lvVal(e.arr, lv, e.over, e.ext || ext) / (e.k === "extra" ? 1 : 100);
       else if (e.n != null) v = lvVal(info.nums[e.n] || [0], lv, e.over, e.ext || ext) / (e.flat || e.k === "extra" || DEFK[e.k] ? 1 : 100);
       const xh = e.k === "extra" && !e.lv ? coreLvHit(c && c.en, name, e.m != null ? e.m : v) : null, xlv = e.k === "extra" ? (e.lv || (xh && xh.k)) : null;
-      if (e.k === "extra") return `追加ヒット ${r1(xh ? xh.m : (e.m != null ? e.m : v))}%${xlv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[xlv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）×${e.c || 1}`;
-      if (e.k === "count") return `ヒット回数 +${e.add}`;
+      if (e.k === "extra") {
+        const tj = t => TAGJ[t] || t;
+        const cntT = e.perTag ? `×（${tj(e.perTag)}の回数${e.tagAdd ? (e.tagAdd > 0 ? "+" : "") + e.tagAdd : ""}${e.tagDiv ? "÷" + e.tagDiv : ""}）${e.tagMul ? "×" + e.tagMul : ""}` : e.perLuxOther ? `×${e.c || 1}×（自分以外の同じ属性の人数）` : `×${e.c || 1}`;
+        const bon = e.tagBonus ? `、${tj(e.tagBonus.tag)}1回につき +${r1(e.tagBonus.r * 100)}%（最大${e.tagBonus.cap}回）` : "";
+        return `追加ヒット ${r1(xh ? xh.m : (e.m != null ? e.m : v))}%${xlv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[xlv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）${cntT}${bon}`;
+      }
+      if (e.k === "count" || e.k === "countMul") {
+        const hh = c && Object.values(c.hits || {}).flat().find(h => h.id === e.hit), cn = e.cond ? "（" + (CONDJ[e.cond] || e.cond) + "）" : "";
+        return `${hh ? hh.name + "の" : ""}ヒット回数 ${e.k === "count" ? "+" + e.add : "×" + e.mul}${cn}`;
+      }
       if (e.k === "drop") return "";
       if (e.k === "retype") return `${(e.tags || []).map(t => TAGJ[t] || t).join("・")}のダメージを${HTJ[e.t] || e.t}ダメージに変換${e.cond ? "（" + (CONDJ[e.cond] || e.cond) + "）" : ""}`;
       if (e.k === "markFromBb") return `通常攻撃ダメージ ${r1(100 / e.ratio / 100)}%ごとに印ダメージ +1%（最大 +${r1(v * 100)}%）`;
@@ -417,7 +427,7 @@ window.SIM = window.SIM || {};
       else if (e.to && e.to !== "enemy") notes.push(TOJ[e.to] || e.to);
       else if (!e.to && !/^taken/.test(e.k)) notes.push("自分");
       if (e.perLux) notes.push("同じ属性の人数ぶん");
-      if (e.stk > 1) notes.push(`最大${e.stk}重`);
+      if (e.stk > 1) notes.push(`最大${e.stk}重${e.stk0 != null ? `・既定${e.stk0}重` : ""}`);
       if (e.ht) notes.push(`${HTJ[e.ht] || e.ht}だけ`);
       if (e.cond) notes.push(CONDJ[e.cond] || e.cond);
       return `${tg}${kn} ${v < 0 ? "" : "+"}${flat ? r1(v) : r1(v * 100) + "%"}${notes.length ? "（" + notes.join("・") + "）" : ""}`;
