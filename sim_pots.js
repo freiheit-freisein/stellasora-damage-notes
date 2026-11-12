@@ -245,6 +245,8 @@ window.SIM = window.SIM || {};
     { n: 2, name: "新たな知見", txt: "味方が地の印を付与した後6秒、地属性の全員のスキルダメージ +28.5%（説明文はクルニス自身だが、実測でグレイにも乗る）", e: [{ k: "Bs", raw: 0.285, to: "lux" }] },
     { n: 3, name: "医術の融合", txt: "クルニス（華服）の必殺技の後20秒、敵の地属性被ダメージ +3.5%（最大6重。必殺後なので既定は反映しない）", off: true, e: [{ k: "taken", raw: 0.035, stk: 6, to: "enemy" }] },
   ];
+  // 手で書いていない巡遊者は、日本語Wikiの心相の表から作ったもの（data/heart_wiki.js）を使う
+  (S.CH || []).forEach(c => { if (!HEART[c.id] && (window.HEART_WIKI || {})[c.en]) HEART[c.id] = window.HEART_WIKI[c.en]; });
   S.HEART_SPEC = HEART;
 
   // チーム全体の効果の集計。返り値: id → 集計
