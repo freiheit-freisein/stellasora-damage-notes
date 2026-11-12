@@ -125,8 +125,8 @@ window.SIM = window.SIM || {};
   ];
   // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
   (window.SIM_CHARS_AUTO || []).forEach(c => { if (!S.CH.some(x => x.en === c.en)) S.CH.push(c); });
-  // 心相の小さい節のうち、ダメージ系（属性・通常攻撃・スキル・必殺技・会心ダメージ）の1段階（0.5凸）あたりの値。基礎HP・基礎攻撃・攻撃力%は英語Wikiの表で入っている。
-  // ゲームの画面で確かめたものだけ入れる（2026-11-14 チトセ: 5凸のステータス画面で水属性ダメージ 115%）
+  // 心相の小さい節のうち、ダメージ系（属性・通常攻撃・スキル・必殺技・会心ダメージ）の値。計算は心相の値（0〜50）を5ごとの段階で持つので、★5は1凸＝2段階（★4は0.5凸＝1段階）。
+  // 基礎HP・基礎攻撃・攻撃力%は英語Wikiの表で入っている。ゲームの画面で確かめたものだけ入れる（2026-11-14 チトセ: 1凸ごとに +3%、5凸のステータス画面で水属性ダメージ 115%）
   const TALENT_BONUS_GAME = { Chitose: { elem: 0.015 } };
   S.CH.forEach(c => { const b = TALENT_BONUS_GAME[c.en]; if (b && !Object.keys(c.talentBonus || {}).length) c.talentBonus = Object.assign({}, b); });
   // 自動データの巡遊者に、画面・実測で確かめた値を足す（2026-10-29）
