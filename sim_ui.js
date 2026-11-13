@@ -1056,15 +1056,15 @@
       sm.rows.forEach(r => { const o = by[r.type] = by[r.type] || { t: r.type, B: r.B, dmg: 0 }; o.dmg += r.total; });
       return Object.values(by).sort((a, b) => (b.t === t) - (a.t === t) || b.dmg - a.dmg);
     };
-    // 内訳: 押した行のすぐ下に出す。1ヒット1行（ヒット・倍率×回数・1ヒットの期待値・小計）。種類が違うヒットと、会心が違うヒットだけ補足を出す
+    // 内訳: 押した行のすぐ下に出す。1ヒット1行（ヒット・倍率×回数・小計）。種類が違うヒットと、会心が違うヒットだけ補足を出す
     // 内訳: 結果の行と同じ列にそろえる（総倍率の列に「倍率×回数」、ダメージの列に「小計」。小計を足すと、上の行のダメージ（期待値）になる）
-    // ヒットの下に小さく: 「スキル扱い: +x%」（どの種類のダメージとして計算したか。全部のヒットに出す・2026-11-14 ユーザー）、「率ダメ: 会心率 / 会心ダメ」、1ヒットの期待値・非会心・会心
+    // ヒットの下に小さく: 「スキル扱い: +x%」（どの種類のダメージとして計算したか。全部のヒットに出す・2026-11-14 ユーザー）、「率ダメ: 会心率 / 会心ダメ」、1ヒットの非会心・会心・期待値
     const drillHtml = (sm, t) => `<div class="rs-drill"><div class="rs-grid rs-dh"><span>ヒット</span><span class="rs-mult">倍率×回数</span><span class="rs-dmg">小計</span><span></span></div>
       ${sm.rows.map(r => {
         const cd = r.critDmg != null ? r.critDmg : r.crit / r.normal;
         const tip = esc(`属性 ${f3(r.W)}／種別 ${f3(r.B)}／被ダメージ ${f3(r.taken)}／敵 ${f3(r.D)}${r.markX !== 1 ? `／印の別枠 ${r.markX}` : ""}`);
         return `<div class="rs-grid rs-dr" title="${tip}"><span class="rs-dn">${esc(r.name)}</span><span class="rs-mult">${(Math.round(r.mult * 10) / 10).toFixed(1)}% ×${r.count}</span><span class="rs-dmg">${dmgF(r.total)}</span><span></span>
-          <span class="rs-dsub">${v("ty", E.TYPE_NAME[r.type] + "扱い", "+" + p1(r.B - 1))}${v("rd", "率ダメ", p1(r.rate) + " / " + p1(cd))}${v("one", "1ヒット", dmgF(r.avg))}${v("nc", "非会心", dmgF(r.normal))}${v("cc", "会心", dmgF(r.crit))}</span></div>`;
+          <span class="rs-dsub">${v("ty", E.TYPE_NAME[r.type] + "扱い", "+" + p1(r.B - 1))}${v("rd", "率ダメ", p1(r.rate) + " / " + p1(cd))}${v("nc", "非会心", dmgF(r.normal))}${v("cc", "会心", dmgF(r.crit))}${v("one", "期待値", dmgF(r.avg))}</span></div>`;
       }).join("")}</div>`;
     const row = ([key, label, sm, id]) => {
       if (!sm) return "";   // その巡遊者にない攻撃（印など）は出さない
