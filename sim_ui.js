@@ -105,7 +105,18 @@
     const d3 = n => (n == null || !isFinite(n)) ? "—" : n.toFixed(3);   // 倍率は小数3桁にそろえる（1.000 など）
     const t = (label, val, sub) => `<div class="mi" title="${esc(label + "：" + sub)}"><span>${label.replace(/^ダメージ/, "").replace(/倍率$/, "")}</span><b>${val}</b></div>`;
     $("mline").innerHTML = `<div class="ml-h"><span class="unitbar ml-who" role="group" aria-label="共通の倍率を出す巡遊者">${who}</span></div>
-      <div class="ml-items" role="group" aria-label="共通の倍率">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", d3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", d3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", d3(dd.def), "敵の防御" + (defX ? `（防御力低下・防御貫通 ${fmt(defX)}）` : ""))}${t("その他倍率", d3(taken), "被ダメージ・実測合わせ等")}</div>`;
+      <div class="ml-items" role="group" aria-label="共通の倍率">${t("ダメージ基礎値", fmt(ref), c.ref === "hp" ? "最大HP" : "攻撃力")}${t("属性倍率", d3(W), c.el + "属性ダメージ " + pct(st.elemAdd + o.ef.W))}${t("耐性倍率", d3(dd.res * dd.weak), `耐性×${f3(dd.res)}` + (dd.weak !== 1 ? ` 弱点×${dd.weak}` : "") + `（貫通${fmt(st.pen)}${st.pen > 250 ? "・適用は250まで" : ""}）`)}${t("防御倍率", d3(dd.def), "敵の防御" + (defX ? `（防御力低下・防御貫通 ${fmt(defX)}）` : ""))}${t("その他倍率", d3(taken), "被ダメージ・実測合わせ等")}${recTile()}</div>`;
+  }
+  // 記録レベル: 「その他」の右に出す。マウスを重ねるか、押すと詳しい中身（スコア・次のLvまで・ボーナス）を出す
+  function recTile() {
+    const auto = G.recordAuto !== false, sc = S.recordScore ? S.recordScore(G) : null;
+    const next = sc != null ? (RECORD_LEVELS || []).find(x => x[1] > sc) : null, rb = E.recordBonus(G.recordLv);
+    const pop = `<div class="recpop" role="dialog" aria-label="記録レベル">
+      <b>記録レベル Lv${G.recordLv}</b><span class="muted">（${auto ? "ビルドから自動" : "手で選んだ値"}）</span>
+      ${sc != null ? `<div>記録のスコア <b>${fmt(sc)}</b>${next ? `　次の Lv${next[0]} まで あと ${fmt(next[1] - sc)}` : ""}</div>` : ""}
+      <div>戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}</div>
+      <div class="muted">スコア: コア素質1つ 180・通常素質のLv1つ 60・獲得した音符1個 15・アシスト効果のLv1つ 120（徽章の＋は数えない）。手で選ぶときは ③ロスレコ の「記録レベル」で。</div></div>`;
+    return `<button type="button" class="mi mi-rec${V.recPop ? " open" : ""}" data-act="recpop" aria-expanded="${!!V.recPop}"><span>記録</span><b>Lv${G.recordLv}</b>${pop}</button>`;
   }
 
   // ---- 選択ボタン ----
@@ -569,6 +580,9 @@
         ${as ? `<div class="lrfx-band">アシスト効果<span>音符のレベルで自動で解放</span></div>${as}` : ""}</div>`;
     }).join("");
     const rb = E.recordBonus(G.recordLv);
+    // 記録レベルは、既定でビルドのスコアから自動で決める（recordAuto が false のときだけ手で選ぶ）
+    const recAuto = G.recordAuto !== false, recSc = S.recordScore ? S.recordScore(G) : null;
+    const recNext = recSc != null ? (RECORD_LEVELS || []).find(x => x[1] > recSc) : null;
     const recOpts = (RECORD_LEVELS || []).map(x => [x[0], `Lv${x[0]}（攻撃+${x[2]} / HP+${x[3]}）`]);
     // 上の段: 左にロスレコ6枚、右に記録レベルと効果の数。下の段: 音符・メインのロスレコの効果・手入力（横いっぱい）
     return `<div class="wide"><div class="secg lr-g">
@@ -576,7 +590,9 @@
         <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div class="lr-sub">${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
         ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。「突破」で、コア効果の値と基礎攻撃力が変わります（★5の基礎攻撃力は、突破1つごとに +130。サブも基礎攻撃力が変わります）。条件付きの効果は、既定では反映しません（チェックで反映）。")}</section>
       <div class="sec-col">
-        <section class="sec"><h3>記録レベル</h3>${inp("recordLv", { sel: recOpts })}
+        <section class="sec"><h3>記録レベル</h3>${recAuto ? inp("recordLv", { sel: recOpts }).replace("<select ", "<select disabled ") : inp("recordLv", { sel: recOpts })}
+          <label class="check" style="margin:6px 0 0"><input type="checkbox" data-p="recordAuto" data-t="b"${recAuto ? " checked" : ""}> ビルドから自動で決める</label>
+          <div class="muted help">${recSc != null ? `記録のスコア ${fmt(recSc)}${recNext ? `（次の Lv${recNext[0]} まで あと ${fmt(recNext[1] - recSc)}）` : ""}。` : ""}コア素質1つ 180・通常素質のLv1つ 60・獲得した音符1個 15・アシスト効果のLv1つ 120 で数えます（徽章の＋は数えません）。</div>
           <div class="muted help">戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）</div></section>
         <section class="sec"><h3>効果の数</h3><div class="muted help" style="margin:0 0 6px">暁光・星願など。戦闘中のある時点を想定して入力します。</div>
           ${counts ? `<div class="cnt-list">${counts}</div>` : '<p class="muted" style="margin:0">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}</section>
@@ -1238,6 +1254,7 @@
       V.clrSure = null; renderAll(); return;
     }
     if (a.indexOf("tf:") === 0) { V.tilesFor = a.slice(3); renderAll(); return; }
+    if (a === "recpop") { V.recPop = !V.recPop; renderTiles(); return; }   // 記録レベルの詳しい中身（タップで開く・閉じる）
     if (a.indexOf("drill:") === 0) {
       const k = a.slice(6);
       V.drill = V.drill === k ? null : k;   // 押した行のすぐ下に内訳を開く（もう一度押すと閉じる）

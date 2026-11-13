@@ -250,6 +250,16 @@
     (G.lrMain || []).filter(Boolean).forEach(rid => { const fx = S.LR_FX[rid]; if (fx) fx.assists.forEach(a => { s += S.lrAssistLv(nt, a) * SC.assist; }); });
     return s;
   }
+  // 記録レベルを、入力したビルドの記録のスコアから決める（ゲームの記録レベルはスコアで決まる。2026-11-14 ユーザー）
+  //   G.recordAuto が false のときだけ、手で選んだ記録レベルを使う（既定は自動。新しいキーは初期状態に入れない＝共有コードの辞書を変えない）
+  S.recordScore = G => { try { return recordScore(G); } catch (e) { return null; } };
+  S.recordLvOf = G => {
+    const sc = S.recordScore(G), rows = window.RECORD_LEVELS || [];
+    if (sc == null || !rows.length) return G.recordLv;
+    let lv = rows[0][0];
+    rows.forEach(r => { if (sc >= r[1]) lv = r[0]; });
+    return lv;
+  };
   // ロスレコのおすすめ順: 巡遊者の属性（と属性なし）のロスレコを、メインに1枚だけ入れたときのダメージの大きい順（突破I・音符なし・素質なし）
   function recommendLR(G) {
     const els = new Set(SLOTS.map(([k]) => chOf(G.team[k]).el).concat(["なし"]));
@@ -283,7 +293,7 @@
   function planBuild(G, opts) {
     const g = clone(G);
     if (opts.owned) Object.assign(opts, pickLR(G, opts.owned));
-    g.recordLv = opts.recordLv; g.lrMain = (opts.lrMain || []).concat(["", "", ""]).slice(0, 3); g.lrSub = (opts.lrSub || []).concat(["", "", ""]).slice(0, 3);
+    g.recordLv = opts.recordLv; g.recordAuto = false; g.lrMain = (opts.lrMain || []).concat(["", "", ""]).slice(0, 3); g.lrSub = (opts.lrSub || []).concat(["", "", ""]).slice(0, 3);
     g.lrRank = {}; g.lrMain.concat(g.lrSub).filter(Boolean).forEach(rid => { g.lrRank[rid] = 1; });   // 突破は I から（持っている突破は分からないので）
     g.notes = {};
     SLOTS.forEach(([k]) => { const cs = g.chars[g.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
@@ -335,6 +345,7 @@
       if (!best) break;
       best.cd.fn(g); log.push({ label: best.cd.label, cost: best.cost });
     }
+    delete g.recordAuto;   // 反映したあとは、ほかと同じく記録レベルをスコアから自動で決める
     return { g, score: recordScore(g), budget, log };
   }
 

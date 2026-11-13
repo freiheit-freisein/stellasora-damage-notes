@@ -300,6 +300,7 @@
   function calcTeam(G) {
     if (S.migrateSup) S.migrateSup(G);   // エレノアの前の入力（sup）を読み替える
     if (S.migrateWillow) S.migrateWillow(G);   // ウィローの前の入力（pots）を pots2 に読み替える
+    if (G.recordAuto !== false && S.recordLvOf) G.recordLv = S.recordLvOf(G);   // 記録レベルはビルドのスコアから自動で（手で選ぶときは recordAuto: false）
     G.enemyObj = mergeEnemy(S.ENEMIES.find(x => x.id === G.enemy) || S.ENEMIES[0], G.enemyOv);
     const team = [G.team.main, G.team.s1, G.team.s2];
     const out = { team: {}, G };
