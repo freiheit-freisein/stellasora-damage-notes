@@ -134,6 +134,17 @@ window.SIM = window.SIM || {};
           H(3, 2, 1, "ult", "爆発2", "uBlast2", ["ult", "parasol", "parasolBlast"]), H(3, 3, 1, "ult", "爆発3", "uBlast3", ["ult", "parasol", "parasolBlast"])],
       } },
   ];
+  // スグハ（2026-11-13 実装）。data/trekkers_new.js に数値がそろって TREKKERS に入ったときだけ足す。共有コードの辞書には入らない（sim_share.js の V2_CHARS）
+  //   観測点の弾丸は、観測点1つ分（3秒ごと・10秒間で3発）。主力スキル1回で観測点1つとして計算（実際はセオドライトが10個を超えたとき。未確認）
+  //   レーダーマップは2秒ごと・10秒間で5回、必殺技は3秒ごと・20秒間で6回。地属性の印のダメージ（主力スキル: 攻撃力の61%）は入れていない
+  if ((window.TREKKERS || []).some(t => t.en === "Suguha")) S.CH.push(
+    { id: "suguha", en: "Suguha", jp: "スグハ", el: "地", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: { basic: 0.021 }, v2: true,   // 心相1凸で通常攻撃ダメージ +4.2%（ゲームの画面）
+      hits: {
+        basic: [H(0, 0, 1, "basic", "1段目", "b1", ["basic"]), H(0, 1, 1, "basic", "2段目", "b2", ["basic"]), H(0, 2, 1, "basic", "3段目", "b3", ["basic"])],
+        main: [H(1, 0, 1, "skill", "アースウェーブ", "mScan", ["main"]), H(1, 1, 3, "basic", "観測点の弾丸（3秒ごと・10秒間。観測点1つ分）", "mObs", ["main", "obs"])],
+        support: [H(2, 0, 1, "basic", "スキャニング", "sScan", ["support", "scan"]), H(2, 1, 5, "basic", "レーダーマップ（2秒ごと・10秒間）", "sRadar", ["support", "radar"])],
+        ult: [H(3, 0, 6, "ult", "ジオ・マテリアライズ（3秒ごと・20秒間）", "uGeo", ["ult"])],
+      } });
   // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
   (window.SIM_CHARS_AUTO || []).forEach(c => { if (!S.CH.some(x => x.en === c.en)) S.CH.push(c); });
   // 心相の小さい節のうち、ダメージ系（属性・通常攻撃・スキル・必殺技・会心ダメージ）の値。計算は心相の値（0〜50）を5ごとの段階で持つので、★5は1凸＝2段階（★4は0.5凸＝1段階）。

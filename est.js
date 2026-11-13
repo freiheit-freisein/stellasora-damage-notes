@@ -4,6 +4,7 @@
 // - スキルの倍率: 英語Wikiの全巡遊者のスキルの数値は、Lv10 が Lv1 の約2.79倍になる型（A）と、約2.30倍の型（B）の2つだけ。
 //   Lvごとの比は、読み込んだ TREKKERS から毎回求める（中央値）。どちらの型かは Lv2 の値で決まる（A は Lv2 が1.15倍、B は1.10倍）。
 //   ゲームのスキル説明の「(xx%↑)」が次の Lv の値なので、Lv1 の画面1枚で決まる。Lv2 が分からなければ、多いほうの A とみる（type "A?"）
+//   Lv10 の値しか分からないときは skillFrom10（Lv10 はそのまま、Lv1〜9 は A の型で推定）
 // - 巡遊者の HP・攻撃力: Lv1〜90 の伸び方の形が全員ほぼ同じ（HP は0.3%以内）。Lv1 と Lv90 の2つから、形の中央値で間を埋める。
 //   防御はLvで変わらない
 // - ロスレコのコア効果（突破I〜VI）: 確かめた9件すべてで、1段ごとに突破Iの値の +20%（突破VI = 突破I の2倍）。
@@ -44,9 +45,22 @@ window.EST = (function () {
     const cv = type === "B" ? c.B : c.A;
     return { v: cv.map(r => r1(v1 * r)), type };
   }
+  // Lv10 の値だけから（ゲームのスキル画面は育てたLvの値しか出ないとき）。型が分からないので、多いほうの A とみる。Lv10 はその値のまま
+  function skillFrom10(v10, type) {
+    const c = skillCurves(), cv = type === "B" ? c.B : c.A;
+    if (!cv) return null;
+    return { v: cv.map((r, k) => k === 9 ? v10 : r1(v10 / cv[9] * r)), type: type || "A?" };
+  }
   // スキルの数値の一覧（ヒットごとの [Lv1, Lv2]）→ trekkers.js の nums の形（nums[Lv-1][ヒット] = [値]）
   function skillNums(pairs) {
-    const per = pairs.map(([a, b]) => skill(a, b));
+    // { v10 } なら Lv10 の値から。{ v1, v2, v10 } のように画面で見た Lv があれば、その Lv はその値のまま（型は Lv1 と Lv2 から決める）
+    const per = pairs.map(p => {
+      if (!p || Array.isArray(p)) return skill(p[0], p[1]);
+      const type = p.type || (p.v1 && p.v2 ? skill(p.v1, p.v2).type : undefined);
+      const r = p.v10 != null ? skillFrom10(p.v10, type) : skill(p.v1, p.v2);
+      if (r) { if (p.v1 != null) r.v[0] = p.v1; if (p.v2 != null) r.v[1] = p.v2; }
+      return r;
+    });
     if (per.some(x => !x)) return null;
     return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => per.map(p => [p.v[k]]));
   }
@@ -77,5 +91,5 @@ window.EST = (function () {
   // 分かっている段の番号（1〜n）。推定の段かどうかの判定に使う
   const knownLv = (len, n) => len >= n ? null : len === 2 ? [1, n] : len === 1 ? [1] : null;
 
-  return { skill, skillNums, skillCurves, stat, statShape, steps, knownLv };
+  return { skill, skillFrom10, skillNums, skillCurves, stat, statShape, steps, knownLv };
 })();
