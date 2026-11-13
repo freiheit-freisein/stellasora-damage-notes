@@ -122,7 +122,7 @@ window.SIM = window.SIM || {};
     const u = US[c.en];
     if (!u) return;
     SPEC[c.id] = SPEC[c.id] || {};
-    Object.keys(u).forEach(name => { SPEC[c.id][name] = { txt: u[name].txt || "", off: !!u[name].off, ext: u[name].ext, e: u[name].e || [], st: u[name].draft ? "draft" : "ok" }; });
+    Object.keys(u).forEach(name => { SPEC[c.id][name] = { txt: u[name].txt || "", off: !!u[name].off, offUnless: u[name].offUnless, ext: u[name].ext, e: u[name].e || [], st: u[name].draft ? "draft" : "ok" }; });
   });
   // まだ表も入力もない素質は、自動の下書き（data/spec_draft.js：日本語Wikiの説明文からルールで作った、確認前の内容）を使う
   const KN = { W: "属性ダメ", Bs: "スキルダメ", Bb: "通常ダメ", Bu: "必殺ダメ", mark: "印ダメ", atkPct: "攻撃力%", hpPct: "最大HP%", hpFlat: "最大HP", critRate: "会心率", critDmg: "会心ダメ",
@@ -352,7 +352,7 @@ window.SIM = window.SIM || {};
         const lv = ov != null ? ov : lv0 + ((S.emblemExtra(cs.emb, cs.embOn).pot[name]) || 0);   // 徽章の素質レベル上昇（取得している素質だけ）
         const sp = spec[name];
         const onSet = (cs.pon || {})[key];
-        if (onSet == null ? sp.off : !onSet) return;
+        if (onSet == null ? S.potDefOff(sp, cs) : !onSet) return;
         const info = Object.assign({}, numsOf(c, name), { ext: sp.ext, pn: name });
         sp.e.forEach((e, ei) => apply(e, ei, key, oid, cs, lv, info));
         out[oid].applied.push(name);
@@ -390,6 +390,8 @@ window.SIM = window.SIM || {};
   };
   S.collectPots = collect;
   S.potNums = numsOf;
+  // 既定でオフか。off: true ならいつもオフ。offUnless: "素質の英語名" なら、その素質を取っていないときだけオフ（例: 侵食観察はマーカー追加があるときだけ常時とみる）
+  S.potDefOff = (sp, cs) => !!(sp && (sp.off || (sp.offUnless && !+((cs && cs.pots2 || {})[S.potKey(sp.offUnless)]))));
   // 計算に使っている中身を、そのLvの値つきの短い文にする（素質カードの「計算: …」）
   const KJ = { W: el => el + "属性ダメージ", Bs: "スキルダメージ", Bb: "通常攻撃ダメージ", Bu: "必殺技ダメージ", mark: "印ダメージ", markMult: "印ダメージ（別枠の掛け算）",
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",

@@ -8791,7 +8791,8 @@ window.SPEC_USER = {
      "cond": "allLux"
     }
    ],
-   "note": "ゲームの素質プレビュー（2026-11-13）で作成。Lv1・Lv6 は画面の値、Lv2〜5 は推定"
+   "note": "ゲームの素質プレビュー（2026-11-13）で作成。Lv1・Lv6 は画面の値、Lv2〜5 は推定。測量マーカーは3つたまるまで起爆しないので、マーカー追加がないと3秒の効果が切れがち（C6WqBae の実測でスキャニングに乗っていなかった。2026-11-14）。マーカー追加があるときだけ既定で入れる（offUnless）",
+   "offUnless": "Extra Marker"
   },
   "Romance of Adventure": {
    "done": true,

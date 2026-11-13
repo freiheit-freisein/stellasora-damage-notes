@@ -115,7 +115,7 @@
       <b>記録レベル Lv${G.recordLv}</b><span class="muted">（${auto ? "ビルドから自動" : "手で選んだ値"}）</span>
       ${sc != null ? `<div>記録のスコア <b>${fmt(sc)}</b>${next ? `　次の Lv${next[0]} まで あと ${fmt(next[1] - sc)}` : ""}</div>` : ""}
       <div>戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}</div>
-      <div class="muted">スコア: コア素質1つ 180・通常素質のLv1つ 60・獲得した音符1個 15・アシスト効果のLv1つ 120（徽章の＋は数えない）。手で選ぶときは ③ロスレコ の「記録レベル」で。</div></div>`;
+      <div class="muted">スコア: コア素質1つ 180・通常素質のLv1つ 60・音符1個 15（ロスレコの初期の音符も数える）・アシスト効果のLv1つ 120（徽章の＋は数えない）。手で選ぶときは ③ロスレコ の「記録レベル」で。</div></div>`;
     return `<button type="button" class="mi mi-rec${V.recPop ? " open" : ""}" data-act="recpop" aria-expanded="${!!V.recPop}"><span>記録レベル</span><b>${G.recordLv}</b>${pop}</button>`;
   }
 
@@ -416,14 +416,15 @@
         it.calc = S.potCalcText(id, x.name, it.lv + it.bonus);
         it.calcLv = core ? "" : `Lv${it.lv + it.bonus}${it.bonus ? `・徽章+${it.bonus}込み` : ""}${it.lv + it.bonus > POT_LV_MAX ? "・推定" : ""}`;
         const onv = (cs.pon || {})[key];
-        if (it.calc && !(onv == null ? !sp.off : onv)) it.calc += "　※反映を外しているので、今は計算に入っていません";
+        if (it.calc && !(onv == null ? !S.potDefOff(sp, cs) : onv)) it.calc += "　※反映を外しているので、今は計算に入っていません";
       }
       if (!sp) it.tags.push(tg("計算に未対応"));
       else {
         const ctl = [];
         if (!sp.e.length) it.noeff = tg("火力に影響なし");   // 「反映」と同じ場所に出す
-        else { const onv = (cs.pon || {})[key], on = onv == null ? !sp.off : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
+        else { const onv = (cs.pon || {})[key], on = onv == null ? !S.potDefOff(sp, cs) : onv; it.onc = `<label class="pz-c">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></label>`; }
         if (sp.off) it.tags.push(tg("条件付き（既定はオフ）"));
+        else if (sp.offUnless) it.tags.push(tg(`条件付き（${(window.POTENTIAL_JA || {})[sp.offUnless] || sp.offUnless}がないときは既定でオフ）`));
         const seen = {};
         sp.e.forEach(e => { if (e.stk > 1 && !seen[e.sk || ""]) { seen[e.sk || ""] = 1; const sk = key + (e.sk ? ":" + e.sk : ""); ctl.push(`<span class="pz-c"><span class="muted">${e.sk ? (e.sk === "glow" ? "グロウ" : "ハロー") : "重複数"}</span> ${stepper(`${p}.pstk.${sk}`, 0, e.stk, e.stk0 != null ? e.stk0 : e.stk, "sm")}<span class="muted">/${e.stk}</span></span>`); } });
         sp.e.forEach((e, ei) => { if (e.edit) ctl.push(`<span class="pz-c"><span class="muted">回数</span> ${stepper(`${p}.pcnt.${key}#${ei}`, 0, 99, e.c, "sm")}</span>`); });
@@ -592,7 +593,7 @@
       <div class="sec-col">
         <section class="sec"><h3>記録レベル</h3>${recAuto ? inp("recordLv", { sel: recOpts }).replace("<select ", "<select disabled ") : inp("recordLv", { sel: recOpts })}
           <label class="check" style="margin:6px 0 0"><input type="checkbox" data-p="recordAuto" data-t="b"${recAuto ? " checked" : ""}> ビルドから自動で決める</label>
-          <div class="muted help">${recSc != null ? `記録のスコア ${fmt(recSc)}${recNext ? `（次の Lv${recNext[0]} まで あと ${fmt(recNext[1] - recSc)}）` : ""}。` : ""}コア素質1つ 180・通常素質のLv1つ 60・獲得した音符1個 15・アシスト効果のLv1つ 120 で数えます（徽章の＋は数えません）。</div>
+          <div class="muted help">${recSc != null ? `記録のスコア ${fmt(recSc)}${recNext ? `（次の Lv${recNext[0]} まで あと ${fmt(recNext[1] - recSc)}）` : ""}。` : ""}コア素質1つ 180・通常素質のLv1つ 60・音符1個 15（ロスレコの初期の音符も数える）・アシスト効果のLv1つ 120 で数えます（徽章の＋は数えません）。</div>
           <div class="muted help">戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）</div></section>
         <section class="sec"><h3>効果の数</h3><div class="muted help" style="margin:0 0 6px">暁光・星願など。戦闘中のある時点を想定して入力します。</div>
           ${counts ? `<div class="cnt-list">${counts}</div>` : '<p class="muted" style="margin:0">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}</section>

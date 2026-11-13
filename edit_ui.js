@@ -190,7 +190,7 @@
     const src = u || b || dr;
     meta.fromDraft = !!(u && u.draft) || (!u && !b && !!dr); meta.unk = (dr && dr.review && !u && !b) ? dr.unk : null;
     rows = src && src.e ? src.e.map(fromEngine) : [];
-    meta = { ext: (src && src.ext) || "", off: !!(src && src.off), none: !!(src && src.e && src.e.length === 0 && !(src.review)), note: (src && src.note) || "", txt: (src && src.txt) || "", fromDraft: meta.fromDraft, unk: meta.unk };
+    meta = { ext: (src && src.ext) || "", off: !!(src && src.off), offUnless: (src && src.offUnless) || "", none: !!(src && src.e && src.e.length === 0 && !(src.review)), note: (src && src.note) || "", txt: (src && src.txt) || "", fromDraft: meta.fromDraft, unk: meta.unk };
     renderEditor();
   }
   const sel = (id, opts, cur) => `<select data-f="${id}">${opts.map(o => `<option value="${esc(o[0])}"${String(o[0]) === String(cur) ? " selected" : ""}>${esc(o[1])}</option>`).join("")}</select>`;
@@ -452,7 +452,7 @@
     }
     if (a.indexOf("role:") === 0) { S.role = a.slice(5); S.sel = null; bar(); renderList(); renderEditor(); return; }
     if (a.indexOf("pick:") === 0) { Object.keys(ckBuf).forEach(k => delete ckBuf[k]); openPot(a.slice(5)); renderList(); return; }
-    if (a === "ok") { const e = meta.none ? [] : rows.map(toEngine); user[S.t] = user[S.t] || {}; const o = { done: true, e, txt: meta.txt || "", verified: "確認済み" }; if (meta.off) o.off = true; if (meta.ext) o.ext = meta.ext; if (meta.note) o.note = meta.note; user[S.t][S.sel] = o; save(); meta.fromDraft = false; meta.unk = null; bar(); renderList(); renderEditor(); return; }
+    if (a === "ok") { const e = meta.none ? [] : rows.map(toEngine); user[S.t] = user[S.t] || {}; const o = { done: true, e, txt: meta.txt || "", verified: "確認済み" }; if (meta.off) o.off = true; if (meta.offUnless) o.offUnless = meta.offUnless; if (meta.ext) o.ext = meta.ext; if (meta.note) o.note = meta.note; user[S.t][S.sel] = o; save(); meta.fromDraft = false; meta.unk = null; bar(); renderList(); renderEditor(); return; }
     if (a === "addrow") { rows.push(newRow()); renderEditor(); return; }
     if (a.indexOf("del:") === 0) { rows.splice(+a.slice(4), 1); renderEditor(); return; }
     if (a === "save") {
@@ -460,6 +460,7 @@
       user[S.t] = user[S.t] || {};
       const o = { done: true, e };   // 保存すると「下書き」の印は外れる（確認した内容として扱う）
       if (meta.off) o.off = true;
+      if (meta.offUnless) o.offUnless = meta.offUnless;
       if (meta.ext) o.ext = meta.ext;
       if (meta.note) o.note = meta.note;
       o.txt = meta.txt || meta.note || (meta.none ? "火力に影響なし" : "");
