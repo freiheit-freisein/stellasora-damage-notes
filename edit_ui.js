@@ -70,8 +70,14 @@
   const potSkill = (en, role, pot) => { const cl = ((window.CORE_LV || {})[en] || {})[pot]; if (cl) return cl.k; const sp = (user[en] && user[en][pot]) || builtIn(en, pot) || {}; const e = (sp.e || []).find(x => x.lv); return e ? e.lv : role; };
   // スキルLvで伸びるコア素質（data/core_lv.js）
   const coreLv = (en, pot) => ((window.CORE_LV || {})[en] || {})[pot] || null;
-  const trekkers = TREKKERS.slice().sort((a, b) => (b.rarity - a.rarity) || a.en.localeCompare(b.en));
-  const S = { t: (JSON.parse(localStorage.getItem("stellasora-edit-t") || "null") || "Tilia"), role: "main", sel: null };
+  // 巡遊者は日本語名のあいうえお順。属性で絞れる（2026-11-13 ユーザー: 属性ごとに情報を集めているので）
+  const ELJ = { Aqua: "水", Ignis: "火", Ventus: "風", Terra: "地", Lux: "光", Umbra: "闇" };
+  const ALL_T = TREKKERS.slice().sort((a, b) => TJ(a.en).localeCompare(TJ(b.en), "ja"));
+  const S = { t: (JSON.parse(localStorage.getItem("stellasora-edit-t") || "null") || "Tilia"), role: "main", sel: null, el: "" };
+  try { S.el = localStorage.getItem("stellasora-edit-el") || ""; } catch (e) { /* 無視 */ }
+  let trekkers = ALL_T;
+  const setEl = el => { S.el = el; trekkers = ALL_T.filter(x => !el || ELJ[x.element] === el); if (!trekkers.length) { S.el = ""; trekkers = ALL_T; } try { localStorage.setItem("stellasora-edit-el", S.el); } catch (e) { /* 無視 */ } };
+  setEl(S.el);
   if (!trekkers.some(x => x.en === S.t)) S.t = trekkers[0].en;
 
   // ---- 組み込みの効果表（検証済みの6人）----
@@ -151,7 +157,7 @@
     if (MODE !== "pot") return;
     const done = (en, t) => { let n = 0, d = 0, dr = 0; Object.keys(t.potentials || {}).forEach(role => t.potentials[role].forEach(g => g.potentials.forEach(p => { n++; { const u = specOf(en, p.name); if ((u && !u.draft) || (!u && builtIn(en, p.name)) || ckDone(en, p.name)) d++; else if ((u && u.draft) || draftOf(en, role, p.name)) dr++; } }))); return [d, n, dr]; };
     const t = TREKKERS.find(x => x.en === S.t), [d, n, dr] = done(S.t, t);
-    $("bar").innerHTML = `${CMP.modeBar("pot")}<b style="margin-left:8px">巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
+    $("bar").innerHTML = `${CMP.modeBar("pot")}<b style="margin-left:8px">属性:</b>${["", "水", "火", "風", "地", "光", "闇"].map(e => `<button class="sbtn${S.el === e ? " on" : ""}" data-act="tel:${e}">${e || "全部"}</button>`).join("")}<b style="margin-left:8px">巡遊者:</b><select id="selT">${trekkers.map(x => { const [dd, nn, rr] = done(x.en, x); return `<option value="${esc(x.en)}"${x.en === S.t ? " selected" : ""}>${"★" + x.rarity} ${esc(TJ(x.en))}（${ELJ[x.element] || x.element}）  確認済み ${dd} ／ 下書き ${rr} ／ 全${nn}</option>`; }).join("")}</select>
       <button class="sbtn${S.role === "main" ? " on" : ""}" data-act="role:main">主力の素質</button><button class="sbtn${S.role === "support" ? " on" : ""}" data-act="role:support">支援の素質</button>
       <span class="muted">${esc(TJ(S.t))}：確認済み ${d} ／ 全 ${n} 件（このブラウザで「合ってる」などを押したもの ${Object.keys(chk[S.t] || {}).length} 件）</span>
       <label class="muted" style="margin-left:auto"><input type="checkbox" data-act="adv"${S.adv ? " checked" : ""}> 詳しい入力を出す（通常は使いません）</label>`;
@@ -383,6 +389,7 @@
     const a = el.getAttribute("data-act");
     if (a.indexOf("mode:") === 0) { setMode(a.slice(5)); return; }
     if (MODE !== "pot") { if (a !== "ckexport" && a !== "copy") return; }
+    if (a.indexOf("tel:") === 0) { setEl(a.slice(4)); if (!trekkers.some(x => x.en === S.t)) { S.t = trekkers[0].en; S.sel = null; try { localStorage.setItem("stellasora-edit-t", JSON.stringify(S.t)); } catch (e) { /* 無視 */ } } bar(); renderList(); renderEditor(); return; }
     if (a === "adv") { S.adv = el.checked; bar(); renderList(); renderEditor(); return; }
     if (a === "ck:save" || a === "ck:unk") {   // 採用の欄（f:番号:Lv）を保存。前に入れた報告・ゲームの数字はそのまま残す
       const name = S.sel; chk[S.t] = chk[S.t] || {};

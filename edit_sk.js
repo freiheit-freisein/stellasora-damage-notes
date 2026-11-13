@@ -20,7 +20,7 @@
   const saveSel = () => { try { localStorage.setItem("stellasora-edit-sk", JSON.stringify({ t: V.t, el: V.el })); } catch (e) { /* 無視 */ } };
   const buf = {};
   let ROWS = [];
-  const list = () => (window.TREKKERS || []).filter(t => t.stats && (!V.el || EL[t.element] === V.el)).slice().sort((a, b) => (b.rarity - a.rarity) || a.en.localeCompare(b.en));
+  const list = () => (window.TREKKERS || []).filter(t => t.stats && (!V.el || EL[t.element] === V.el)).slice().sort((a, b) => TJ(a.en).localeCompare(TJ(b.en), "ja"));   // あいうえお順（2026-11-13 ユーザー）
   const ent = () => (store[V.mode][V.t] = store[V.mode][V.t] || {});
   const val = (kd, k) => { const kk = (kd === "r" ? "r:" : "") + k; if (buf[kk] != null) return buf[kk]; const c = store[V.mode][V.t] || {}; return ((kd === "r" ? c.r : c.g) || {})[k]; };
 
