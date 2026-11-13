@@ -25,10 +25,12 @@ W.TREKKERS.slice().sort((a, b) => (TJ[a.en] || a.en).localeCompare(TJ[b.en] || b
     const u = su[p.name], b2 = bi[p.name];
     const ja = (PJ[t.en] || {})[p.name] || p.name;
     const sp = (u && !u.draft) ? u : (!u && b2) ? b2 : null;
-    if (sp) s.done++; else if (u && u.draft) { s.draft++; s.none.push(ja + "（下書き）"); } else s.none.push(ja);
+    const okd = ck[p.name] && ck[p.name].st !== "unk" ? "（確認済み）" : "";
+    if (sp) s.done++; else if (u && u.draft) { s.draft++; s.none.push(ja + "（下書き）" + okd); } else s.none.push(ja + okd);
     // 説明文に「攻撃力の○%の…ダメージを与え」があるのに、追加ヒットが無いもの
     const txt = (((JP[t.en] || {})[g] || {})[p.name] || {}).text || "";
-    if (sp && /攻撃力の[^。]*ダメージを与え/.test(txt) && !(sp.e || []).some(e => e.k === "extra")) s.noExtra.push(ja);
+    // 効果なし（e が空）で理由を書いたものは、わざと入れていないので数えない（例: ホタルのじぐざぐレーザーは単体の敵では効果なし）
+    if (sp && (sp.e || []).length && /攻撃力の[^。]*ダメージを与え/.test(txt) && !(sp.e || []).some(e => e.k === "extra")) s.noExtra.push(ja);
   })));
   const tot = st.main.n + st.support.n, done = st.main.done + st.support.done;
   const mark = done === tot && !st.main.noExtra.length && !st.support.noExtra.length ? "[x]" : "[ ]";
@@ -37,7 +39,7 @@ W.TREKKERS.slice().sort((a, b) => (TJ[a.en] || a.en).localeCompare(TJ[b.en] || b
 
 const out = [];
 out.push("# 素質の反映チェックリスト", "", `作成: ${new Date().toLocaleString("ja-JP")}（tools/pot_status.js で作り直せます）`, "",
-  "- 入れた＝計算に入っている素質（下書きは数えない）", "- 追加ダメージの抜け＝説明文に「攻撃力の○%の…ダメージ」があるのに、追加のヒットが入っていない素質", "- 確認＝素質の確認（edit）で確かめた件数", "- ヒット＝スキルの当たり方。自動のままだと、素質の効き先（技の中の特定の攻撃）を分けられないことがある", "");
+  "- 入れた＝計算に入っている素質（下書きは数えない）", "- 追加ダメージの抜け＝説明文に「攻撃力の○%の…ダメージ」があるのに、追加のヒットが入っていない素質", "- 確認＝素質の確認（edit）で確かめた件数。まだのものの一覧で「（確認済み）」が付いているものから先に入れる", "- ヒット＝スキルの当たり方。自動のままだと、素質の効き先（技の中の特定の攻撃）を分けられないことがある", "");
 out.push("| | 巡遊者 | 属性 | 主力 | 支援 | 追加ダメージの抜け | 確認 | ヒット |", "|---|---|---|---|---|---|---|---|");
 const EL = { Aqua: "水", Ignis: "火", Ventus: "風", Terra: "地", Lux: "光", Umbra: "闇" };
 rows.forEach(r => out.push(`| ${r.mark} | ${TJ[r.t.en] || r.t.en} | ${EL[r.t.element] || r.t.element} | ${r.st.main.done}/${r.st.main.n} | ${r.st.support.done}/${r.st.support.n} | ${r.st.main.noExtra.length + r.st.support.noExtra.length || ""} | ${r.ckN}/${r.ckAll} | ${r.hits} |`));
