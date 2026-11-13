@@ -9,10 +9,15 @@
 
   // ---- 辞書 ----
   // legacy=true: 版1のコード用（自動で増やした巡遊者を含めない。巡遊者を増やす前と同じ辞書になる）
+  // 版2の辞書に入れる巡遊者（2026-11-13 の41人で固定）。あとから足した巡遊者（スグハなど）は辞書に入れず、文字のまま書き出す。
+  // 辞書が変わると、それまでの共有コードが読めなくなるため
+  const V2_CHARS = new Set(["willow", "nazuka", "eleanor", "noya", "firefly", "tilia", "allie", "donna", "chaton", "freesia", "ridge", "snowish_laru", "minova", "otoha",
+    "amber", "kasimira", "firenze", "iris", "noya_ventus", "shimiao", "jinglin", "coronis", "nanoha", "canace", "ann", "flora", "teresa", "fuyuka", "mistique", "sparkla",
+    "chixia", "cosette", "wraith", "chitose", "caramel", "gerie", "laru", "shia", "nazuna", "karin", "springseek_coronis"]);
   function buildDict(def0, legacy) {
-    const CH = (S.CH || []).filter(c => !legacy || !(c.auto || c.v2));   // v2 = 版2のあとで手で書き直した巡遊者（版1の辞書には入れない）
-    const def = legacy ? Object.assign({}, def0, { chars: {} }) : def0;
-    if (legacy) CH.forEach(c => { if (def0.chars[c.id]) def.chars[c.id] = def0.chars[c.id]; });
+    const CH = (S.CH || []).filter(c => V2_CHARS.has(c.id) && (!legacy || !(c.auto || c.v2)));   // v2 = 版2のあとで手で書き直した巡遊者（版1の辞書には入れない）
+    const def = Object.assign({}, def0, { chars: {} });
+    CH.forEach(c => { if (def0.chars[c.id]) def.chars[c.id] = def0.chars[c.id]; });
     const set = new Set();
     const walk = o => {
       if (Array.isArray(o)) { o.forEach(walk); return; }

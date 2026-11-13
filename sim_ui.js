@@ -765,7 +765,10 @@
     const info = c => { const t = TK(c.en) || {}; return { c, rar: t.rarity || 0, rel: t.release || "", id: t.id || 0 }; };
     const cmp = pkSort === "kana" ? (a, b) => a.c.jp.localeCompare(b.c.jp, "ja")
       : (a, b) => String(b.rel).localeCompare(String(a.rel)) || (b.id - a.id);   // 実装日が同じなら、ゲームの番号の大きいほうを先に
-    return EL_ORDER.map(el => ({ el, list: S.CH.filter(c => c.el === el).map(info).sort(cmp).map(x => x.c) })).filter(g => g.list.length);
+    // 実装されたばかりで数値がまだない巡遊者（data/trekkers_new.js）は、選べないカード「データ待ち」で、その属性の先頭に出す
+    const ELJ = { Aqua: "水", Ignis: "火", Ventus: "風", Terra: "地", Lux: "光", Umbra: "闇" };
+    const pend = el => (window.TREKKERS_PENDING || []).filter(t => ELJ[t.element] === el);
+    return EL_ORDER.map(el => ({ el, pend: pend(el), list: S.CH.filter(c => c.el === el).map(info).sort(cmp).map(x => x.c) })).filter(g => g.list.length || g.pend.length);
   }
   // 押すと、空いている枠の一番前（主力 → 支援1 → 支援2）に入る。選んである人を押すと、その枠が空く
   function pickToggle(id) {
@@ -832,6 +835,8 @@
       return `<button type="button" class="pk${s ? " on" : ""}" aria-pressed="${!!s}" data-act="pick:${c.id}" style="--elc:${EL_COLOR[c.el] || "#4B5082"}">
         <span class="pk-ic" aria-hidden="true">${esc([...c.jp][0])}</span><span class="pk-nm">${esc(c.jp)}${c.auto ? "*" : ""}</span><span class="pk-rar">★${rar}</span>${s ? `<span class="pk-slot">${s[1]}</span>` : ""}</button>`;
     };
+    const pendCard = t => `<button type="button" class="pk pk-pend" disabled title="実装されたばかりで、スキル・素質の数値がまだそろっていません" style="--elc:${EL_COLOR[{ Aqua: "水", Ignis: "火", Ventus: "風", Terra: "地", Lux: "光", Umbra: "闇" }[t.element]] || "#4B5082"}">
+        <span class="pk-ic" aria-hidden="true">${esc([...t.jp][0])}</span><span class="pk-nm">${esc(t.jp)}</span><span class="pk-rar">データ待ち</span></button>`;
     const chosen = SLOTS.map(([k, l]) => `<span class="pk-ch${p[k] ? " on" : ""}">${l}：${p[k] ? esc(chOf(p[k]).jp) : "（空き）"}</span>`).join("");
     const full = SLOTS.every(([k]) => p[k]);
     const ls = dlg.querySelector(".pk-list"), keep = ls ? ls.scrollTop : 0, keepD = dlg.scrollTop;   // 描き直しても、一覧のスクロールの位置を保つ
@@ -839,7 +844,7 @@
     $("pickBody").innerHTML = `<h2 id="pickDlgT"><span class="en">NEW</span>巡遊者を選んで作る</h2>
       ${helpTxt("pick", "巡遊者を押すと、主力 → 支援1 → 支援2 の順に入ります。もう一度押すと外れます。", "選んである人を押すとその枠が空き、次に押した人がその空いた枠に入ります。3人そろったら「計算に選んだ巡遊者を反映する」を押してください（入力中のデータは、すべて初期値に戻ります）。「条件を指定してビルドを作る」では、ロスレコと記録レベルを選ぶと、素質と音符を割り振ったビルドを作ります（試作）。")}
       <div class="pk-bar">${chosen}<span style="flex:1"></span><span class="unitbar" role="group" aria-label="並び順"><button type="button" class="${pkSort === "rel" ? "on" : ""}" aria-pressed="${pkSort === "rel"}" data-act="pksort:rel">実装順</button><button type="button" class="${pkSort === "kana" ? "on" : ""}" aria-pressed="${pkSort === "kana"}" data-act="pksort:kana">あいうえお順</button></span></div>
-      <div class="pk-list">${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.list.map(card).join("")}</div></div>`).join("")}</div>
+      <div class="pk-list">${pickList().map(g => `<div class="pk-grp"><div class="pk-el" style="--elc:${EL_COLOR[g.el] || "#4B5082"}">${g.el}</div><div class="pk-grid">${g.pend.map(pendCard).join("")}${g.list.map(card).join("")}</div></div>`).join("")}</div>
       ${msgOf("pick")}<div class="foot"><button class="btn-add" data-act="pick-close">閉じる</button><button type="button" class="btn-add" data-act="pick-make"${full ? "" : " disabled"}>${V.pickSure ? "もう一度押して反映する" : "計算に選んだ巡遊者を反映する"}</button>${WIZ_ON ? `<button type="button" class="btn-add pri" data-act="wiz:lr"${full ? "" : " disabled"}>条件を指定してビルドを作る<span class="beta-s" style="margin-left:6px">試作</span></button>` : ""}</div>`;
     const ls2 = dlg.querySelector(".pk-list"); if (ls2) ls2.scrollTop = keep; dlg.scrollTop = keepD;
   }

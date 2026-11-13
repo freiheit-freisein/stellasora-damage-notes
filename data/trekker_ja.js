@@ -40,5 +40,6 @@ window.TREKKER_JA = {
 "Snowish Laru": "ラール（聖夜）",
 "Springseek Coronis": "クルニス（華服）",
 "Suntide Willow": "ウィロー（水着）",
-"Firstlight Noya": "セイナ（原点）"
+"Firstlight Noya": "セイナ（原点）",
+"Suguha": "スグハ"
 };
