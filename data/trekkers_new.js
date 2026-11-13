@@ -9,8 +9,11 @@ window.TREKKERS_NEW = [
   {
     id: null, en: "Suguha", jp: "スグハ", role: "Versatile", element: "Terra", rarity: 5, range: null, release: "2026-11-13",
     faction: "地理協会", cv: "三浦千幸",
+    // 能力値: 分かったら { hp: [Lv1, Lv90], atk: [Lv1, Lv90], def: 値 } の形で入れれば、Lv1〜90 を推定で埋める（est.js）。
+    //   信頼（trust）・心相（talent）は巡遊者ごとに違うので、画面で確かめて入れる
     stats: null,
-    // 技の名前は日本語Wikiより。name（英語名）・text（説明）・nums（Lvごとの数値）はまだない
+    // 技の名前は日本語Wikiより。name（英語名）・text（説明）・nums（Lvごとの数値）はまだない。
+    // nums の代わりに hits: [[Lv1の値, Lv2の値], ...]（ヒットごと。Lv2 は説明の「(xx%↑)」）を入れれば、Lv1〜10 を推定で埋める
     skills: [
       { ja: "ファセットグロース", name: null, brief: null, text: null, nums: null },   // 通常攻撃
       { ja: "アーススキャニング", name: null, brief: null, text: null, nums: null },   // 主力スキル
@@ -23,12 +26,21 @@ window.TREKKERS_NEW = [
   },
 ];
 (function () {
-  const ready = t => !!(t.stats && t.skills && t.skills.length === 4 && t.skills.every(s => s.name && s.nums) && t.potentials && t.potentials.main.length && t.potentials.support.length);
+  // 推定で埋める（est.js）。推定した値は est に印を残す
+  const fill = t => {
+    if (!window.EST) return;
+    (t.skills || []).forEach(sk => { if (!sk.nums && sk.hits && sk.hits.length) { sk.nums = EST.skillNums(sk.hits); sk.est = true; } });
+    const st = t.stats;
+    if (st) ["hp", "atk"].forEach(k => { const a = st[k]; if (Array.isArray(a) && a.length === 2) { st[k] = EST.stat(k, a[0], a[1]); st.est = true; } });
+    if (st && typeof st.def === "number") { st.def = Array(99).fill(st.def); }   // 防御はLvで変わらない
+  };
+  const ready = t => !!(t.stats && t.stats.hp && t.stats.hp.length > 2 && t.stats.trust && t.stats.talent && t.skills && t.skills.length === 4 && t.skills.every(s => s.name && s.nums) && t.potentials && t.potentials.main.length && t.potentials.support.length);
   const T = window.TREKKERS || [];
   window.TREKKERS_PENDING = [];
   window.TREKKERS_NEW.forEach(t => {
     if (window.TREKKER_JA && !window.TREKKER_JA[t.en]) window.TREKKER_JA[t.en] = t.jp;
     if (T.some(x => x.en === t.en)) return;   // 英語Wikiのデータに入ったら、そちらを使う
+    fill(t);
     if (ready(t)) T.push(t); else window.TREKKERS_PENDING.push(t);
   });
 })();

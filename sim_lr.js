@@ -110,10 +110,29 @@
   // ---- 日本語Wikiから自動で作ったロスレコ（data/lr_auto.js）。ゲーム内では未確認なので、画面では名前に「*」を付ける ----
   // 手で入れたロスレコ（上）は、そのまま使う。手で入れたものに効果の表（LR_FX）がなければ、Wikiの効果だけ足す（autoFx）。
   // コア効果は突破（1〜6、既定1）、アシスト効果は音符で決まるLv（1〜5）の値を使う。重複できるものは最大の重複数。
+  // Wikiに「最初と最後」の段しか値が無いもの（途中の段が最初の段と同じ値・同じ文になっている★5）や、最初の1段しか文が無いものは、
+  // 間の段を推定で埋める（est.js の EST.steps。確かめた★5のロスレコは、どれも最初と最後の段の間がまっすぐ）。
+  //   推定した段の文は、最初の段の文の数字を置き換え、末尾に「（推定）」を付ける
+  //   FIX・FIXV で値を入れた効果は、推定を使わない（txt0 = 推定しない元の文）
+  const pct = x => String(Math.round(x * 1000) / 10) + "%";
+  const autoItem = (it, id, n, kind, rar) => {
+    const len = it.txt.length, es0 = it.e || [];
+    const ends = rar === 5 && es0.length && es0.every(e => e.v.length === n && e.v.slice(0, n - 1).every(x => x === e.v[0])) && es0.some(e => e.v[n - 1] !== e.v[0]);
+    const kl = !window.EST || it.skip || !es0.length || rar !== 5 ? null : ends ? [1, n] : EST.knownLv(len, n);   // ★4以下は突破ごとの伸び方を確かめていない
+    const es = es0.map(e => ({ e, v: !kl ? e.v : EST.steps(ends ? [e.v[0], e.v[n - 1]] : e.v, n, kind) }));
+    const txt0 = lv => it.txt[Math.min(lv, len) - 1];
+    const txt = !kl ? txt0 : lv => {
+      if (kl.indexOf(lv) >= 0) return txt0(lv);
+      let t = it.txt[0];
+      es.forEach(({ e, v }) => { const re = new RegExp("(?<![0-9.])" + pct(e.v[0]).replace(".", "[.]")); t = t.replace(re, pct(v[Math.min(lv, v.length) - 1])); });
+      return t + "（推定）";
+    };
+    return { id, auto: true, est: !!kl, skip: it.skip, off: it.off, txt, txt0, e: es.map(({ e, v }) => Object.assign({}, e, { v: lv => v[Math.min(lv, v.length) - 1] * (e.stk || 1) })) };
+  };
   const autoFx = r => ({
     auto: true,
-    core: r.core.map((it, i) => ({ id: "c" + i, auto: true, skip: it.skip, off: it.off, txt: lv => it.txt[Math.min(lv, it.txt.length) - 1], e: (it.e || []).map(e => Object.assign({}, e, { v: lv => e.v[Math.min(lv, e.v.length) - 1] * (e.stk || 1) })) })),
-    assists: r.assists.map(a => ({ id: a.id, name: a.name, notes: a.notes, base: a.base, items: a.items.map((it, i) => ({ id: "i" + i, auto: true, skip: it.skip, off: it.off, txt: lv => it.txt[Math.min(lv, it.txt.length) - 1], e: (it.e || []).map(e => Object.assign({}, e, { v: lv => e.v[Math.min(lv, e.v.length) - 1] * (e.stk || 1) })) })) })),
+    core: r.core.map((it, i) => autoItem(it, "c" + i, 6, "core", r.rarity)),
+    assists: r.assists.map(a => ({ id: a.id, name: a.name, notes: a.notes, base: a.base, items: a.items.map((it, i) => autoItem(it, "i" + i, 5, "assist", r.rarity)) })),
   });
   (window.LR_AUTO || []).forEach(r => {
     const had = L.find(x => x.name === r.name);
@@ -169,13 +188,13 @@
     const FIX = (name, path, o) => {
       const it = itemOf(name, path);
       if (!it) return;
-      Object.assign(it, o, { skip: false, e: o.e.map(e => { const a = e.v; return Object.assign({}, e, { v: lv => at(a, lv) }); }) });
+      Object.assign(it, o, { skip: false, est: false, txt: it.txt0 || it.txt, e: o.e.map(e => { const a = e.v; return Object.assign({}, e, { v: lv => at(a, lv) }); }) });
     };
     // FIX に加えて、説明文の数字（最大の段の値）も段ごとの値に置き換える（ゲームの画面で確かめた値）
     const FIXV = (name, path, o) => {
       const it = itemOf(name, path);
       if (!it) return;
-      const a = o.e[0].v, top = a.length, t0 = typeof it.txt === "function" ? it.txt(top) : it.txt;
+      const a = o.e[0].v, top = a.length, tf = it.txt0 || it.txt, t0 = typeof tf === "function" ? tf(top) : tf;
       const f = x => String(Math.round(x * 1000) / 10) + "%";
       FIX(name, path, o);
       const re = new RegExp("(?<![0-9.])" + f(a[top - 1]).replace(".", "[.]"));
@@ -217,7 +236,7 @@
     FIXV("青空を越えて", "c1", { off: true, e: [{ k: "takenBasic", to: "el", el: "水", v: P(10, 12, 14, 16, 18, 20) }] });
     FIXV("青空を越えて", "c2", { off: true, e: [{ k: "takenSkill", to: "el", el: "水", v: P(12, 14.4, 16.8, 19.2, 21.6, 24) }] });
     // 揺らめく光の向こう側 a1.2（SPの獲得・計算に未反映）は、説明文の数字だけ段ごとにする
-    (it => { if (!it || typeof it.txt !== "function") return; const t0 = it.txt(5); it.txt = lv => t0.replace("7.5%", [1.5, 3, 4.5, 6, 7.5][Math.min(lv, 5) - 1] + "%"); })(itemOf("揺らめく光の向こう側", "a1.2"));
+    (it => { if (!it || typeof it.txt !== "function") return; const t0 = (it.txt0 || it.txt)(5); it.est = false; it.txt = lv => t0.replace("7.5%", [1.5, 3, 4.5, 6, 7.5][Math.min(lv, 5) - 1] + "%"); })(itemOf("揺らめく光の向こう側", "a1.2"));
 
     // C. 数（重複数など）を入れて使うもの
     [["レモネードと紅茶", "風"], ["一撃必中", "火"], ["かけがえのない時間", "光"], ["一期一会", "水"], ["真夜中の鈴", "闇"], ["虹を描こう", "地"]].forEach(([nm, el]) =>
