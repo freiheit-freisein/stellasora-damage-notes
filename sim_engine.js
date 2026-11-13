@@ -254,6 +254,7 @@
         else if (mo.k === "critDmg") { if (!(man.critDmg && typeLevel)) cdAdd += mo.v; }
         else if (mo.k === "Bs" && type === "skill") bAdd += mo.v;
         else if (mo.k === "Bb" && type === "basic") bAdd += mo.v;
+        else if (mo.k === "Bu" && type === "ult") bAdd += mo.v;   // 特定の攻撃だけの必殺技ダメージ（例: オトハの万象は闇へ。花の傘だけ）
         else if (mo.k === "W") wAdd += mo.v;
         else if (mo.k === "taken") tAdd += mo.v;   // その攻撃だけに乗る敵の被ダメージ（被ダメージの足し算に入れる）
         else if (mo.k === "defPen") dpAdd += mo.v;   // その攻撃だけの防御貫通（例: セイナ(原点)の極星の構え）
@@ -268,7 +269,7 @@
       let B;
       if (type === "basic") B = 1 + st.basicAdd + (man.basic ? 0 : ef.Bb) + (mh.Bb || 0) + bAdd;
       else if (type === "skill") B = 1 + st.skillAdd + (man.skill ? 0 : ef.Bs) + (mh.Bs || 0) + bAdd;
-      else if (type === "ult") B = 1 + st.ultAdd + (man.ult ? 0 : ef.Bu);
+      else if (type === "ult") B = 1 + st.ultAdd + (man.ult ? 0 : ef.Bu) + bAdd;
       else B = 1 + st.markAdd + (man.mark ? 0 : ag.markAdd) + (ag.markFromBb ? Math.min(ag.markFromBb.cap, (st.basicAdd + (man.basic ? 0 : ef.Bb)) * ag.markFromBb.r) : 0);   // 通常攻撃ダメージの増加ぶんを印ダメージにも（エリーの断捨離タイム）
       let taken = (ef.taken + tAdd) * (mh.taken || 1) * (other.taken || 1);
       if (type === "mark") taken *= ag.takenMark * (ag.markMult || 1);

@@ -122,6 +122,17 @@ window.SIM = window.SIM || {};
         support: [H(2, 0, 1, "skill", "星光", "sLight", ["support"]), H(2, 1, 2, "skill", "星芒（2つ・1回分ずつ）", "sStar", ["support", "star"])],
         ult: [H(3, 0, 16, "ult", "ウィンドアッシュの攻撃（0.3秒ごと・5秒間）", "uAsh", ["ult"])],
       } },
+    // オトハ（2026-11-14）。素質の効き先（催涙雨・轟撃・狐火、花の傘、天誅など）が分かるように手で書く
+    //   催涙雨は説明文では「4秒間・0.5秒ごと」だが、8回だと支援スキルだけで主力スキルの十数倍になり不自然なので、確かめるまで1回分
+    //   狐火は「6秒間・0.5秒ごと」で12回（説明文の秒数から）。花の傘の回転中の命中は回数が書かれていないので1回分
+    { id: "otoha", en: "Otoha", jp: "オトハ", el: "闇", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 3, "basic", "1撃目×3", "b1", ["basic"]), H(0, 1, 3, "basic", "2撃目×3", "b2", ["basic"]), H(0, 2, 9, "basic", "3撃目×9", "b3", ["basic"])],
+        main: [H(1, 0, 1, "skill", "射撃", "mShot", ["main", "nightShot"])],
+        support: [H(2, 0, 1, "skill", "催涙雨（1回分）", "sRain", ["support", "tearRain"]), H(2, 1, 12, "skill", "狐火（0.5秒ごと・6秒間）", "sFox", ["support", "foxfire"])],
+        ult: [H(3, 0, 1, "ult", "花の傘の回転（命中1回分）", "uSpin", ["ult", "parasol"]), H(3, 1, 1, "ult", "爆発1", "uBlast1", ["ult", "parasol", "parasolBlast"]),
+          H(3, 2, 1, "ult", "爆発2", "uBlast2", ["ult", "parasol", "parasolBlast"]), H(3, 3, 1, "ult", "爆発3", "uBlast3", ["ult", "parasol", "parasolBlast"])],
+      } },
   ];
   // 残りの巡遊者（自動）: data/sim_chars_auto.js（tools/build_chars.py が英語Wikiのスキルの説明文から作ったヒット）。上の手で書いた定義が優先
   (window.SIM_CHARS_AUTO || []).forEach(c => { if (!S.CH.some(x => x.en === c.en)) S.CH.push(c); });

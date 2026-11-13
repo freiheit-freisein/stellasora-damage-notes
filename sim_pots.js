@@ -321,7 +321,7 @@ window.SIM = window.SIM || {};
           const cc = (cs.pcnt || {})[key + "#" + ei];
           if (cc != null && cc !== "") cnt = +cc;
           else if (e.perLuxOther) cnt *= Math.max(0, sameN(oid) - 1);   // 自分以外の同じ属性の人数ぶん（例: トーナのオマケの一矢）
-          let m = e.m != null ? e.m : v, lvOf = e.lv || null;
+          let m = e.m != null ? e.m * (pr != null ? pr : 1) : v, lvOf = e.lv || null;   // m を書いた追加ヒットも、確率があれば期待値に
           if (!lvOf) { const h = coreLvHit(chs[team.indexOf(oid)].en, info.pn, m); if (h) { lvOf = h.k; m = h.m; } }   // m はスキルLv10の値、計算のときに今のスキルLvに直す
           a.xhits.push({ group: e.group, name: jaHit(e.name, info.pn, chs[team.indexOf(oid)].en), m, c: cnt, t: e.t, tags: e.tags || [], perGlow: !!e.perGlow, perTag: e.perTag || null, tagDiv: e.tagDiv || 0, tagAdd: e.tagAdd || 0, tagMul: e.tagMul || 0, tagBonus: e.tagBonus || null, lvOf, owner: oid, key: key + "#" + ei });
           return;
@@ -332,7 +332,7 @@ window.SIM = window.SIM || {};
         if (e.k === "markMult") { a.markMult *= 1 + v; return; }   // 印ダメージの別枠（印ダメージ+の足し算とは別に掛ける）
         if (e.k === "takenSkill") { a.takenSkill *= 1 + v; return; }
         if (e.k === "takenBasic") { a.takenBasic = (a.takenBasic || 1) * (1 + v); return; }
-        if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || ((e.tags || e.grp) && (e.k === "Bs" || e.k === "Bb" || e.k === "W" || e.k === "atkPctHit"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: e.cond || null }); return; }
+        if (e.k === "mult" || e.k === "critRate" || e.k === "critDmg" || ((e.tags || e.grp) && (e.k === "Bs" || e.k === "Bb" || e.k === "Bu" || e.k === "W" || e.k === "atkPctHit"))) { a.mods.push({ k: e.k, v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: e.cond || null }); return; }
         if (e.k === "defPen" && (e.tags || e.ht || e.grp)) { a.mods.push({ k: "defPen", v, tags: e.tags || null, ht: e.ht || null, grp: e.grp || null, cond: null }); return; }   // 特定の攻撃だけの防御貫通
         if (e.k === "mark") { a.markAdd += v; return; }
         if (a[e.k] != null) a[e.k] += v;
@@ -394,7 +394,7 @@ window.SIM = window.SIM || {};
   const KJ = { W: el => el + "属性ダメージ", Bs: "スキルダメージ", Bb: "通常攻撃ダメージ", Bu: "必殺技ダメージ", mark: "印ダメージ", markMult: "印ダメージ（別枠の掛け算）",
     atkPct: "攻撃力", hpPct: "最大HP", hpFlat: "基礎HP", atkFlat: "基礎攻撃力", pen: "耐性貫通", critRate: "会心率", critDmg: "会心ダメージ", atkPctHit: "攻撃力",
     taken: el => "敵の" + el + "属性被ダメージ", takenSkill: "敵のスキル被ダメージ", takenBasic: "敵の通常攻撃被ダメージ", takenMark: "敵の印被ダメージ（別枠の掛け算）", mult: "ダメージ（別枠の掛け算）", defDown: "敵の防御力低下", defPen: "防御貫通" };
-  const TAGJ = { frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
+  const TAGJ = { nightShot: "主力スキルの射撃", tearRain: "催涙雨", bombard: "轟撃", foxfire: "狐火", parasol: "花の傘", parasolBlast: "花の傘の爆発", doomfall: "天誅", sange: "散華の小さい弾丸", frog: "バブルフロッグ", wave: "震動波", shovel: "チェーンシャベル", cage: "鉄の牢獄", main: "主力スキル", support: "支援スキル", basic: "通常攻撃", ult: "必殺技", long: "長剣", giant: "大剣", great: "大剣", starfall: "星雷", glow: "光刃", cannon: "浮遊砲", blade: "飛ぶ刃",
     jump: "叩きつけの爆発", drone: "ドローン", vigil: "警戒", s15: "通常攻撃の1〜5撃目", final: "最終撃", scale: "流閃・鱗", rush: "連撃", mirror: "鏡影", serpent: "騰蛇", penguin: "ぬいぐるみペンギン", statue: "ペンギン像", heart: "ハートアロー", sweep: "掃射", shitsuke: "ママのしつけ", iceBlade: "氷刃", iceEdge: "アイスエッジ", frostBloom: "追加の華", sweepSlash: "スイープスラッシュ", icicle: "アイシクルスラッシュ", crystal: "氷晶", dust: "一掃", purge: "粛清", purgeX: "粛清の残像", orb: "花のオーブ", sea: "花の海", petal: "花びら", seaEnd: "花の海の消滅時の追撃", arrow: "スプラッシュアロー", cascade: "カスケードルート", tail: "矢尾への追加ダメージ", pullOut: "矢尾の引き抜き", pursuit: "追い打ち", track: "トラッキングウェーブ", agile: "速達状態", minion: "従者", gust: "突風", vortex: "旋風", counter: "反撃", bomb: "ネコ神爆弾", bombLand: "爆弾の着地", bombKai: "ネコ神爆弾改", fall: "空に堕ちる焔", scar: "魔痕", flare: "インフィニティフレア", glare: "アビスグレア", curse: "覗き込む闇", markDark: "漆黒の刻印", roll: "ローリング射撃", pierce: "貫通弾", pierceX: "追加の貫通弾", split: "小型貫通弾", puni: "ぷにぷにボム", bless: "黒き祝福", eye: "魔眼の射手", normal: "通常（狂化でない）", berserk: "狂化中の通常攻撃", flower: "氷華", seed: "氷の種", triple: "三塁打", double: "二塁打", noRespite: "連続打撃の追加ダメージ", glowBurst: "光輝炸裂", thunder: "落雷", moon: "フォルモント・ネールモント", star: "星芒", shutout: "完封欲求", arc: "ジャストミート", b5: "通常攻撃5撃目" };
   const TOJ = { selfNonEl: "自分と違う属性の味方・自分", nonEl: "自分と違う属性の味方", all: "全員", main: "主力", lux: "同じ属性の全員", luxVers: "同じ属性のバランサー", luxAB: "同じ属性のアタッカー・バランサー", sup: "支援の2人", others: "自分以外の味方" };
   const HTJ = { skill: "スキル", basic: "通常攻撃", ult: "必殺技", mark: "印" };
@@ -415,7 +415,8 @@ window.SIM = window.SIM || {};
         const tj = t => TAGJ[t] || t;
         const cntT = e.perTag ? `×（${tj(e.perTag)}の回数${e.tagAdd ? (e.tagAdd > 0 ? "+" : "") + e.tagAdd : ""}${e.tagDiv ? "÷" + e.tagDiv : ""}）${e.tagMul ? "×" + e.tagMul : ""}` : e.perLuxOther ? `×${e.c || 1}×（自分以外の同じ属性の人数）` : `×${e.c || 1}`;
         const bon = e.tagBonus ? `、${tj(e.tagBonus.tag)}1回につき +${r1(e.tagBonus.r * 100)}%（最大${e.tagBonus.cap}回）` : "";
-        return `追加ヒット ${r1(xh ? xh.m : (e.m != null ? e.m : v))}%${xlv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[xlv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）${cntT}${bon}`;
+        const xpr = probOf(e, lv, Object.assign({}, info, { ext })), prT = xpr != null ? `（確率${r1(xpr * 100)}%の期待値）` : "";
+        return `追加ヒット ${r1(xh ? xh.m : (e.m != null ? e.m : v))}%${xlv ? `（${({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" })[xlv]}Lv10のとき・Lvで伸びる）` : ""}（${HTJ[e.t] || ""}）${cntT}${bon}${prT}`;
       }
       if (e.k === "count" || e.k === "countMul") {
         const hh = c && Object.values(c.hits || {}).flat().find(h => h.id === e.hit), cn = e.cond ? "（" + (CONDJ[e.cond] || e.cond) + "）" : "";
