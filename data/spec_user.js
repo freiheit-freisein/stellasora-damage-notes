@@ -693,9 +693,15 @@ window.SPEC_USER = {
      "k": "defPen",
      "n": 0,
      "to": "all",
-     "perLux": true
+     "perLux": true,
+     "over": {
+      "7": 35,
+      "8": 36,
+      "9": 37
+     }
     }
-   ]
+   ],
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Flying Droplets": {
    "done": true,
@@ -715,7 +721,7 @@ window.SPEC_USER = {
      ]
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "2026-11-14 ゲームの文は 427%〜1088%×3（Lv1〜Lv9の範囲と見られる）。Lv10 1190% は岸を覆う激流の伸び（570÷204）と合う"
   },
   "Flooding Shore": {
    "done": true,
@@ -735,7 +741,7 @@ window.SPEC_USER = {
      ]
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Hovering Gale": {
    "done": true,
@@ -760,10 +766,14 @@ window.SPEC_USER = {
       "hovering"
      ],
      "stk": 12,
-     "stk0": 1
+     "stk0": 1,
+     "over": {
+      "8": 10.9,
+      "9": 12.2
+     }
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Words Unchanged": {
    "done": true,
@@ -777,7 +787,7 @@ window.SPEC_USER = {
      "stk0": 1
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Eternal Tide": {
    "done": true,
@@ -789,7 +799,7 @@ window.SPEC_USER = {
      "to": "all"
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Rhythm Surge": {
    "done": true,
@@ -801,7 +811,7 @@ window.SPEC_USER = {
      "to": "all"
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Thunderous Surf": {
    "done": true,
@@ -834,12 +844,22 @@ window.SPEC_USER = {
      "t": "skill",
      "c": 1,
      "edit": true,
-     "n": 0
+     "n": 0,
+     "over": {
+      "7": 187,
+      "8": 211,
+      "9": 236
+     }
     },
     {
      "k": "critRate",
      "n": 1,
-     "to": "all"
+     "to": "all",
+     "over": {
+      "7": 21,
+      "8": 22,
+      "9": 23
+     }
     },
     {
      "k": "atkPct",
@@ -848,7 +868,7 @@ window.SPEC_USER = {
      "prob": 0.5
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Engulfing Tide": {
    "done": true,
@@ -857,10 +877,15 @@ window.SPEC_USER = {
     {
      "k": "W",
      "n": 0,
-     "to": "main"
+     "to": "main",
+     "over": {
+      "7": 81,
+      "8": 92,
+      "9": 102
+     }
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Receding Echoes": {
    "done": true,
@@ -870,10 +895,14 @@ window.SPEC_USER = {
      "k": "critDmg",
      "n": 0,
      "to": "all",
-     "stk": 16
+     "stk": 16,
+     "over": {
+      "8": 3.1,
+      "9": 3.5
+     }
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   },
   "Prismatic Barrier": {
    "done": true,
@@ -888,10 +917,15 @@ window.SPEC_USER = {
     {
      "k": "atkPct",
      "n": 0,
-     "to": "all"
+     "to": "all",
+     "over": {
+      "7": 48,
+      "8": 54,
+      "9": 60
+     }
     }
    ],
-   "note": "2026-11-14 英語Wikiの数字で作成（素質の確認はまだ）"
+   "note": "素質の確認（2026-11-13）の値に合わせた（Lv7〜9も）"
   }
  },
  "Shia": {
