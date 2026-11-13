@@ -116,7 +116,7 @@
       ${sc != null ? `<div>記録のスコア <b>${fmt(sc)}</b>${next ? `　次の Lv${next[0]} まで あと ${fmt(next[1] - sc)}` : ""}</div>` : ""}
       <div>戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}</div>
       <div class="muted">スコア: コア素質1つ 180・通常素質のLv1つ 60・獲得した音符1個 15・アシスト効果のLv1つ 120（徽章の＋は数えない）。手で選ぶときは ③ロスレコ の「記録レベル」で。</div></div>`;
-    return `<button type="button" class="mi mi-rec${V.recPop ? " open" : ""}" data-act="recpop" aria-expanded="${!!V.recPop}"><span>記録</span><b>Lv${G.recordLv}</b>${pop}</button>`;
+    return `<button type="button" class="mi mi-rec${V.recPop ? " open" : ""}" data-act="recpop" aria-expanded="${!!V.recPop}"><span>記録レベル</span><b>${G.recordLv}</b>${pop}</button>`;
   }
 
   // ---- 選択ボタン ----
