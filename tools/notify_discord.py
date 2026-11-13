@@ -2,6 +2,7 @@
 # 使い方: python tools/notify_discord.py            … 前回流したコミットから HEAD までに増えた行を送る
 #         python tools/notify_discord.py --dry-run  … 送らずに中身だけ出す
 #         python tools/notify_discord.py --only=2   … 増えた行のうち先頭の2件だけ送る（残りは送らずに、送ったことにする）
+#         python tools/notify_discord.py --pick=1,3,4 … 増えた行のうち、番号で選んだ行だけ送る（残りは送らずに、送ったことにする）
 # Webhook の URL は .discord-webhook（git に入れない）。前回流したコミットは .discord-last に残す。
 import json, re, subprocess, sys, urllib.request
 from pathlib import Path
@@ -37,6 +38,9 @@ def main():
     only = next((int(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--only=")), None)   # 先頭のN件だけ送る（長いと読みにくいとき。ユーザーの指示）
     if only:
         items = items[:only]
+    pick = next(([int(x) for x in a.split("=", 1)[1].split(",")] for a in sys.argv if a.startswith("--pick=")), None)   # 番号（1から）で選んだ行だけ送る（更新が多いときに厳選する。ユーザーの指示）
+    if pick:
+        items = [items[i - 1] for i in pick if 0 < i <= len(items)]
     head_txt = "**巡遊者の計算ノートを更新しました**"
     foot = ""   # URL は付けない（ユーザーの希望）
     body, out = [], []
