@@ -437,12 +437,13 @@
         <span class="pz-row">${STAR("#F4C84A")}<span class="pz-name">${esc(x.name)}</span>${x.grp ? `<span class="pz-grp">${x.grp}</span>` : ""}<span class="pz-sw${on ? " on" : ""}"><span></span></span></span>
         <span class="pz-desc">${esc(x.desc)}${x.calc ? `<span class="pz-calc">計算${x.calcLv ? `（${x.calcLv}）` : ""}: ${esc(x.calc)}</span>` : ""}</span></button>${tags(x)}${(on && (x.onc || x.ctl)) || x.noeff ? `<div class="pz-ctl">${on ? (x.onc || "") + x.ctl : ""}${x.noeff || ""}</div>` : ""}</div>`;
     };
-    // 通常素質: Lv0〜6のボタン。徽章の「＋」は、名前の行の右端（6のボタンの上）に出す
+    // 通常素質: 名前と反映の行、Lv0〜6のボタン、その下に右寄せで「徽章+3」（Lvは押したボタンで分かるので出さない。2026-11-14 ユーザー）
     const normCard = x => {
       const btns = Array.from({ length: POT_LV_MAX + 1 }, (_, n) => `<button type="button" class="pz-lv${x.lv === n ? " on" : ""}" aria-pressed="${x.lv === n}" data-act="plv|${n}|${x.path}">${n}</button>`).join("");
       return `<div class="pz-norm${x.lv > 0 ? " on" : ""}" title="${esc(x.en)}">
-        <div class="pz-row">${STAR("#9AA0C8")}<span class="pz-name">${esc(x.name)}</span><span class="pz-lvt${x.lv ? "" : " off"}">${x.lv ? `Lv${x.lv}` : ""}${x.bonus ? `（徽章+${x.bonus}）` : ""}</span><span style="flex:1"></span>${x.lv > 0 && x.onc ? x.onc : (x.noeff || "")}</div>
+        <div class="pz-row">${STAR("#9AA0C8")}<span class="pz-name">${esc(x.name)}</span><span style="flex:1"></span>${x.lv > 0 && x.onc ? x.onc : (x.noeff || "")}</div>
         <div class="pz-row"><div class="pz-lvs" role="group" aria-label="${esc(x.name)}のLv">${btns}</div></div>
+        ${x.bonus ? `<div class="pz-row"><span style="flex:1"></span><span class="pz-lvt${x.lv ? "" : " off"}">徽章+${x.bonus}</span></div>` : ""}
         ${x.lv > POT_LV_MAX ? `<div class="muted" style="font-size:11px">前の入力で Lv${x.lv} が入っています（ボタンを押すと Lv0〜6 に変わります）</div>` : ""}
         ${tags(x)}${x.lv > 0 && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}
         <div class="pz-desc">${esc(x.desc)}${x.calc ? `<span class="pz-calc">計算${x.calcLv ? `（${x.calcLv}）` : ""}: ${esc(x.calc)}</span>` : ""}</div></div>`;
