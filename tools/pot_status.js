@@ -1,6 +1,8 @@
-// 素質の反映状況のチェックリストを作る。使い方: node tools/pot_status.js > ../potential-checklist.md
+// 素質の反映状況のチェックリストを作る。使い方: node stellasora-calc/tools/pot_status.js（どのフォルダから実行してもよい）
+//   計算ノートのフォルダの隣に potential-checklist.md を UTF-8 で書き出す（PowerShell の「>」は UTF-16 になるので使わない）
 // 巡遊者ごとに、主力・支援の素質が計算に入っているか（入れた・下書き・未登録）、追加ダメージの抜け、素質の確認の件数、ヒットの定義（手で書いた／自動）を出す
-const fs = require("fs"), vm = require("vm");
+const fs = require("fs"), vm = require("vm"), path = require("path");
+process.chdir(path.join(__dirname, ".."));
 const c = { window: {} };
 ["data/trekkers.js", "data/trekker_ja.js", "data/potential_ja.js", "data/potentials_jp.js", "data/spec_user.js", "data/pot_check.js", "data/sim_chars_auto.js"].forEach(f => vm.runInNewContext(fs.readFileSync(f, "utf8"), c));
 const W = c.window;
@@ -38,7 +40,7 @@ W.TREKKERS.slice().sort((a, b) => (TJ[a.en] || a.en).localeCompare(TJ[b.en] || b
 });
 
 const out = [];
-out.push("# 素質の反映チェックリスト", "", `作成: ${new Date().toLocaleString("ja-JP")}（tools/pot_status.js で作り直せます）`, "",
+out.push("# 素質の反映チェックリスト", "", `作成: ${new Date().toLocaleString("ja-JP")}（node stellasora-calc/tools/pot_status.js で作り直せます）`, "",
   "- 入れた＝計算に入っている素質（下書きは数えない）", "- 追加ダメージの抜け＝説明文に「攻撃力の○%の…ダメージ」があるのに、追加のヒットが入っていない素質", "- 確認＝素質の確認（edit）で確かめた件数。まだのものの一覧で「（確認済み）」が付いているものから先に入れる", "- ヒット＝スキルの当たり方。自動のままだと、素質の効き先（技の中の特定の攻撃）を分けられないことがある", "");
 out.push("| | 巡遊者 | 属性 | 主力 | 支援 | 追加ダメージの抜け | 確認 | ヒット |", "|---|---|---|---|---|---|---|---|");
 const EL = { Aqua: "水", Ignis: "火", Ventus: "風", Terra: "地", Lux: "光", Umbra: "闇" };
@@ -51,4 +53,6 @@ rows.filter(r => r.mark === "[ ]").forEach(r => {
     if (s.noExtra.length) out.push(`- ${gj}の追加ダメージの抜け ${s.noExtra.length}件: ${s.noExtra.join("、")}`); });
   out.push("");
 });
-console.log(out.join("\n"));
+const dest = path.join("..", "potential-checklist.md");
+fs.writeFileSync(dest, out.join("\n") + "\n", "utf8");
+console.log(`書き出しました: ${path.resolve(dest)}（完了 ${rows.filter(r => r.mark === "[x]").length} 人・まだ ${rows.filter(r => r.mark === "[ ]").length} 人）`);
