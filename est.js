@@ -58,7 +58,7 @@ window.EST = (function () {
       if (!p || Array.isArray(p)) return skill(p[0], p[1]);
       const type = p.type || (p.v1 && p.v2 ? skill(p.v1, p.v2).type : undefined);
       const r = p.v10 != null ? skillFrom10(p.v10, type) : skill(p.v1, p.v2);
-      if (r) { if (p.v1 != null) r.v[0] = p.v1; if (p.v2 != null) r.v[1] = p.v2; }
+      if (r) for (let k = 1; k <= 10; k++) if (p["v" + k] != null) r.v[k - 1] = p["v" + k];   // 画面で見た Lv（v1〜v10）はその値
       return r;
     });
     if (per.some(x => !x)) return null;
