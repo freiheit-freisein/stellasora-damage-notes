@@ -231,7 +231,7 @@
   }
 
   // ---- 記録レベルからビルドを作る（試作）----
-  // 記録のスコア = コア素質×180 + サブ素質のLv合計×60 + 音符×15 + アシスト効果のLv合計×120（ユーザーの記録Lv34ほか4件で検算済み）
+  // 記録のスコア = コア素質×180 + サブ素質のLv合計×60（徽章の+分は入れない） + 音符（ロスレコの初期の音符を含む）×15 + アシスト効果のLv合計×120（ユーザーの記録Lv34ほか4件・C6WqBae で検算）
   const SC = { core: 180, sub: 60, note: 15, assist: 120 };
   function potList(G, k) {   // 巡遊者の素質（その位置で取れるもの）: [{ key, core }]
     const id = G.team[k], tk = TK(chOf(id).en), role = k === "main" ? "main" : "support";
@@ -245,8 +245,9 @@
       const cs = G.chars[G.team[k]], pl = potList(G, k);
       pl.forEach(p => { const lv = +((cs.pots2 || {})[p.key]) || 0; if (lv > 0) s += p.core ? SC.core : lv * SC.sub; });
     });
-    S.NOTE_ALL.forEach(n => { s += (+((G.notes || {})[n]) || 0) * SC.note; });
+    // 音符は、ロスレコ（サブ）の初期の音符も数える（C6WqBae: ゲーム 8985 = 素質 + 音符175（入力133＋初期42）×15 + アシスト。2026-11-14）
     const nt = S.notesTotal(G);
+    S.NOTE_ALL.forEach(n => { s += (+(nt[n]) || 0) * SC.note; });
     (G.lrMain || []).filter(Boolean).forEach(rid => { const fx = S.LR_FX[rid]; if (fx) fx.assists.forEach(a => { s += S.lrAssistLv(nt, a) * SC.assist; }); });
     return s;
   }
