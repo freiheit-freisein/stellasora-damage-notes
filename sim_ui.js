@@ -1459,6 +1459,7 @@
     const team = [G.team.main, G.team.s1, G.team.s2].map(id => chOf(id).jp).join("・");
     $("reportBody").innerHTML = `<h2 id="reportDlgT"><span class="en">REPORT</span>報告</h2>
       <p class="muted" style="margin:0">β版なので、データや計算が間違っている所がまだあると思います。計算の数値がゲームと合わない、素質やロスレコの効果がちがう、ここが使いにくい…など、なんでも気軽に教えてください！（返信はできないこともあります）</p>
+      <p class="muted" style="margin:6px 0 0">Discord もあるので、ぜひご参加ください → <a href="https://discord.gg/YJdYv3uRz6" target="_blank" rel="noopener">Discord に参加する</a></p>
       ${RP.done ? `<p class="msg ok" style="font-size:14px;margin-top:14px">送りました。教えてくれてありがとうございます！</p><div class="foot"><button class="btn-add" data-act="rp-close">閉じる</button></div>` : `
       <div class="row"><label for="rp-kind">種類</label><select id="rp-kind"><option value="">（選んでください）</option>${RP_KINDS.map(k => `<option${RP.kind === k ? " selected" : ""}>${k}</option>`).join("")}</select></div>
       <div class="row"><label for="rp-body">内容 <span class="muted" style="font-weight:400">（どこが・どう違うか。ゲーム内の値が分かれば、その値も）</span></label>
