@@ -133,6 +133,17 @@ window.SIM = window.SIM || {};
         ult: [H(3, 0, 1, "ult", "花の傘の回転（命中1回分）", "uSpin", ["ult", "parasol"]), H(3, 1, 1, "ult", "爆発1", "uBlast1", ["ult", "parasol", "parasolBlast"]),
           H(3, 2, 1, "ult", "爆発2", "uBlast2", ["ult", "parasol", "parasolBlast"]), H(3, 3, 1, "ult", "爆発3", "uBlast3", ["ult", "parasol", "parasolBlast"])],
       } },
+    // クルニス（華服）（2026-11-18）。素質の効き先（パワーストーンのレーザー・ローゼンアンプル・ポイズンアンプルなど）が分かるように手で書く
+    //   レーザーは説明文の「0.6秒ごと・8秒間」から13回。アンプルは「0.8秒ごと・6秒間」から7回で、1つ分（ローゼンアンプル6つが同じ敵に重なるかは未確認）
+    //   遅効毒は5重で爆発するので、7回のうち1回。地属性の印のダメージ（説明文に倍率がない）は入れていない
+    { id: "springseek_coronis", en: "Springseek Coronis", jp: "クルニス（華服）", el: "地", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
+      hits: {
+        basic: [H(0, 0, 1, "basic", "薬液の射撃（1発）", "bShot", ["basic", "shot"])],
+        main: [H(1, 0, 1, "skill", "射撃", "mShot", ["main"]), H(1, 1, 13, "skill", "パワーストーンのレーザー（0.6秒ごと・8秒間）", "mBeam", ["main", "stone", "beam"])],
+        support: [H(2, 0, 7, "skill", "ローゼンアンプル（0.8秒ごと・6秒間。1つ分）", "sRose", ["support", "rose"]), H(2, 1, 7, "skill", "ポイズンアンプル（0.8秒ごと・6秒間）", "sPoison", ["support", "poison"]),
+          H(2, 2, 1, "skill", "遅効毒の爆発（5重）", "sWither", ["support", "wither"])],
+        ult: [H(3, 0, 1, "ult", "薬瓶の破裂", "uBurst", ["ult"]), H(3, 1, 8, "ult", "結晶の破片×8", "uShard", ["ult"])],
+      } },
   ];
   // スグハ（2026-11-13 実装）。data/trekkers_new.js に数値がそろって TREKKERS に入ったときだけ足す。共有コードの辞書には入らない（sim_share.js の V2_CHARS）
   //   観測点の弾丸は、観測点1つ分（3秒ごと・10秒間で3発）。主力スキル1回で観測点1つとして計算（実際はセオドライトが10個を超えたとき。未確認）
