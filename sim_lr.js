@@ -441,6 +441,13 @@
     { id: "love", skill: "main", idx: 1, n: 2, k: "W", to: "self", mul: 3, nodict: true, txt: v => `愛のしるし3つ：自身の水属性ダメージ +${Math.round(v * 3 * 10) / 10}%（1つ +${v}%。母の愛で増える4・5つ目は素質の側で足す）` },
     { id: "ult", skill: "ult", idx: 3, n: 1, k: "atkPct", to: "self", nodict: true, txt: v => `一掃のおしおきモード：自身の攻撃力 +${v}%（15秒）` },
   ];
+  // クルニス（華服）の支援スキル: ローゼンアンプル6つのうち、同じ敵に当たる数（既定1。2〜3個当たることが多い・ユーザーの観察 2026-11-18）。
+  //   ローゼンアンプルのヒットと、ローゼンアンプルのタグの追加ヒット（追加処方の消滅のダメージ）をこの数倍にする。k: "cnt" は入力の数（G.skN）
+  S.SKILL_FX.springseek_coronis = [
+    { id: "roseN", skill: "support", idx: 2, n: 0, k: "cnt", hit: "sRose", tag: "rose", def: 1, min: 1, max: 6, nodict: true,
+      txt: () => "ローゼンアンプル（6つ）のうち、同じ敵に当たる数。ローゼンアンプルのヒットと、消滅のダメージ（追加処方）をこの数倍にします（2〜3個当たることが多い）" },
+  ];
+  S.skillCnt = (G, id, fx) => { const v = (G.skN || {})[id + ":" + fx.id]; return v == null || v === "" ? fx.def : Math.max(fx.min, Math.min(fx.max, +v || fx.def)); };
   S.SKILL_NAME = { basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" };
 
   S.skillCollect = function (G, team, chs, out) {
@@ -456,6 +463,11 @@
         const key = id + ":" + fx.id;
         const on = (G.skOn || {})[key] == null ? !fx.off : G.skOn[key];
         if (!on) return;
+        if (fx.k === "cnt") {   // 当たる数（入力）で、そのヒットとタグの追加ヒットを何倍かに
+          const a = out[id], n = S.skillCnt(G, id, fx);
+          if (a && n !== 1) { a.countMul[fx.hit] = (a.countMul[fx.hit] || 1) * n; a.xhits.forEach(x => { if (x.owner === id && (x.tags || []).indexOf(fx.tag) >= 0 && !x.perTag) x.c *= n; }); }
+          return;
+        }
         const lv = (((cs.skillLv || {})[fx.skill]) || 10) + (lvB[fx.skill] || 0);
         const v = S.engine.skillVal(c, fx.idx, fx.n, lv) / 100 * (fx.mul || 1);
         const rec = fx.to === "main" ? [team[0]] : fx.to === "self" ? [id] : fx.to === "lux" ? luxIds : team.slice();

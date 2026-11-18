@@ -134,13 +134,13 @@ window.SIM = window.SIM || {};
           H(3, 2, 1, "ult", "爆発2", "uBlast2", ["ult", "parasol", "parasolBlast"]), H(3, 3, 1, "ult", "爆発3", "uBlast3", ["ult", "parasol", "parasolBlast"])],
       } },
     // クルニス（華服）（2026-11-18）。素質の効き先（パワーストーンのレーザー・ローゼンアンプル・ポイズンアンプルなど）が分かるように手で書く
-    //   レーザーは説明文の「0.6秒ごと・8秒間」から13回。アンプルは「0.8秒ごと・6秒間」から7回で、1つ分（ローゼンアンプル6つが同じ敵に重なるかは未確認）
+    //   レーザーは説明文の「0.6秒ごと・8秒間」から13回。アンプルは「0.8秒ごと・6秒間」から7回。ローゼンアンプルが同じ敵に当たる数は、スキルのバフ効果の欄で入力（既定1。sim_lr.js）
     //   遅効毒は5重で爆発するので、7回のうち1回。地属性の印のダメージ（説明文に倍率がない）は入れていない
     { id: "springseek_coronis", en: "Springseek Coronis", jp: "クルニス（華服）", el: "地", ref: "atk", role: "バランサー", trust0: 0, talent0: 0, talentBonus: {}, v2: true,
       hits: {
         basic: [H(0, 0, 1, "basic", "薬液の射撃（1発）", "bShot", ["basic", "shot"])],
         main: [H(1, 0, 1, "skill", "射撃", "mShot", ["main"]), H(1, 1, 13, "skill", "パワーストーンのレーザー（0.6秒ごと・8秒間）", "mBeam", ["main", "stone", "beam"])],
-        support: [H(2, 0, 7, "skill", "ローゼンアンプル（0.8秒ごと・6秒間。1つ分）", "sRose", ["support", "rose"]), H(2, 1, 7, "skill", "ポイズンアンプル（0.8秒ごと・6秒間）", "sPoison", ["support", "poison"]),
+        support: [H(2, 0, 7, "skill", "ローゼンアンプル（0.8秒ごと・6秒間。1つが当たる回数）", "sRose", ["support", "rose"]), H(2, 1, 7, "skill", "ポイズンアンプル（0.8秒ごと・6秒間）", "sPoison", ["support", "poison"]),
           H(2, 2, 1, "skill", "遅効毒の爆発（5重）", "sWither", ["support", "wither"])],
         ult: [H(3, 0, 1, "ult", "薬瓶の破裂", "uBurst", ["ult"]), H(3, 1, 8, "ult", "結晶の破片×8", "uShard", ["ult"])],
       } },

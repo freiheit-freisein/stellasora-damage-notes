@@ -263,6 +263,8 @@
       const lv = (cs.skillLv[fx.skill] || 10) + (lvB[fx.skill] || 0);
       const v = Math.round(E.skillVal(c, fx.idx, fx.n, lv) * 10) / 10;
       const on = (G.skOn || {})[key] == null ? !fx.off : G.skOn[key];
+      if (fx.k === "cnt") return `<div class="pot${usable ? " core" : ""}"><b>${S.SKILL_NAME[fx.skill]}</b>${usable ? "" : '<span class="tag-ng">この枠では使えません</span>'}
+        <div>${esc(fx.txt())}</div><div class="lv">当たる数 ${stepper(`skN.${key}`, fx.min, fx.max, fx.def)}<span class="muted">/${fx.max}（既定 ${fx.def}）</span></div></div>`;
       return `<div class="pot${usable ? " core" : ""}"><b>${S.SKILL_NAME[fx.skill]}</b>${usable ? "" : '<span class="tag-ng">この枠では使えません</span>'}
         <div>${esc(fx.txt(v))}</div><div class="lv">反映 <input type="checkbox" data-p="skOn.${key}" data-t="b"${on ? " checked" : ""}${usable ? "" : " disabled"}></div></div>`;
     }).join("");
