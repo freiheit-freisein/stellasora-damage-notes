@@ -1,12 +1,23 @@
 // ゲームの素質プリセットコード（プリセット共有サイトの「ゲームで使えるコード」と同じ形）の読み込みと作成。
 // 形: Base64 → 27バイト。主力・支援1・支援2の巡遊者ID（各32bit）→ 1人ごとに コア1bit×4 ＋ サブ3bit×12（Lv0〜6）
-// 枠の順の素質は data/preset_map.js（プリセット共有サイトのデータから作った対応表）。
+// 枠の順の素質は data/preset_map.js（プリセット共有サイトのデータから作った対応表）。結び付けは日本語名（巡遊者は c.jp、素質は data/potential_ja.js）。
+// 英語名は両サイトで違うことがある（スグハなど）ので使わない。全角・半角の違い（「セイナ（原点）」と「セイナ(原点)」など）はそろえて比べる
 // ゲームの決まり（ゲーム内で確認済み）: コアは1人ちょうど2つ・サブはLv0〜6・同じ巡遊者は2枠に入らない（同じ巡遊者のコードは、ゲームでエラーになる）
 (function (S) {
   const BYTES = 27;
   const M = () => window.PRESET_MAP || { trekkers: {}, slots: {} };
   const read = (bytes, pos, n) => { let v = 0; for (let i = 0; i < n; i++, pos.i++) v = v * 2 + ((bytes[pos.i >> 3] >> (7 - (pos.i & 7))) & 1); return v; };
   const SLOTS = ["main", "s1", "s2"];
+  const nz = t => String(t || "").normalize("NFKC").replace(/\s+/g, "");
+  const chOfJa = ja => S.CH.find(c => nz(c.jp) === nz(ja));
+  // 対応表の枠（素質の日本語名）→ 計算ノートの素質の英語名。日本語名が分からない素質は null（その枠は読み書きしない）
+  const slotMap = (c, role) => {
+    const ja = Object.keys(M().slots).find(k => nz(k) === nz(c.jp)), r = ja && M().slots[ja][role];
+    if (!r) return null;
+    const rev = {}; Object.entries((window.POTENTIAL_JA || {})[c.en] || {}).forEach(([en, j]) => { rev[nz(j)] = en; });
+    const f = n => (n && rev[nz(n)]) || null;
+    return { core: r.core.map(f), sub: r.sub.map(f) };
+  };
 
   function decode(input) {
     const code = String(input || "").replace(/\s+/g, "");
@@ -39,10 +50,10 @@
     const members = decode(input);
     const names = [];
     members.forEach((m, i) => {
-      const en = M().trekkers[String(m.id)];
-      const c = en && S.CH.find(x => x.en === en);
-      if (!c) throw new Error("この計算ページにない巡遊者のコードです（ID " + m.id + "）");
-      const map = (M().slots[en] || {})[i === 0 ? "main" : "support"];
+      const ja = M().trekkers[String(m.id)];
+      const c = ja && chOfJa(ja);
+      if (!c) throw new Error("この計算ページにない巡遊者のコードです（" + (ja || "ID " + m.id) + "）");
+      const map = slotMap(c, i === 0 ? "main" : "support");
       if (!map) throw new Error("素質の対応表がない巡遊者です（" + c.jp + "）");
       G.team[SLOTS[i]] = c.id;
       const cs = G.chars[c.id];
@@ -59,9 +70,9 @@
   S.presetMake = function (G) {
     const ids = SLOTS.map(k => G.team[k]);
     if (new Set(ids).size !== 3) throw new Error("同じ巡遊者が2回入っています（ゲームではエラーになるため作れません）");
-    const idOf = en => Object.keys(M().trekkers).find(k => M().trekkers[k] === en);
+    const idOf = c => Object.keys(M().trekkers).find(k => nz(M().trekkers[k]) === nz(c.jp));
     const members = ids.map((id, i) => {
-      const c = S.CH.find(x => x.id === id), map = (M().slots[c.en] || {})[i === 0 ? "main" : "support"], sid = idOf(c.en);
+      const c = S.CH.find(x => x.id === id), map = slotMap(c, i === 0 ? "main" : "support"), sid = idOf(c);
       if (!map || !sid) throw new Error("素質の対応表がない巡遊者です（" + c.jp + "）");
       const p2 = G.chars[id].pots2 || {};
       const core = map.core.map(name => (name && +(p2[S.potKey(name)] || 0) > 0) ? 1 : 0);

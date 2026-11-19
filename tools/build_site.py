@@ -47,6 +47,24 @@ def put(name, text):
     open(os.path.join(OUT, name), 'w', encoding='utf-8', newline='\n').write(text)
 
 
+# 素質プリセットコードの対応表は、公開のたびにプリセット共有サイトから作り直す（新しい巡遊者が自動で入る）。
+#   取れなかったときは、リポジトリの data/preset_map.js のまま。リポジトリの版と違ったら、作り直してコミットするよう知らせる
+try:
+    import json, sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import build_preset_map
+    pm = build_preset_map.build()
+    new = 'window.PRESET_MAP = ' + json.dumps(pm, ensure_ascii=False, separators=(',', ':')) + ';'
+    old = open(os.path.join(ROOT, 'data', 'preset_map.js'), encoding='utf-8').read()
+    if new not in old:
+        s = re.sub(r'window\.PRESET_MAP = .*;', lambda m: new, old)
+        open(os.path.join(OUT, 'data', 'preset_map.js'), 'w', encoding='utf-8', newline='\n').write(s)
+        print('素質プリセットの対応表を作り直しました（%d人）。リポジトリにも入れるには: python tools/build_preset_map.py → コミット' % len(pm['trekkers']))
+    else:
+        print('素質プリセットの対応表: 変更なし（%d人）' % len(pm['trekkers']))
+except Exception as e:
+    print('素質プリセットの対応表を作り直せませんでした（リポジトリの版のまま）:', e)
+
 put('robots.txt', f'User-agent: *\nAllow: /\nSitemap: {SITE}/sitemap.xml\n')   # /edit・/s/ は noindex を読ませるため、クロールは止めない
 lastmod = subprocess.run(['git', 'log', '-1', '--format=%cs'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
 put('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
