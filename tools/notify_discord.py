@@ -41,6 +41,11 @@ def main():
     pick = next(([int(x) for x in a.split("=", 1)[1].split(",")] for a in sys.argv if a.startswith("--pick=")), None)   # 番号（1から）で選んだ行だけ送る（更新が多いときに厳選する。ユーザーの指示）
     if pick:
         items = [items[i - 1] for i in pick if 0 < i <= len(items)]
+    # --extra=見出し|文: 素質ノートなど、ほかのサイトの更新を同じ1通に足す（3サイト共通の更新は1通だけ送る決まり）。何回でも指定できる
+    for a in sys.argv:
+        if a.startswith("--extra="):
+            lab, _, txt = a.split("=", 1)[1].partition("|")
+            items.append(f"```\n【{lab}】{txt.replace('`', chr(39))}\n```")
     head_txt = "**巡遊者の計算ノートを更新しました**"
     foot = ""   # URL は付けない（ユーザーの希望）
     body, out = [], []
