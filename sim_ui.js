@@ -904,7 +904,7 @@
         .catch(() => say("load", "読み込めませんでした（公開しているページで使えます）", true));
     }
     if (v.indexOf("#c=") >= 0) return loadCode(decodeURIComponent(v.slice(v.indexOf("#c=") + 3)), "load", "共有URLのビルド");
-    if (v.indexOf("#p=") >= 0) return loadPreset(decodeURIComponent(v.slice(v.indexOf("#p=") + 3)), "load");
+    if (v.indexOf("#p=") >= 0) { const hp = S.hashParams(v.slice(v.indexOf("#p="))); return loadPreset(hp.p, "load", hp.e); }
     return loadCode(v, "load", "共有コードのビルド");
   }
 
@@ -943,6 +943,8 @@
       <section class="sec"><h3>プリセットコード（ゲーム内で入力できます）</h3>
         <div class="ld-line"><input type="text" id="dv-preset" value="${esc(DV.preset)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:preset:out">作る</button><button class="btn-add" data-act="dv:preset:copy">コピー</button></div>
         ${msgOf("preset")}<div class="muted help">編成と素質Lvを記録したコードです。ゲーム内のプリセット登録で読み込むことができます。</div>
+        <div class="ld-line" style="margin-top:8px"><button class="btn-add" data-act="post-note">素質ノートに投稿する（徽章も）</button></div>
+        ${msgOf("post")}<div class="muted help">素質ノートの投稿ページを別のタブで開き、今の編成・素質Lv・徽章を入れた状態にします。同じビルドがすでにあれば、そのビルドの徽章として登録できます。</div>
         ${IS_LOCAL ? `<h3 style="margin-top:16px">長い共有コード</h3>
         <div class="ld-line"><input type="text" id="dv-code" value="${esc(DV.code)}" readonly placeholder="（「作る」を押すと出ます）" spellcheck="false"><button class="btn-add" data-act="dv:code:out">作る</button><button class="btn-add" data-act="dv:code:copy">コピー</button></div>
         ${msgOf("code")}<div class="muted help">サーバーを使わずに作れる、長い形の共有コードです（手元で動かしているときだけ出します）。</div>` : ""}</section>
@@ -1390,13 +1392,25 @@
     else if (a === "bjopen") { V.bjOpen = !(V.bjOpen || DV.bjson || V.bimp); if (!V.bjOpen) { DV.bjson = ""; V.bimp = null; } renderAll(); }
     else if (a === "rp-send") sendReport();
     else if (a.indexOf("dv:") === 0) shareAct(a.split(":")[1], a.split(":")[2]);
+    else if (a === "post-note") {   // 素質ノートの投稿ページを、プリセットコードと徽章（#e=）を付けて開く
+      try { const code = S.presetMake(G), e = S.embEncode(G); window.open("https://preset.stella-tool.com/post?code=" + encodeURIComponent(code) + (e ? "#e=" + e : ""), "_blank", "noopener"); DM.post = { t: "素質ノートを開きました" + (e ? "" : "（徽章が無いので、編成と素質Lvだけ）") }; } catch (er) { DM.post = { t: er.message, ng: true }; }
+      renderAll();
+    }
     else if (a === "reset") { if (confirm("入力をすべて初期値に戻します。よいですか？")) { G = defState(); renderAll(); } }
   });
   // ---- 共有・読み込み（ポップアップの各欄）: key = preset / code / url、op = in（読込）/ out（作成）/ copy ----
   const say = (key, t, ng) => { DM[key] = { t, ng: !!ng }; renderAll(); };
   const loadCode = (code, key, what) => S.shareDecode(code, defState()).then(g => { G = g; DM[key] = { t: what + "を読み込みました" }; shareMsg = what + "を読み込みました"; V.panel = "overview"; renderAll(); }).catch(e => say(key, e.message || "読み込めませんでした", true));
-  const loadPreset = (code, key) => {
-    try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); DM[key] = { t: "読み込みました（" + names.join("・") + "）。編成と素質Lvだけが変わります" }; shareMsg = "プリセットコード（" + names.join("・") + "）を読み込みました"; V.panel = "overview"; renderAll(); }
+  // e = 徽章（素質ノートから #p=…&e=… で来たとき。sim_preset.js の S.embApply）。徽章が読めなくても、編成と素質Lvは読み込む
+  const loadPreset = (code, key, e) => {
+    try {
+      const g = clone(G); const names = S.presetApply(g, code);
+      let emb = "";
+      if (e) { try { S.embApply(g, e); emb = "・徽章"; } catch (er) { emb = "（徽章は読めませんでした）"; } }
+      G = merge(defState(), g);
+      DM[key] = { t: "読み込みました（" + names.join("・") + "）。編成と素質Lv" + (emb === "・徽章" ? "と徽章" : "") + "だけが変わります" + (emb && emb !== "・徽章" ? emb : "") };
+      shareMsg = "プリセットコード（" + names.join("・") + "）" + (emb === "・徽章" ? "と徽章" : "") + "を読み込みました" + (emb && emb !== "・徽章" ? emb : ""); V.panel = "overview"; renderAll();
+    }
     catch (e) { say(key, e.message || "読み込めませんでした", true); }
   };
   function shareAct(key, op) {
@@ -1426,7 +1440,7 @@
           .catch(() => say(key, "読み込めませんでした（公開しているページで使えます）", true));
       }
       if (v.indexOf("#c=") >= 0) return loadCode(decodeURIComponent(v.slice(v.indexOf("#c=") + 3)), key, "共有URLのビルド");
-      if (v.indexOf("#p=") >= 0) return loadPreset(decodeURIComponent(v.slice(v.indexOf("#p=") + 3)), key);
+      if (v.indexOf("#p=") >= 0) { const hp = S.hashParams(v.slice(v.indexOf("#p="))); return loadPreset(hp.p, key, hp.e); }
       return say(key, "共有URLを貼り付けてください", true);
     }
     say(key, "短縮URLを作っています…");
@@ -1505,10 +1519,15 @@
     try { loadBuild(S.buildFromHash(decodeURIComponent(hc.slice(3))), "bjson"); } catch (e) { say("bjson", "URLの編成データを読めませんでした", true); }
   }
   if (hc.indexOf("#c=") === 0 || hc.indexOf("#p=") === 0) {
-    const code = decodeURIComponent(hc.slice(3));
+    const hp = hc[1] === "p" ? S.hashParams(hc) : null, code = hp ? hp.p : decodeURIComponent(hc.slice(3));   // #p=プリセットコード&e=徽章（素質ノートの「ダメージ計算をする」から）
     try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* 無視 */ }
-    if (hc[1] === "p") {
-      try { const g = clone(G); const names = S.presetApply(g, code); G = merge(defState(), g); shareMsg = "URLのプリセット（" + names.join("・") + "）を読み込みました"; V.panel = "overview"; } catch (e) { shareMsg = e.message; }
+    if (hp) {
+      try {
+        const g = clone(G); const names = S.presetApply(g, code);
+        let emb = "";
+        if (hp.e) { try { S.embApply(g, hp.e); emb = "と徽章"; } catch (er) { emb = "（徽章は読めませんでした）"; } }
+        G = merge(defState(), g); shareMsg = "URLのプリセット（" + names.join("・") + "）" + (emb === "と徽章" ? emb + "を読み込みました" : "を読み込みました" + emb); V.panel = "overview";
+      } catch (e) { shareMsg = e.message; }
       renderAll();
     } else S.shareDecode(code, defState()).then(g => { G = g; shareMsg = "URLのビルドを読み込みました"; V.panel = "overview"; renderAll(); }).catch(e => { shareMsg = e.message || "URLのビルドを読み込めませんでした"; renderAll(); });
   }
