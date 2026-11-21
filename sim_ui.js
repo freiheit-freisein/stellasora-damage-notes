@@ -6,6 +6,9 @@
   // 結果のダメージの表記: そのまま（19,875,037）／K（19,875K）／M（19.9M）。このブラウザに覚える
   let dmgUnit = "raw";
   try { dmgUnit = localStorage.getItem("stellasora-sim-unit") || "raw"; } catch (e) { /* 無視 */ }
+  // 素質の説明を出すか（コア素質・通常素質で別々。見る人ごとの好み。既定は出す）
+  const potDesc = { core: true, norm: true };
+  try { ["core", "norm"].forEach(k => { potDesc[k] = localStorage.getItem("stellasora-sim-potdesc-" + k) !== "0"; }); } catch (e) { /* 無視 */ }
   const dmgF = n => (n == null || !isFinite(n)) ? "—" : dmgUnit === "k" ? (n / 1e3).toLocaleString("ja-JP", { maximumFractionDigits: 0 }) + "K"
     : dmgUnit === "m" ? (n / 1e6).toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "M" : fmt(n);
   const f3 = n => (n == null || !isFinite(n)) ? "—" : (Math.round(n * 1000) / 1000).toString();
@@ -115,14 +118,14 @@
       <b>記録レベル Lv${G.recordLv}</b><span class="muted">（${auto ? "ビルドから自動" : "手で選んだ値"}）</span>
       ${sc != null ? `<div>記録のスコア <b>${fmt(sc)}</b>${next ? `　次の Lv${next[0]} まで あと ${fmt(next[1] - sc)}` : ""}</div>` : ""}
       <div>戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}</div>
-      <div class="muted">スコア: コア素質1つ 180・通常素質のLv1つ 60・音符1個 15（ロスレコの初期の音符も数える）・アシスト効果のLv1つ 120（徽章の＋は数えない）。手で選ぶときは ③ロスレコ の「記録レベル」で。</div></div>`;
+      <div class="muted">スコア: コア素質1つ 180・通常素質のLv1つ 60・音符1個 15（ロスレコの初期の音符も数える）・アシスト効果のLv1つ 120（徽章の＋は数えない）。手で選ぶときは「補正」の画面の「記録レベル」で。</div></div>`;
     return `<button type="button" class="mi mi-rec${V.recPop ? " open" : ""}" data-act="recpop" aria-expanded="${!!V.recPop}"><span>記録レベル</span><b>${G.recordLv}</b>${pop}</button>`;
   }
 
   // ---- 選択ボタン ----
   function renderSelectors() {
     // 徽章・素質などの巡遊者ごとの画面は「巡遊者」のタブの中
-    const top = /^(emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
+    const top = /^(base|emb|heart|pot|add):/.test(V.panel) ? "overview" : V.panel;
     const b = (key, label, en, n) => `<button class="tab" role="tab" aria-selected="${top === key}" data-act="panel:${key}"><span class="te">${en}</span><span>${n ? `<span class="tn">${n}</span>` : ""}${label}</span></button>`;
     // 入力する順に番号を付けて並べる。ゲームの画面と数値を合わせるための画面（直接入力・補正）は、右端に「実測合わせ」としてまとめる
     $("selectors").innerHTML = b("load", "読込", "LOAD", 1) + b("overview", "巡遊者", "TREKKERS", 2) + b("lr", "ロスレコ", "RECORD", 3) + b("gimmick", "エネミー", "ENEMY", 4) + b("score", "ビルド確認", "CHECK", 5) + b("share", "共有・保存", "SHARE", 6)
@@ -184,11 +187,17 @@
     const b = (d, ch, dis) => `<button type="button" class="stp-b" data-act="stp|${d}|${min}|${max}|${def}|${path}"${dis ? " disabled" : ""} aria-label="${d > 0 ? "1つ上げる" : "1つ下げる"}">${ch}</button>`;
     return `<span class="stp${size ? " " + size : ""}">${b(-1, "−", cur <= min)}<input type="number" data-p="${path}" data-t="n" min="${min}" max="${max}" step="1" value="${cur}">${b(1, "＋", cur >= max)}</span>`;
   }
+  // 心相: 凸で出し、★5は10段階（1凸）、★4は5段階（0.5凸）ずつ動かす（2026-11-22 ユーザー）。中では段階（0〜50）で持つ（2026-11-22 ユーザー。前は心相のタブで凸だけ選べた）
+  function talentRow(id) {
+    const c = chOf(id), cs = G.chars[id], path = `chars.${id}.talent`, st = TK(c.en).rarity >= 5 ? 10 : 5, cur = +cs.talent || 0;
+    const b = (d, ch, dis) => `<button type="button" class="stp-b" data-act="stp|${d}|0|50|0|${path}"${dis ? " disabled" : ""} aria-label="${d > 0 ? "上げる" : "下げる"}">${ch}</button>`;
+    return `<div class="stp-row"><span class="stp-lab">心相</span><span class="stp">${b(-st, "−", cur <= 0)}<input type="number" data-p="${path}" data-t="x10" min="0" max="5" step="${st / 10}" value="${cur / 10}">${b(st, "＋", cur >= 50)}</span><span class="muted stp-note">凸</span></div>`;
+  }
   // スキルLv（徽章の「＋」があるときは、横に → 最終的なLv）
   function lvRow(id, key, label, note) {
     const bonus = emx(id).lv[key];
-    const extra = (bonus ? `+${bonus} → Lv${(G.chars[id].skillLv[key] || 10) + bonus}` : "") + (note ? (bonus ? "／" : "") + note : "");
-    return `<div class="stp-row"><span class="stp-lab">${label}</span>${stepper(`chars.${id}.skillLv.${key}`, 1, 10, 10)}${extra ? `<span class="muted stp-note">${extra}</span>` : ""}</div>`;
+    // 徽章でLvが上がる分は、素質の画面と同じ「徽章+1」の札で出す（2026-11-22 ユーザー）
+    return `<div class="stp-row"><span class="stp-lab">${label}</span>${stepper(`chars.${id}.skillLv.${key}`, 1, 10, 10)}${bonus ? `<span class="pz-lvt" title="徽章でLv${(G.chars[id].skillLv[key] || 10) + bonus}">徽章+${bonus}</span>` : ""}${note ? `<span class="muted stp-note">${note}</span>` : ""}</div>`;
   }
   // 心相・徽章・素質・その他のボタンに出す、今の状態
   function charSummary(k) {
@@ -216,6 +225,23 @@
     return `${mChar()}<div class="cols3">${SLOTS.map(col).join("")}</div>
       ${helpTxt("overview", "キャラレベルは90で計算。「*」は未確認のデータです。", "名前の後ろの「*」は未確認（技のヒットや素質を、Wikiの説明文から自動で作ったもの）です。ステータスがゲームの画面と合わないときは、「実測合わせ：直接入力」に画面の値を入れると、その欄だけ上書きして計算します。")}`;
   }
+  // 「基本」: 巡遊者1人の 属性・巡遊者・スキルLv・信頼と、ステータスの表（巡遊者の画面の1列分を、左右に並べたもの）
+  function renderBase() {
+    // 3人を横に並べて、まとめて入れる（2026-11-22 ユーザー）。心相・徽章などは上の巡遊者タブで1人ずつ
+    const col = ([k, l]) => {
+      const id = G.team[k], c = chOf(id), p = `chars.${id}`;
+      return `<div class="b3-col${(V.lastSlot || "main") === k ? "" : " m-hide"}">
+        ${fld("属性", `<select data-chel="${k}">${EL_ORDER.filter(el => chOfEl(el).length).map(el => `<option${el === c.el ? " selected" : ""}>${el}</option>`).join("")}</select>`)}
+        ${fld("巡遊者", inp(`team.${k}`, { sel: chOfEl(c.el).map(x => [x.id, x.jp + (x.auto ? "*" : "")]), str: true }))}
+        <div class="stp-list">${lvRow(id, "basic", "通常攻撃")}${lvRow(id, "main", "主力スキル")}${lvRow(id, "support", "支援スキル")}${lvRow(id, "ult", "必殺技")}
+          <div class="stp-row"><span class="stp-lab">信頼ボーナス</span>${stepper(`${p}.trustLv`, 0, 99, 0)}</div>${talentRow(id)}</div>
+        <div class="ch-clr b3-clr">${V.clrSure === id ? `<span class="muted">${esc(c.jp)}の入力を初期値に戻します</span><button class="btn-add" data-act="chclr-no">やめる</button><button class="btn-add pri" data-act="chclr-ok:${id}">クリアする</button>` : `<button class="btn-add clr-link" data-act="chclr:${id}" title="スキルLv・信頼・心相・徽章・素質・その他・直接入力を、初期値に戻します">${esc(c.jp)}の入力をクリア</button>`}</div>
+        ${cardsHtml(id)}
+      </div>`;
+    };
+    return `<div class="base3">${SLOTS.map(col).join("")}</div>
+      <div class="base-foot"><div>${helpTxt("overview", "キャラレベルは90で計算。必殺技のLv11〜は推定です。「*」は未確認のデータです。", "名前の後ろの「*」は未確認（技のヒットや素質を、Wikiの説明文から自動で作ったもの）です。ステータスがゲームの画面と合わないときは、「実測合わせ：直接入力」に画面の値を入れると、その欄だけ上書きして計算します。")}</div></div>`;
+  }
   // ---- 巡遊者（直接入力）----
   function renderDirect() {
     const col = ([k, l]) => {
@@ -238,18 +264,22 @@
   function renderAdd(k) {
     const id = G.team[k], c = chOf(id), p = `chars.${id}.add`;
     // 割合の欄は「12」で12%と入れる（保存は 0.12 のまま。表示と入力のときだけ100倍）
-    const pin = key => { const v = getPath(`${p}.${key}`); return `<input type="number" data-p="${p}.${key}" data-t="pct" step="any" value="${v == null || v === "" ? "" : Math.round(+v * 1e6) / 1e4}" style="width:100px">`; };
-    return `<div class="wide"><h3>${esc(c.jp)}：その他</h3>
+    const pin = key => { const v = getPath(`${p}.${key}`); return `<input type="number" data-p="${p}.${key}" data-t="pct" step="any" value="${v == null || v === "" ? "" : Math.round(+v * 1e6) / 1e4}">`; };
+    return `<div class="wide">
       <div class="box">${skillSection(k)}</div>
-      <div class="box"><h3 style="margin:0 0 6px;font-size:14px">加算（素質や心相などの効果で、この画面にまだ無いものを入れる場所）</h3>
-      <div class="grid-in">
-        ${fld("基礎攻撃力 加算", inp(`${p}.atkFlat`, { w: 100 }), "掛け算の前")}${fld("基礎HP 加算", inp(`${p}.hpFlat`, { w: 100 }), "掛け算の前")}
-        ${fld("攻撃力% 加算", pin("atkPct"), "%")}${fld("最大HP% 加算", pin("hpPct"), "%")}
-        ${fld(c.el + "属性ダメージ 加算", pin("elem"))}${fld("通常攻撃ダメージ 加算", pin("basic"))}
-        ${fld("スキルダメージ 加算", pin("skill"))}${fld("必殺技ダメージ 加算", pin("ult"))}
-        ${fld("印ダメージ 加算", pin("mark"))}${fld("会心率 加算", pin("critRate"))}
-        ${fld("会心ダメージ 加算", pin("critDmg"))}${fld("貫通 加算", inp(`${p}.pen`, { w: 100 }))}
-      </div><p class="muted">割合は「12」で 12% です。基礎攻撃力・基礎HP・貫通は、そのままの数値です。</p></div></div>`;
+      ${heartFxBox(k)}
+      <div class="box"><h3 style="margin:0 0 4px;font-size:14px">加算<span class="muted" style="font-weight:400;font-size:12px;margin-left:8px">素質や心相などの効果で、この画面にまだ無いものを入れる場所</span></h3>
+      ${addGrid([
+        ["基礎ステータス（掛け算の前に足す）", [["基礎攻撃力", inp(`${p}.atkFlat`, { w: 90 }), ""], ["基礎HP", inp(`${p}.hpFlat`, { w: 90 }), ""], ["攻撃力", pin("atkPct"), "%"], ["最大HP", pin("hpPct"), "%"]]],
+        ["ダメージ", [[c.el + "属性ダメージ", pin("elem"), "%"], ["通常攻撃ダメージ", pin("basic"), "%"], ["スキルダメージ", pin("skill"), "%"], ["必殺技ダメージ", pin("ult"), "%"], ["印ダメージ", pin("mark"), "%"]]],
+        ["会心・貫通", [["会心率", pin("critRate"), "%"], ["会心ダメージ", pin("critDmg"), "%"], ["属性耐性貫通", inp(`${p}.pen`, { w: 90 }), ""]]],
+      ])}
+      <p class="muted" style="margin:6px 0 0">「%」の欄は「12」で 12% です。基礎攻撃力・基礎HP・貫通は、そのままの数値です。</p></div></div>`;
+  }
+  // 加算の欄: 種類ごとの列に、「名前・入力・単位」を1行ずつそろえて並べる（2026-11-22 ユーザー。前は欄が横に流れて見にくかった）
+  function addGrid(groups) {
+    return `<div class="add-g">${groups.map(([title, rows]) => `<div class="add-col"><div class="add-t">${title}</div>${rows.map(([label, input, unit]) =>
+      `<label class="add-r"><span>${label}</span>${input.replace(/style="width:\d+px"/, "").replace(/ style="width:\d+px"/, "")}<i>${unit}</i></label>`).join("")}</div>`).join("")}</div>`;
   }
   // ---- スキル（バフ効果の反映）----
   function skillSection(k) {
@@ -318,8 +348,8 @@
         ${st.rows.some(r => r.nopot) ? `<p class="msg ng">素質のレベル上昇が、この巡遊者の素質に見つかりませんでした。巡遊者が異なるか、読み取りがうまく行かなかった可能性があります。読めなかった枠は空白になりますので、手動で選択してください。</p>` : ""}
         <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="ocr-apply:${id}">この内容で入れる</button><button class="btn-add" data-act="ocr-cancel">やめる</button></div>`;
     }
-    return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <span class="hint-tip" tabindex="0">撮影のヒント<span class="hint-pop">PCの場合は「Alt＋PrintScreen」で、いま選んでいるウィンドウのスクリーンショットを撮れます。<br>または「Windows＋Shift＋S」で、画面の一部だけを撮れます。</span></span>
-      <p class="muted" style="margin:4px 0">「徽章一覧」を一番下までスクロールして撮った画像を、クリップボードから読み込むか、ファイルで選んでください（この画面で Ctrl+V もOK！）。画像はお使いのブラウザの中にてJavaScriptを使って処理されるため、どこにも送信されません。</p>
+    return `<div class="box ocr-box"><b>スクリーンショットから読み込む</b> <button type="button" class="hint-tip" data-act="hint" aria-haspopup="dialog">使い方<span class="hint-pop" hidden>「徽章一覧」は、一番下までスクロールしてから撮ってください。<br>この画面で Ctrl+V しても読み込めます。<br>PCの場合は「Alt＋PrintScreen」で、いま選んでいるウィンドウのスクリーンショットを撮れます。または「Windows＋Shift＋S」で、画面の一部だけを撮れます。<br>画像はお使いのブラウザの中で処理され、どこにも送信されません。</span></button>
+      <p class="muted" style="margin:4px 0">「徽章一覧」の画像を、クリップボードから読み込むか、ファイルで選んでください。</p>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-add pri" data-act="ocr-clip:${id}"${st.busy ? " disabled" : ""}>クリップボードから読み込む</button><label class="btn-add ocr-pick${st.busy ? " dis" : ""}">画像ファイルを選ぶ<input type="file" accept="image/*" id="ocr-file" data-id="${id}"${st.busy ? " disabled" : ""}></label></div>
       ${st.msg ? `<p class="msg${st.ng ? " ng" : ""}">${esc(st.msg)}</p>` : ""}${res}</div>`;
   }
@@ -329,6 +359,117 @@
     S.ocrEmblem(file, ocrPots(id), m => { if (V.ocr && V.ocr.id === id) { V.ocr.msg = m; renderAll(); } })
       .then(rows => { V.ocr = { id, rows, msg: rows.length ? "読み取りました。内容を確かめて「この内容で入れる」を押してください。" : "徽章の行が見つかりませんでした。徽章一覧の画面か確かめてください。", ng: !rows.length }; renderAll(); })
       .catch(e => { V.ocr = { id, msg: e.message || "読み取れませんでした", ng: true }; renderAll(); });
+  }
+  // ---- ロスレコスキル画面のスクリーンショットから、メインのロスレコと音符を読み込む（sim_ocr.js の S.ocrRecord）----
+  // 画面の音符は合計（サブのロスレコの初期の音符も入った数）なので、入れるときは、いま選んでいるサブの初期の分を引いて「獲得」に入れる
+  const subIni = () => { const t = {}; (G.lrSub || []).filter(Boolean).forEach(id => { const r = LOSTRECORDS.find(x => x.id === id); ((r && r.sub && r.sub.startNotes) || []).forEach(n => { t[n.note] = (t[n.note] || 0) + n.lv; }); }); return t; };
+  function recOcrBox() {
+    const st = V.rocr || {};
+    let res = "";
+    if (st.res) {
+      const { notes, lrs, warn } = st.res, ini = subIni();
+      const lrTxt = lrs.map((x, i) => { const r = x.id && LOSTRECORDS.find(y => y.id === x.id);
+        return `<div>メイン${i + 1}：${r ? esc(r.name) : `<span class="tag-ng">読めませんでした</span>（${esc(x.read || "文字なし")}。この枠は入れません。下の枠で選んでください）`}${x.other ? ' <span class="tag-ng">要確認</span>' : ""}</div>`; }).join("");
+      const ntTxt = notes.map(x => { const nm = x.note ? x.note.replace("の音符", "") : "？", own = x.note ? Math.max(0, x.n - (ini[x.note] || 0)) : null;
+        return `<span style="margin-right:10px">${esc(nm)} ${x.n}${x.note && ini[x.note] ? `（獲得 ${own}）` : ""}${x.elem ? ' <span class="tag-ng">色で判定</span>' : ""}</span>`; }).join("");
+      const short = notes.filter(x => x.note && (ini[x.note] || 0) > x.n);
+      res = `<div class="ocr-res" style="grid-template-columns:1fr"><div>${lrTxt}</div><div>音符：${ntTxt}</div></div>
+        ${warn.map(t => `<p class="msg ng">${esc(t)}</p>`).join("")}
+
+        ${short.length ? `<p class="msg ng">${short.map(x => esc(x.note.replace("の音符", ""))).join("・")}の音符が、選んでいるサブのロスレコの初期の数より少なく読めました。サブのロスレコが合っているか確かめてください。</p>` : ""}
+        <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="rocr-apply">この内容で入れる</button><button class="btn-add" data-act="rocr-cancel">やめる</button></div>`;
+    }
+    return `<div class="box ocr-box"><b>ロスレコスキル画面のスクリーンショットから読み込む</b> <button type="button" class="hint-tip" data-act="hint" aria-haspopup="dialog">使い方<span class="hint-pop" hidden>メインのロスレコ（アシスト効果の名前から）と、音符の数を読みます。<br>音符効果とアシスト効果が全部映るように撮ってください。画面の大きさや切り取り方は問いません。<br>画面の音符は合計（サブのロスレコの初期の音符を含む）なので、いま選んでいるサブのロスレコの初期の分を引いて「獲得」に入れます。サブのロスレコは画面に出ないので、先に選んでおいてください。<br>属性の音符は、アイコンの色で見分けています。<br>この画面で Ctrl+V しても読み込めます。<br>PCの場合は「Alt＋PrintScreen」で、いま選んでいるウィンドウのスクリーンショットを撮れます。または「Windows＋Shift＋S」で、画面の一部だけを撮れます。<br>画像はお使いのブラウザの中で処理され、どこにも送信されません。</span></button>
+      <p class="muted" style="margin:4px 0">記録詳細から「ロスレコスキル」タブ画面の画像を、クリップボードから読み込むか、ファイルで選んでください。</p>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-add pri" data-act="rocr-clip"${st.busy ? " disabled" : ""}>クリップボードから読み込む</button><label class="btn-add ocr-pick${st.busy ? " dis" : ""}">画像ファイルを選ぶ<input type="file" accept="image/*" id="rocr-file"${st.busy ? " disabled" : ""}></label></div>
+      ${st.msg ? `<p class="msg${st.ng ? " ng" : ""}">${esc(st.msg)}</p>` : ""}${res}</div>`;
+  }
+  function runRecOcr(file) {
+    if (!file || !S.ocrRecord) return;
+    V.rocr = { busy: true, msg: "読み取りの準備をしています…" }; renderAll();
+    S.ocrRecord(file, m => { if (V.rocr) { V.rocr.msg = m; renderAll(); } })
+      .then(res => { const ok = res.lrs.some(x => x.id) || res.notes.length; V.rocr = { res: ok ? res : null, msg: ok ? "読み取りました。内容を確かめて「この内容で入れる」を押してください。" : "ロスレコスキル画面の文字が見つかりませんでした。画面を確かめてください。", ng: !ok }; renderAll(); })
+      .catch(e => { V.rocr = { msg: e.message || "読み取れませんでした", ng: true }; renderAll(); });
+  }
+  function applyRecOcr() {
+    const res = V.rocr && V.rocr.res;
+    if (!res) return;
+    G.lrMain = G.lrMain || [];
+    res.lrs.slice(0, 3).forEach((x, i) => { if (x.id) { G.lrMain[i] = x.id; delete V.lrEl["lrMain." + i]; } });
+    const ini = subIni();
+    G.notes = G.notes || {};
+    res.notes.forEach(x => { if (x.note) G.notes[x.note] = Math.max(0, x.n - (ini[x.note] || 0)); });
+    V.rocr = { msg: "入れました。違うところがあれば、下の枠で直してください。" };
+    save(); renderAll();
+  }
+  // ---- 素質収集画面のスクリーンショットから、その巡遊者の素質とLvを読み込む（sim_ocr.js の S.ocrPotentials）----
+  // 素質の画面（1人ずつ）に置き、その巡遊者の段だけを読む（ほかの段は見出しで飛ばすので速い）。V.pocr.slot がいま読んでいる巡遊者
+  // 何枚かに分けて撮ったものを、貼るたびに足していく。カードの数字は徽章の分も入った値なので、入れるときに徽章の分を引く
+  // 見出しの数字（例: 32+4）は 徽章なしの合計+徽章の分。読めたカードの合計と比べて、読み落としがないかを出す
+  function potCands() {
+    return ["main", "s1", "s2"].map(k => {
+      const id = G.team[k], c = chOf(id), tk = TK(c.en), role = k === "main" ? "main" : "support", pots = [];
+      ((tk && tk.potentials && tk.potentials[role]) || []).forEach(gr => gr.potentials.forEach(p => { const key = S.potKey(p.name); if (!pots.some(x => x.key === key)) pots.push({ key, en: p.name, ja: JA(p.name, id), core: p.type === 1 }); }));
+      return { slot: k, id, jp: c.jp, pots };
+    });
+  }
+  // 読めたカードを、入れる素質Lv（徽章の分を引いた値）にする
+  function potPlan(st) {
+    return potCands().filter(c => c.slot === st.slot && st.got[c.slot]).map(c => {
+      const cs = G.chars[c.id], bonus = S.emblemExtra(cs.emb, cs.embOn).pot, got = st.got[c.slot];
+      const items = c.pots.filter(p => got[p.key]).map(p => {
+        const g = got[p.key], b = p.core ? 0 : (bonus[p.en] || 0);
+        const lv = p.core ? 1 : g.lv != null ? Math.max(1, g.lv - b) : (+((cs.pots2 || {})[p.key]) || 1);
+        return { p, card: g.lv, b, lv, warn: g.warn };
+      });
+      const sum = st.sums[c.slot], cardSum = items.reduce((a, x) => a + (x.p.core ? 1 : x.card || 0), 0);
+      return { c, items, sum, cardSum, ok: sum ? cardSum === sum.base + sum.emb : null };
+    });
+  }
+  function potOcrBox(k) {
+    const st = V.pocr && V.pocr.slot === k ? V.pocr : {}, jp = chOf(G.team[k]).jp;
+    let res = "";
+    if (st.got && !st.busy && Object.keys(st.got).length) {
+      const plan = potPlan(st);
+      res = plan.map(x => `<div style="margin:6px 0"><b>${esc(x.c.jp)}</b>（${x.items.length}件）
+          ${x.ok === true ? '<span class="tag-ok">見出しの合計と一致</span>' : x.ok === false ? `<span class="tag-ng">見出しの合計 ${x.sum.base}${x.sum.emb ? "+" + x.sum.emb : ""} と、読めたカードの合計 ${x.cardSum} が違います（読み落としか、スクロールが足りないかもしれません）</span>` : '<span class="muted">見出しの合計は読めませんでした</span>'}
+          <div class="muted" style="margin-top:2px">${x.items.map(i => `${esc(i.p.ja)} ${i.p.core ? "コア" : `Lv${i.lv}${i.b ? `（画面 ${i.card}・徽章+${i.b}）` : ""}`}${i.warn ? ' <span class="tag-ng">Lvが読めませんでした</span>' : ""}`).join("／")}</div></div>`).join("")
+        + (st.miss.length ? `<p class="msg ng">素質が見つからなかったカード: ${st.miss.map(esc).join("、")}（読み取りがうまく行きませんでした）</p>` : "")
+        + `<p class="muted" style="margin:4px 0">${st.n}枚読み込み済み（続けて貼ると足していきます）</p>
+        <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="pocr-apply">この内容で入れる</button><button class="btn-add" data-act="pocr-cancel">やめる</button></div>`;
+    }
+    return `<div class="box ocr-box"><b>素質収集画面のスクリーンショットから読み込む</b> <button type="button" class="hint-tip" data-act="hint" aria-haspopup="dialog">使い方<span class="hint-pop" hidden>${esc(jp)}の段だけを読みます。<br>巡遊者名とカードが全部映るように撮ってください。1枚に入らないときは、スクロールして何枚かに分けて撮り、続けて貼れば足していきます。画面の大きさや切り取り方は問いません。<br>カードのLvは徽章の分を含むので、徽章の分を引いて入れます。先に徽章を合わせておいてください。<br>入れると、この巡遊者の素質は、読めたものだけになります（読めなかった素質は取得なし）。見出しの合計（例: 32+4）と読めたカードの合計が合うかも確かめます。<br>この画面で Ctrl+V しても読み込めます。<br>PCの場合は「Alt＋PrintScreen」で、いま選んでいるウィンドウのスクリーンショットを撮れます。または「Windows＋Shift＋S」で、画面の一部だけを撮れます。<br>画像はお使いのブラウザの中で処理され、どこにも送信されません。</span></button>
+      <p class="muted" style="margin:4px 0">記録詳細から「素質収集」タブ画面の画像を、クリップボードから読み込むか、ファイルで選んでください。</p>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn-add pri" data-act="pocr-clip:${k}"${st.busy ? " disabled" : ""}>クリップボードから読み込む</button><label class="btn-add ocr-pick${st.busy ? " dis" : ""}">画像ファイルを選ぶ<input type="file" accept="image/*" multiple id="pocr-file" data-slot="${k}"${st.busy ? " disabled" : ""}></label></div>
+      ${st.msg ? `<p class="msg${st.ng ? " ng" : ""}">${esc(st.msg)}</p>` : ""}${res}</div>`;
+  }
+  function runPotOcr(files, k) {
+    files = [...(files || [])].filter(Boolean);
+    if (!files.length || !S.ocrPotentials || !k) return;
+    const prev = V.pocr && V.pocr.got && V.pocr.slot === k ? V.pocr : { slot: k, got: {}, sums: {}, miss: [], n: 0 };
+    V.pocr = Object.assign({}, prev, { busy: true, msg: "読み取りの準備をしています…" }); renderAll();
+    const t0 = Date.now();
+    S.ocrPotentials(files, potCands(), m => { if (V.pocr) { V.pocr.msg = m; renderAll(); } }, k)
+      .then(r => {
+        const got = JSON.parse(JSON.stringify(prev.got)), sums = Object.assign({}, prev.sums);
+        Object.keys(r.got).forEach(sl => { const o = (got[sl] = got[sl] || {}); Object.keys(r.got[sl]).forEach(key => { const x = r.got[sl][key]; if (!o[key] || o[key].lv == null) o[key] = x; }); });
+        Object.keys(r.sums).forEach(sl => { if (!sums[sl]) sums[sl] = r.sums[sl]; });
+        const ok = !!got[k], sec = Math.round((Date.now() - t0) / 1000);
+        V.pocr = { slot: k, got, sums, miss: prev.miss.concat(r.miss), n: prev.n + files.length, msg: ok ? `読み取りました（${sec}秒）。内容を確かめて「この内容で入れる」を押してください。` : `${chOf(G.team[k]).jp}の素質のカードが見つかりませんでした。素質収集画面で、${chOf(G.team[k]).jp}の巡遊者名とカードが映っているか確かめてください。`, ng: !ok };
+        renderAll();
+      })
+      .catch(e => { V.pocr = Object.assign({}, prev, { busy: false, msg: e.message || "読み取れませんでした", ng: true }); renderAll(); });
+  }
+  function applyPotOcr() {
+    const st = V.pocr;
+    if (!st || !st.got) return;
+    potPlan(st).forEach(x => {
+      const cs = G.chars[x.c.id];
+      cs.pots2 = {};
+      x.items.forEach(i => { cs.pots2[i.p.key] = i.lv; });
+    });
+    V.pocr = { slot: st.slot, msg: "入れました。違うところがあれば、下の素質で直してください。" };
+    save(); renderAll();
   }
   function applyOcr(id) {
     const cs = G.chars[id], rows = (V.ocr && V.ocr.rows) || [];
@@ -362,7 +503,7 @@
           const list = potTargets(id, sl.k);
           tg = sel(`${sp}.t`, list.map(x => [x.en, JA(x.en, id)]), sl.t || "", "（対象の素質）");
         }
-        return `<div class="emb-line"><button class="obtn" data-act="embclear:${id}:${i}:${j}" style="width:auto;min-height:30px">クリア</button>${sel(`${sp}.cat`, EMB_CATS.map(x => [x[0], x[0]]), cat, "（区分）")}${sel(`${sp}.k`, items, sl.k || "", "（項目）")}${o ? sel(`${sp}.q`, vals, (isLv(o) && sl.q === "rainbow") ? "rainbow3" : sl.q, "（値）") : ""}${tg}</div>`;
+        return `<div class="emb-line">${sel(`${sp}.cat`, EMB_CATS.map(x => [x[0], x[0]]), cat, "（区分）")}${sel(`${sp}.k`, items, sl.k || "", "（項目）")}${o ? sel(`${sp}.q`, vals, (isLv(o) && sl.q === "rainbow") ? "rainbow3" : sl.q, "（値）") : ""}${tg}</div>`;
       }).join("");
       return `<div class="emb-card"><h4><label style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" data-p="chars.${id}.embOn.${i}" data-t="b01"${cs.embOn[i] ? " checked" : ""}>${KIND_NAME[e.kind] || esc(e.name)}徽章（${e.kind === "triangle" ? "Lv70" : e.kind === "circle" ? "Lv80" : "Lv90"}）</label></h4>${slots}</div>`;
     };
@@ -371,12 +512,26 @@
     const ex = emx(id);
     const lvTxt = Object.keys(ex.lv).filter(x => ex.lv[x]).map(x => ({ basic: "通常攻撃", main: "主力スキル", support: "支援スキル", ult: "必殺技" }[x] + "Lv+" + ex.lv[x])).join("・");
     const potTxt = Object.keys(ex.pot).map(x => `${JA(x, id)} Lv+${ex.pot[x]}`).join("・");
-    return `<div class="wide"><h3>${esc(c.jp)}：徽章</h3>${ocrBox(id)}<div>${order.map(card).join("")}</div>
+    return `<div class="wide">${ocrBox(id)}<div>${order.map(card).join("")}</div>
       <div class="note">合計: ${sumTxt || "なし"}${lvTxt ? `<br>スキルレベル上昇: ${lvTxt}（スキルLvの欄に反映）` : ""}${potTxt ? `<br>素質レベル上昇: ${potTxt}（取得している素質に反映）` : ""}</div>
       ${helpTxt("emb", "各枠は、左から 区分 → 項目 → 値 の順に選びます。", "金までしかない項目には虹を出しません。素質レベル上昇は、取得している素質（Lv1以上）にだけ足します。")}</div>`;
   }
 
   // ---- 心相（段階・戦闘中の効果）----
+  // 心相の凸の戦闘中の効果（反映するか）。その他の画面に置く（心相の進み具合は基本の画面）
+  function heartFxBox(k) {
+    const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`, st = R.team[id].st, hs = (S.HEART_SPEC || {})[id];
+    const tb = c.talentBonus || {}, tu = Math.min(10, Math.max(0, (cs.talent || 0) / 5));
+    const stat = [`基礎HP +${fmt(st.talHp)}`, `基礎攻撃 +${fmt(st.talAtk)}`].concat(tb.elem ? [`${c.el}属性ダメージ +${pct(tu * tb.elem)}`] : [], tb.basic ? [`通常攻撃ダメージ +${pct(tu * tb.basic)}`] : [], tb.skill ? [`スキルダメージ +${pct(tu * tb.skill)}`] : [], tb.ult ? [`必殺技ダメージ +${pct(tu * tb.ult)}`] : [], tb.crit ? [`会心ダメージ +${pct(tu * tb.crit)}`] : []).join(" ／ ");
+    const list = hs ? `<div class="grid-in" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${hs.map(h => {
+      const un = (cs.talent || 0) >= h.n * 10, key = "heart" + h.n, onv = (cs.pon || {})[key], on = onv == null ? !h.off : onv;
+      return `<div class="pot${un ? " core" : ""}"><b>${h.n} ${esc(h.name)}</b>${un ? '<span class="tag-ok">解放済み</span>' : '<span class="tag-ng">未解放</span>'}
+        <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}
+        ${un && id === "noya" && h.n === 1 ? `<label class="check" style="font-weight:400;margin-top:4px"><input type="checkbox" data-p="heartCrit" data-t="b"${G.heartCrit ? " checked" : ""}>「閃星」中（会心ダメージ +12%）</label>` : ""}</div>`;
+    }).join("")}</div>` : '<p class="muted" style="margin:0">この巡遊者の、心相の戦闘中の効果は、まだ登録していません。反映したい効果は下の「加算」に入れてください。</p>';
+    return `<div class="box"><h3 style="margin:0 0 4px;font-size:14px">心相の効果<span class="muted" style="font-weight:400;font-size:12px;margin-left:8px">心相 ${(+cs.talent || 0) / 10}凸（進み具合は「基本」で変えます）。10段階 = 1凸</span></h3>
+      <p class="muted" style="margin:0 0 6px;font-size:12px">段階ごとのステータス: ${stat}</p>${list}</div>`;
+  }
   function renderHeart(k) {
     const id = G.team[k], c = chOf(id), cs = G.chars[id], p = `chars.${id}`, st = R.team[id].st;
     const hs = (S.HEART_SPEC || {})[id];
@@ -389,7 +544,7 @@
         <div class="muted">${esc(h.txt)}</div>${un ? `<div class="lv">反映 <input type="checkbox" data-p="${p}.pon.${key}" data-t="b"${on ? " checked" : ""}></div>` : ""}
         ${un && id === "noya" && h.n === 1 ? `<label class="check" style="font-weight:400;margin-top:4px"><input type="checkbox" data-p="heartCrit" data-t="b"${G.heartCrit ? " checked" : ""}>「閃星」中（会心ダメージ +12%）</label>` : ""}</div>`;
     }).join("")}</div>` : '<p class="muted">この巡遊者の、心相の戦闘中の効果は、まだ登録していません。反映したい効果は「その他」に入れてください。</p>';
-    return `<div class="wide"><h3>${esc(c.jp)}：心相</h3>
+    return `<div class="wide">
       ${fld("心相", `<div class="pz-lvs seg" role="group" aria-label="心相">${Array.from({ length: 50 / (rar >= 5 ? 10 : 5) + 1 }, (_, i) => i * (rar >= 5 ? 10 : 5)).map(v => `<button type="button" class="pz-lv${(+cs.talent || 0) === v ? " on" : ""}" aria-pressed="${(+cs.talent || 0) === v}" data-act="plv|${v}|${p}.talent">${rar >= 5 ? v / 10 + "凸" : v / 10}</button>`).join("")}</div>`, rar >= 5 ? "" : "星4は5段階ずつ（0.5凸きざみ）")}
       <p class="note">段階ごとのステータス: ${stat}</p>
       <h3 style="margin:10px 0 6px;font-size:14px">凸の戦闘中の効果（10段階 = 1凸）</h3>${list}</div>`;
@@ -462,19 +617,23 @@
         ${tags(x)}${x.lv > 0 && x.ctl ? `<div class="pz-ctl">${x.ctl}</div>` : ""}
         <div class="pz-desc">${esc(x.desc)}${x.calc ? `<span class="pz-calc">計算${x.calcLv ? `（${x.calcLv}）` : ""}: ${esc(x.calc)}</span>` : ""}</div></div>`;
     };
-    const cores = list.filter(x => x.core), norms = list.filter(x => !x.core);
+    // コア素質は2列。特化構築1を上の段、特化構築2を下の段に（2026-11-22 ユーザー）
+    const gOrd = x => /2/.test(x.grp || "") ? 2 : /1/.test(x.grp || "") ? 1 : 3;
+    const cores = list.filter(x => x.core).map((x, i) => [x, i]).sort((a, b) => gOrd(a[0]) - gOrd(b[0]) || a[1] - b[1]).map(a => a[0]), norms = list.filter(x => !x.core);
     // 通常素質は、特化構築ごと・汎用ごとに見出しを付ける（見出しは同じグリッドの1行）
     let lastGrp = null;
     const normHtml = norms.map(x => { const h = x.grp && x.grp !== lastGrp ? `<div class="pz-sub">${x.grp}</div>` : ""; lastGrp = x.grp; return h + normCard(x); }).join("");
-    const coreSec = `<section><h3 class="pz-h">コア素質 <span class="pz-cnt${full ? " full" : ""}">${cnt.core} / ${CORE_MAX}</span></h3>
+    // 説明の表示スイッチは、コア素質・通常素質の見出しの右端に1つずつ（2026-11-22 ユーザー）。切ると説明を隠し、反映・回数・徽章+だけ残してカードの高さをそろえる
+    const dsw = k => `<button type="button" class="pz-dsw" aria-pressed="${potDesc[k]}" data-act="potdesc:${k}">素質の説明<span class="pz-sw${potDesc[k] ? " on" : ""}"><span></span></span></button>`;
+    const coreSec = `<section><h3 class="pz-h">コア素質 <span class="pz-cnt${full ? " full" : ""}">${cnt.core} / ${CORE_MAX}</span>${dsw("core")}</h3>
       ${cores.length ? `<div class="pz-cgrid">${cores.map(coreCard).join("")}</div>` : '<p class="muted">ありません</p>'}</section>`;
-    const normSec = `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span></h3>
+    const normSec = `<section><h3 class="pz-h">通常素質 <span class="muted" style="font-size:13px">取得 ${cnt.normal}個</span>${dsw("norm")}</h3>
       ${norms.length ? `<div class="pz-ngrid">${normHtml}</div>` : '<p class="muted">ありません</p>'}</section>`;
     const note = S.POT_SPEC[id] ? "名前の後ろの「*」は未確認（日本語Wikiの説明文から自動で作った下書き）です。名前は日本語（マウスを重ねると英語名）。回数や重複数が原文に書かれていないものは「仮」の値なので、実測に合わせて直してください。「全員が光」の条件は、編成から自動で判定します。残光の有無は「エネミー」で切り替えます。"
       : "この巡遊者の素質の効果は、まだ計算に入れていません。反映したい効果は「その他」に手で入れられます。";
-    return `<div class="pz">
+    return `<div class="pz${potDesc.core ? "" : " nodesc-core"}${potDesc.norm ? "" : " nodesc-norm"}">
       <div class="pz-main">
-        <h3 style="margin:0">${esc(c.jp)}：素質</h3>
+        ${potOcrBox(k)}
         ${id === "tilia" ? `<label class="check" style="font-weight:400;margin:0"><input type="checkbox" data-p="markDebuff" data-t="b"${G.markDebuff !== false ? " checked" : ""}>印被ダメージ増加（眩い正義など）が敵に付いている</label>` : ""}
         <div class="pz-bar">
           <p class="muted" style="margin:0;font-size:12px">ここで選べるのは Lv6 まで。徽章の「＋」は徽章画面の入力から自動で足されます（Lv7〜9 は推定値）。</p></div>
@@ -506,17 +665,17 @@
     const rankSel = (arr, id) => {
       const r = id && L.find(x => x.id === id);
       const fxCan = arr === "lrMain" && id && S.lrRankOf(G, id).can, atkCan = S.lrAtkScalable(r);
-      if (!fxCan && !atkCan) return `<span class="muted" style="font-size:11px">${id ? S.lrFixedTxt(G, id, arr) : ""}</span>`;
+      // 空の枠でも位置がそろうように、選べない灰色の「突破」の欄を置いておく（2026-11-22 ユーザー）
+      if (!id) return `<select disabled title="ロスレコを選ぶと選べます"><option>突破</option></select>`;
+      if (!fxCan && !atkCan) return `<span class="muted" style="font-size:11px">${S.lrFixedTxt(G, id, arr)}</span>`;
       const now = S.lrRankNow(G, id);
       return `<select data-p="lrRank.${id}" data-t="n" title="突破">${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}"${n === now ? " selected" : ""}>突破${S.lrRoman(n)}</option>`).join("")}</select>`;
     };
     const slot = (arr, i, lab) => {
       const path = `${arr}.${i}`, cur = (G[arr] || [])[i] || "", r = L.find(x => x.id === cur);
-      const el = V.lrEl[path] != null ? V.lrEl[path] : (r ? r.element : "");
-      const names = L.filter(x => !el || x.element === el);
-      return `<div class="lr-line"><span class="lab">${lab}</span><button class="obtn" data-act="lrclear:${path}" style="min-height:30px">クリア</button>
-        <select data-lrel="${path}"><option value="">属性</option>${ELS.map(e => `<option${e === el ? " selected" : ""}>${e}</option>`).join("")}</select>
-        <select data-lrid="${path}"><option value="">（ロスレコ）</option>${names.map(x => `<option value="${esc(x.id)}"${x.id === cur ? " selected" : ""}>${esc(lrOptName(x))}</option>`).join("")}</select>${rankSel(arr, cur)}</div>`;
+      // 名前のドロップダウンのかわりに、カードの一覧から選ぶ画面を開くボタン（2026-11-22 ユーザー。名前だけでは中身が分からないため）
+      return `<div class="lr-line"><span class="lab">${lab}</span>
+        <button type="button" class="lr-pick${r ? "" : " empty"}" data-act="lrpick:${path}">${r ? `<i class="lr-el" style="--elc:${EL_COLOR[r.element] || "#8a8fb8"}"></i><b>${esc(r.name)}${r.auto || r.autoFx ? "*" : ""}</b><small>★${r.rarity || "?"}</small>` : '<b>（ロスレコを選ぶ）</b>'}<span class="lr-pick-arr" aria-hidden="true">▼</span></button>${rankSel(arr, cur)}</div>`;
     };
     const m = "lrManual";
     // 手入力の欄は、ふだんは閉じておく（値が入っているときは、開いた状態から始める）
@@ -582,21 +741,12 @@
         <div class="lrfx-band">コア効果</div><div class="lrfx-card">${core || '<div class="lrfx-it skip">登録されていません</div>'}</div>
         ${as ? `<div class="lrfx-band">アシスト効果<span>音符のレベルで自動で解放</span></div>${as}` : ""}</div>`;
     }).join("");
-    const rb = E.recordBonus(G.recordLv);
-    // 記録レベルは、既定でビルドのスコアから自動で決める（recordAuto が false のときだけ手で選ぶ）
-    const recAuto = G.recordAuto !== false, recSc = S.recordScore ? S.recordScore(G) : null;
-    const recNext = recSc != null ? (RECORD_LEVELS || []).find(x => x[1] > recSc) : null;
-    const recOpts = (RECORD_LEVELS || []).map(x => [x[0], `Lv${x[0]}（攻撃+${x[2]} / HP+${x[3]}）`]);
-    // 上の段: 左にロスレコ6枚、右に記録レベルと効果の数。下の段: 音符・メインのロスレコの効果・手入力（横いっぱい）
-    return `<div class="wide"><div class="secg lr-g">
+    // 上の段: 左にロスレコ6枚、右に効果の数（記録レベルは結果の欄の上に出すので、ここには置かない。手で選ぶのは「補正」の画面）。下の段: 音符・メインのロスレコの効果・手入力（横いっぱい）
+    return `<div class="wide">${recOcrBox()}<div class="secg lr-g">
       <section class="sec"><h3>ロスレコ</h3>
         <div class="lr-cols"><div>${[0, 1, 2].map(i => slot("lrMain", i, "メイン" + (i + 1))).join("")}</div><div class="lr-sub">${[0, 1, 2].map(i => slot("lrSub", i, "サブ" + (i + 1))).join("")}</div></div>
         ${helpTxt("lr", "基礎ステータスは全員に、コア効果・アシスト効果はメインの3枚だけ入ります。", "属性が違うロスレコの属性ダメージは、その属性の巡遊者だけに入ります。名前に「*」があるものは、日本語Wikiの値です（ゲーム内の画面では未確認。Lv90・ランク8の値）。「突破」で、コア効果の値と基礎攻撃力が変わります（★5の基礎攻撃力は、突破1つごとに +130。サブも基礎攻撃力が変わります）。条件付きの効果は、既定では反映しません（チェックで反映）。")}</section>
       <div class="sec-col">
-        <section class="sec"><h3>記録レベル</h3>${recAuto ? inp("recordLv", { sel: recOpts }).replace("<select ", "<select disabled ") : inp("recordLv", { sel: recOpts })}
-          <label class="check" style="margin:6px 0 0"><input type="checkbox" data-p="recordAuto" data-t="b"${recAuto ? " checked" : ""}> ビルドから自動で決める</label>
-          <div class="muted help">${recSc != null ? `記録のスコア ${fmt(recSc)}${recNext ? `（次の Lv${recNext[0]} まで あと ${fmt(recNext[1] - recSc)}）` : ""}。` : ""}コア素質1つ 180・通常素質のLv1つ 60・音符1個 15（ロスレコの初期の音符も数える）・アシスト効果のLv1つ 120 で数えます（徽章の＋は数えません）。</div>
-          <div class="muted help">戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）</div></section>
         <section class="sec"><h3>効果の数</h3><div class="muted help" style="margin:0 0 6px">暁光・星願など。戦闘中のある時点を想定して入力します。</div>
           ${counts ? `<div class="cnt-list">${counts}</div>` : '<p class="muted" style="margin:0">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}</section>
       </div>
@@ -610,6 +760,87 @@
           ${fld("通常攻撃ダメージ 合計", inp(m + ".basicDmg", { w: 100 }))}${fld("スキルダメージ 合計", inp(m + ".skillDmg", { w: 100 }))}${fld("攻撃力% 合計", inp(m + ".atkPct", { w: 100 }))}
         </div>` : '<div class="muted help" style="margin:0">一覧にないロスレコを使うときに、基礎攻撃力・属性ダメージなどの合計を手で入れます。「開く」で入力欄が出ます。</div>'}</section>
       </div></div>`;
+  }
+
+  // ---- ロスレコを選ぶ画面（カードの一覧としぼり込み） ----
+  // カード: 名前・★・属性・タグ・コア効果の要点・基礎攻撃力と属性ダメージ（サブの枠のときは初期の音符も）
+  // しぼり込み: ゲームのフィルタと同じ（レアリティ・属性・役割・音符）＋入手先・文字（名前・効果の文・アシスト効果の名前で探す）。並びは、編成の巡遊者と同じ属性 → ★の多い順
+  // 入手先（モチーフ・イベント・大討伐・事業支援・防衛戦）: 分かっているもの（S.LR_SRC）だけ、しぼり込みとカードの札に出す
+  // タグ: データには「元素/スキル」のように区切ったものと、「元素スキルシールド」のように続けて書いたものがある。
+  //   区切ったものから言葉の一覧を作り、続けて書いたものはその言葉で切り分ける（長い言葉を先に当てる）
+  //   ロスレコの一覧（LOSTRECORDS）に取り込むときにタグが落ちているので、Wikiから作ったデータ（LR_AUTO）から名前で引く
+  const lrTagStr = r => r.tags || ((window.LR_AUTO || []).find(x => x.name === r.name) || {}).tags || "";
+  let LR_VOCAB = null;
+  // ゲームのフィルタの「役割」（2026-11-22 ユーザーのスクショの順）。切り分けの言葉にも使う
+  const LR_ROLES = ["攻撃", "弱点", "シールド", "従者", "印", "会心", "HP", "防御力", "与ダメージ↑", "チャージ", "元素", "汎用", "被ダメージ↓", "通常攻撃", "必殺技", "スキル", "会心ダメージ"];
+  const lrVocab = () => LR_VOCAB || (LR_VOCAB = [...new Set(LR_ROLES.concat(LOSTRECORDS.flatMap(r => { const t = String(lrTagStr(r)); return t.indexOf("/") >= 0 ? t.split("/").map(x => x.trim()) : []; })).filter(Boolean))].sort((a, b) => b.length - a.length));
+  const lrTags = r => {
+    let t = String(lrTagStr(r)); if (!t) return [];
+    if (t.indexOf("/") >= 0) return t.split("/").map(x => x.trim()).filter(Boolean);
+    const out = [];
+    lrVocab().forEach(v => { const i = t.indexOf(v); if (i >= 0) { out.push([i, v]); t = t.slice(0, i) + " ".repeat(v.length) + t.slice(i + v.length); } });
+    return out.sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  };
+  const lrCoreTxt = r => { const fx = S.LR_FX[r.id]; if (!fx) return []; return fx.core.map(it => typeof it.txt === "function" ? it.txt(6) : it.txt).filter(Boolean); };
+  const lrSearchTxt = r => { const fx = S.LR_FX[r.id] || {}; return [r.name, r.element, lrTagStr(r)].concat(lrCoreTxt(r), (fx.assists || []).map(a => a.name)).join(" "); };
+  function renderLrDlg() {
+    const dlg = $("lrDlg"); if (!dlg || !dlg.open || !V.lrp) return;
+    const st = V.lrp, [arr, idx] = st.path.split("."), isSub = arr === "lrSub", L = LOSTRECORDS;
+    const cur = (G[arr] || [])[+idx] || "", used = new Set([].concat(G.lrMain || [], G.lrSub || []).filter(Boolean));
+    const teamEl = SLOTS.map(([k]) => chOf(G.team[k]).el);
+    // しぼり込みはゲームのフィルタと同じ項目・同じ順（レアリティ・属性・役割・音符）に、入手先と文字の検索を足したもの。
+    //   どれも複数選べる（同じ項目の中は「どれか」、項目どうしは「全部」）。何も選ばない＝すべて
+    const ELS = ["水", "火", "地", "風", "光", "闇", "なし"];
+    const NOTES13 = S.NOTE_ALL.map(n => n.replace("の音符", ""));
+    const q = (st.q || "").trim();
+    const SRCS = [...new Set(L.map(S.lrSrc).filter(Boolean))];
+    const has = (key, v) => !st[key].length || st[key].indexOf(v) >= 0;
+    const elOf = r => !r.element || r.element === "なし" ? "なし" : r.element;
+    const notesOf = r => ((r.sub && r.sub.startNotes) || []).map(n => n.note.replace("の音符", ""));
+    const list = L.filter(r => has("star", String(r.rarity)) && has("el", elOf(r)) && (!st.role.length || lrTags(r).some(t => st.role.indexOf(t) >= 0))
+      && (!st.note.length || notesOf(r).some(n => st.note.indexOf(n) >= 0)) && has("src", S.lrSrc(r)) && (!q || lrSearchTxt(r).indexOf(q) >= 0))
+      .map((r, i) => [r, i]).sort((a, b) => {
+        const ea = teamEl.indexOf(a[0].element), eb = teamEl.indexOf(b[0].element);
+        return ((ea < 0 ? 9 : ea) - (eb < 0 ? 9 : eb)) || ((b[0].rarity || 0) - (a[0].rarity || 0)) || (a[1] - b[1]);
+      }).map(x => x[0]);
+    const chip = (key, v, label) => { const on = v === "" ? !st[key].length : st[key].indexOf(v) >= 0;
+      return `<button type="button" class="lrp-chip${on ? " on" : ""}" aria-pressed="${on}" data-act="lrpf:${key}:${esc(v)}">${label}</button>`; };
+    const stat = r => { const s2 = r.stats || {}, out = [];
+      if (s2.baseAtk) out.push(S.lrAtkScalable(r) ? `基礎攻撃力 ${S.lrAtkMax(r) - 650}〜${S.lrAtkMax(r)}` : `基礎攻撃力 ${Math.round(s2.baseAtk)}`);
+      if (s2.baseHp) out.push(`基礎HP ${Math.round(s2.baseHp)}`);
+      if (s2.elemDmg) out.push(`${r.element}属性ダメージ ${Math.round(s2.elemDmg * 1000) / 10}%`);
+      if (s2.skillDmg) out.push(`スキルダメージ ${Math.round(s2.skillDmg * 1000) / 10}%`);
+      if (s2.ultDmg) out.push(`必殺技ダメージ ${Math.round(s2.ultDmg * 1000) / 10}%`);
+      return out.join(" ／ "); };
+    const card = r => {
+      const core = lrCoreTxt(r).slice(0, 2), notes = ((r.sub && r.sub.startNotes) || []).map(n => `${n.note.replace("の音符", "")} ${n.lv}`).join("・");
+      return `<button type="button" class="lrp-card${r.id === cur ? " cur" : ""}" style="--elc:${EL_COLOR[r.element] || "#8a8fb8"}" data-act="lrpset:${esc(r.id)}">
+        <span class="lrp-h"><i class="lr-el"></i><b>${esc(r.name)}${r.auto || r.autoFx ? "*" : ""}</b><small>★${r.rarity || "?"}・${esc(r.element)}</small>${S.lrSrc(r) ? `<span class="lrp-src">${esc(S.lrSrc(r))}</span>` : ""}${r.id === cur ? '<span class="tag-ok">この枠</span>' : used.has(r.id) ? '<span class="tag-ng">ほかの枠で選択中</span>' : ""}</span>
+        ${lrTags(r).length ? `<span class="lrp-tags">${lrTags(r).map(t => `<span>${esc(t)}</span>`).join("")}</span>` : ""}
+        ${core.length ? `<span class="lrp-core">${core.map(t => esc(t)).join("<br>")}</span>` : '<span class="lrp-core muted">コア効果は未登録</span>'}
+        <span class="lrp-st">${stat(r)}${isSub && notes ? `<br>初期の音符: ${esc(notes)}` : ""}</span></button>`;
+    };
+    // フィルタの折りたたみ: 見出しの右端のボタン。たたむと、しぼり込みのボタンの行を隠す（探す欄は残す）。選んでいる数を出す（2026-11-22 ユーザー）
+    const nOn = ["star", "el", "src", "role", "note"].reduce((a, k) => a + st[k].length, 0), fold = !!V.lrpFold;
+    const FUNNEL = `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5z"/></svg>`;
+    $("lrBody").innerHTML = `<h2 id="lrDlgT"><span class="en">LOST RECORD</span>${isSub ? "サブ" : "メイン"}${+idx + 1}のロスレコを選ぶ<button type="button" class="lrp-fold${fold ? "" : " on"}" aria-expanded="${!fold}" data-act="lrp-fold" title="${fold ? "フィルタを開く" : "フィルタをたたむ"}">${FUNNEL}フィルタ${nOn ? `<b>${nOn}</b>` : ""}<span aria-hidden="true">${fold ? "▼" : "▲"}</span></button></h2>
+      <div class="lrp-fs"${fold ? " hidden" : ""}>
+      <div class="lrp-f"><span class="lrp-l">★</span>${chip("star", "", "すべて")}${["5", "4", "3"].map(v => chip("star", v, "★" + v)).join("")}</div>
+      <div class="lrp-f"><span class="lrp-l">属性</span>${chip("el", "", "すべて")}${ELS.map(e => chip("el", e, e)).join("")}</div>
+      ${SRCS.length ? `<div class="lrp-f"><span class="lrp-l">入手</span>${chip("src", "", "すべて")}${SRCS.map(v => chip("src", v, esc(v))).join("")}<span class="muted" style="font-size:11px;margin-left:6px">（分かっているものだけ）</span></div>` : ""}
+      <div class="lrp-f"><span class="lrp-l">役割</span>${chip("role", "", "すべて")}${LR_ROLES.map(t => chip("role", t, esc(t))).join("")}</div>
+      <div class="lrp-f"><span class="lrp-l">音符</span>${chip("note", "", "すべて")}${NOTES13.map(n => chip("note", n, esc(n))).join("")}<span class="muted" style="font-size:11px;margin-left:6px">（サブの初期の音符）</span></div>
+      </div>
+      <div class="lrp-f"><span class="lrp-l">探す</span><input type="search" id="lrp-q" value="${esc(st.q || "")}" placeholder="名前・効果の文・アシスト効果の名前"></div>
+      <p class="muted" style="margin:6px 0">${list.length}件。編成の巡遊者と同じ属性のものから並べています。名前の「*」は日本語Wikiの値（ゲームの画面では未確認）です。</p>
+      <div class="lrp-grid">${list.map(card).join("") || '<p class="muted">当てはまるロスレコがありません</p>'}</div>
+      <div class="foot"><button class="btn-add" data-act="lrpset:">この枠を空にする</button><span style="flex:1"></span><button class="btn-add pri" data-act="lrp-close">閉じる</button></div>`;
+  }
+  try { V.lrpFold = localStorage.getItem("stellasora-sim-lrpfold") === "1"; } catch (e) { /* 無視 */ }   // フィルタをたたんだかは、見る人ごとに覚えておく
+  function openLrDlg(path) {
+    const [arr, idx] = path.split("."), cur = (G[arr] || [])[+idx], r = cur && LOSTRECORDS.find(x => x.id === cur);
+    V.lrp = { path, el: [r ? (r.element || "なし") : chOf(G.team.main).el], star: [], role: [], note: [], src: [], q: "" };
+    $("lrDlg").showModal(); renderLrDlg(); $("lrDlg").scrollTop = 0;
   }
 
   // ---- ギミック・補正 ----
@@ -635,13 +866,22 @@
   function renderAdjust() {
     const en = G.enemyObj;
     const els = ["光", "水", "風", "火", "地", "闇"];
-    return `<div class="wide"><div class="secg">
+    // 記録レベル: 既定はビルドのスコアから自動で決める。ゲームと合わないときだけ、ここで手で選ぶ（2026-11-22 ユーザー。前は「ロスレコ」の画面にあった）
+    const recAuto = G.recordAuto !== false, recSc = S.recordScore ? S.recordScore(G) : null;
+    const recNext = recSc != null ? (RECORD_LEVELS || []).find(x => x[1] > recSc) : null, rb = E.recordBonus(G.recordLv);
+    const recOpts = (RECORD_LEVELS || []).map(x => [x[0], `Lv${x[0]}（攻撃+${x[2]} / HP+${x[3]}）`]);
+    const recSec = `<section class="sec"><h3>記録レベル<span class="h-sub">ふだんはビルドから自動で決めます。ゲームと合わないときだけ手で選びます</span></h3>
+        <label class="check" style="margin:0 0 6px"><input type="checkbox" data-p="recordAuto" data-t="b"${recAuto ? " checked" : ""}> ビルドから自動で決める</label>
+        ${recAuto ? inp("recordLv", { sel: recOpts }).replace("<select ", "<select disabled ") : inp("recordLv", { sel: recOpts })}
+        <div class="muted help">${recSc != null ? `記録のスコア ${fmt(recSc)}${recNext ? `（次の Lv${recNext[0]} まで あと ${fmt(recNext[1] - recSc)}）` : ""}。` : ""}戦闘中に全員の基礎攻撃力 +${fmt(rb.atk)}・基礎HP +${fmt(rb.hp)}（%を掛ける前に足します）。スコアは、コア素質1つ 180・通常素質のLv1つ 60・音符1個 15（ロスレコの初期の音符も数える）・アシスト効果のLv1つ 120 で数えます（徽章の＋は数えません）。</div></section>`;
+    return `<div class="wide"><div class="secg"><div class="sec-col">
       <section class="sec"><h3>補正（敵の数値の上書きと、「その他倍率」）</h3>
         <div class="adj-list">
           ${fld("その他倍率（全体に掛ける）", inp("other.mult", { w: 100 }), "不明な倍率を入れる")}${fld("被ダメージ（別枠の乗算）", inp("other.taken", { w: 100 }), "1.15 = +15%")}
           ${fld("敵の防御倍率 上書き", inp("enemyOv.def", { w: 100 }), "空=" + en.def)}${fld("弱点補正 上書き", inp("enemyOv.weakMult", { w: 100 }), "空=" + en.weakMult)}
           ${fld("印の別枠 上書き", inp("enemyOv.markX", { w: 100 }), "空=" + en.markX)}
         </div></section>
+      ${recSec}</div>
       <section class="sec"><h3>敵の属性ごとの耐性と、実測合わせの倍率</h3>
         <table class="adj-t"><tr><th>属性</th><th>耐性（空=既定）</th><th>その他（実測合わせ）</th></tr>
         ${els.map(e => `<tr><td>${e}${en.weak.indexOf(e) >= 0 ? "（弱点）" : ""}</td><td>${inp(`enemyOv.res.${e}`, { w: 90 })}<span class="muted"> 既定 ${en.res[e] != null ? en.res[e] : (en.resDefault != null ? en.resDefault : 250)}</span></td><td>${inp(`enemyOv.extra.${e}`, { w: 90 })}<span class="muted"> 既定 ${(en.extra && en.extra[e]) || 1}</span></td></tr>`).join("")}</table>
@@ -1014,15 +1254,18 @@
   }
 
   function renderDisplay() {
+    // 巡遊者のタブは、最後に開いた巡遊者の「基本」から（上に巡遊者のタブ、左に 基本・心相・徽章・素質・その他 のタブ。2026-11-22 ユーザー）
+    if (V.panel === "overview") V.panel = "base:" + (V.lastSlot || "main");
+    if (/^heart:/.test(V.panel)) V.panel = V.panel.replace(/^heart/, "add");   // 心相のタブはなくした（進み具合は基本、効果はその他・2026-11-22）
     const [a, b] = V.panel.split(":");
+    if (/^(base|emb|heart|pot|add)$/.test(a) && SLOTS.some(x => x[0] === b)) V.lastSlot = b;
     let h;
-    if (V.panel === "overview") h = renderOverview();
+    if (a === "base") h = renderBase();
     else if (V.panel === "direct") h = renderDirect();
     else if (a === "emb") h = renderEmblem(b);
-    else if (a === "heart") h = renderHeart(b);
     else if (a === "pot") h = renderPot(b);
     else if (a === "add") h = renderAdd(b);
-    else if (V.panel === "record") h = renderLr();   // 記録レベルは「記録・ロスレコ・音符」のタブの中
+    else if (V.panel === "record") h = renderLr();   // 前の「記録」のタブの名前（記録レベルは「補正」の画面に移した）
     else if (V.panel === "lr") h = renderLr();
     else if (V.panel === "gimmick") h = renderGimmick();
     else if (V.panel === "adjust") h = renderAdjust();
@@ -1032,9 +1275,17 @@
     else h = renderOverview();
     // 巡遊者ごとの画面（心相・徽章・素質・その他）では、戻るボタンと、同じ巡遊者のほかの画面へのボタンを出す
     let nav = "";
-    if (/^(emb|heart|pot|add)$/.test(a)) {
-      const nb = (p, l) => `<button class="tab" aria-selected="${a === p}" data-act="panel:${p}:${b}">${l}</button>`;
-      nav = `<div class="subnav"><button class="btn-add" data-act="panel:overview">← 巡遊者に戻る</button><div class="tabs" style="margin:0">${nb("heart", "心相")}${nb("emb", "徽章")}${nb("pot", "素質")}${nb("add", "その他")}</div></div>`;
+    if (/^(base|emb|heart|pot|add)$/.test(a)) {
+      // 上に巡遊者のタブ（主力・支援1・支援2）、左に画面のタブ（心相・徽章・素質・その他）を置き、縦と横でクロスさせて切り替える（2026-11-22 ユーザー・デザインの相談から）
+      const side = [["base", "基本"], ["emb", "徽章"], ["pot", "素質"], ["add", "その他"]].map(([pn, label]) =>
+        `<button type="button" class="xs${pn === a ? " on" : ""}" aria-current="${pn === a ? "page" : "false"}" data-act="panel:${pn}:${b}"><b>${label}</b></button>`).join("");
+      // 中身の枠の一番上に、3人の見出しの行（「主力：名前」と属性の色の線）。基本では3人の列の見出し、ほかの画面では巡遊者の切り替え（選んでいない人は薄く）。
+      //   基本と心相などを行き来しても、見出しの位置が変わらない（2026-11-22 ユーザー）
+      const head = ([k, l]) => { const c = chOf(G.team[k]), st = `style="--elc:${EL_COLOR[c.el] || "#4B5082"}"`;
+        const t = `<span class="xh-tag">${l}</span><i class="xh-dot" aria-hidden="true"></i><b>${esc(c.jp)}${c.auto ? "*" : ""}</b>`;
+        return a === "base" ? `<button type="button" class="xh xh-b${(V.lastSlot || "main") === k ? " m-on" : ""}" ${st} data-act="bsel:${k}">${t}</button>` : `<button type="button" class="xh${k === b ? " on" : ""}" ${st} aria-current="${k === b ? "page" : "false"}" data-act="panel:${a}:${k}">${t}</button>`; };
+      h = `<div class="xnav${a === "base" ? " is-base" : ""}">
+        <div class="xn-body"><div class="xn-side" role="group" aria-label="画面">${side}</div><div class="xn-main"><div class="xn-head" role="group" aria-label="巡遊者">${SLOTS.map(head).join("")}</div>${h}</div></div></div>`;
     }
     $("display").innerHTML = nav + h;
   }
@@ -1145,12 +1396,22 @@
   }
 
   // ---- イベント ----
+  // ロスレコを選ぶ画面の「探す」欄: 打つたびに一覧をしぼる（描き直したあと、欄に戻る）
+  document.addEventListener("input", ev => {
+    const t = ev.target;
+    if (t.id !== "lrp-q" || !V.lrp) return;
+    V.lrp.q = t.value; renderLrDlg();
+    const n = $("lrp-q"); if (n) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (e) { /* 無視 */ } }
+  });
   // 徽章の画面で画像を貼り付けたら、読み取る
   document.addEventListener("paste", ev => {
-    if (!/^emb:/.test(V.panel || "")) return;
+    const isRec = V.panel === "lr" || V.panel === "record", isPot = /^pot:/.test(V.panel || "");
+    if (!/^emb:/.test(V.panel || "") && !isRec && !isPot) return;
     const f = [...((ev.clipboardData && ev.clipboardData.files) || [])].find(x => /^image\//.test(x.type));
     if (!f) return;
     ev.preventDefault();
+    if (isRec) { runRecOcr(f); return; }   // 記録・ロスレコのタブ: ロスレコスキル画面
+    if (isPot) { const k = V.panel.split(":")[1]; runPotOcr([f], SLOTS.some(x => x[0] === k) ? k : "main"); return; }   // 素質の画面: 素質収集画面（その巡遊者の段だけ）
     runOcr(G.team[V.panel.split(":")[1]], f);
   });
   document.addEventListener("change", ev => {
@@ -1162,6 +1423,8 @@
       return;
     }
     if (t.id === "ocr-file") { runOcr(t.getAttribute("data-id"), t.files && t.files[0]); return; }
+    if (t.id === "rocr-file") { runRecOcr(t.files && t.files[0]); return; }
+    if (t.id === "pocr-file") { runPotOcr(t.files, t.getAttribute("data-slot")); t.value = ""; return; }
     if (t.getAttribute("data-act") === "wiz-lvsel") { V.wiz.lv = +t.value; return; }
     // 敵の種類を変えたら、その種類の最初の敵にする
     if (t.id === "enemy-cat") {
@@ -1196,6 +1459,7 @@
     else if (ty === "b01") v = t.checked ? 1 : 0;
     else if (ty === "s") v = t.value;
     else if (ty === "pct") v = t.value === "" ? null : +t.value / 100;   // 「12」→ 0.12
+    else if (ty === "x10") v = t.value === "" ? null : Math.round(+t.value * 10);   // 心相: 「4.5」凸 → 45段階
     else v = t.value === "" ? null : +t.value;
     setPath(p, v);
     // 徽章の枠: 区分を変えたら項目を空に、項目を選んだら値を有効なものに直す
@@ -1219,7 +1483,7 @@
   }
   // −／＋ のボタン: 押したら1つ動かし、押しっぱなしなら少し待ってから速く続けて動かす
   function stepOnce(a) {
-    const m = /^stp\|(-?1)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);
+    const m = /^stp\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(-?\d+)\|(.+)$/.exec(a);
     if (!m) return false;
     const v = getPath(m[5]), cur = v == null || v === "" ? +m[4] : +v, nv = Math.min(+m[3], Math.max(+m[2], cur + +m[1]));
     if (nv === cur) return false;
@@ -1276,6 +1540,7 @@
       renderAll(); window.scrollTo(0, 0); return;
     }
     if (a.indexOf("mchar:") === 0) { V.mChar = a.slice(6); renderAll(); return; }
+    if (a.indexOf("bsel:") === 0) { V.lastSlot = V.mChar = a.slice(5); V.panel = "base:" + V.lastSlot; renderAll(); return; }   // スマホの基本: 見出しで1人を選ぶ（開いている画面の巡遊者も切り替える。そうしないと描き直しで主力に戻る）
     if (a.indexOf("embclear:") === 0) { embClear(a); renderAll(); return; }
     if (a.indexOf("lrclear:") === 0) { const p = a.slice(8), [arr, i] = p.split("."); G[arr] = G[arr] || []; G[arr][+i] = ""; delete V.lrEl[p]; renderAll(); return; }
     let builds = {};
@@ -1372,9 +1637,49 @@
         ng("クリップボードに画像がありません。ゲームの画面をコピー（スクリーンショット）してから押してください。");
       }).catch(() => ng("クリップボードを読めませんでした（許可されていないかもしれません）。この画面で Ctrl+V をしてください。"));
     }
+    else if (a === "pocr-apply") applyPotOcr();
+    else if (a === "pocr-cancel") { V.pocr = null; renderAll(); }
+    else if (a.indexOf("pocr-clip:") === 0) {
+      const k = a.slice(10), ng = m => { V.pocr = Object.assign({}, V.pocr && V.pocr.slot === k ? V.pocr : { slot: k }, { msg: m, ng: true }); renderAll(); };
+      if (!navigator.clipboard || !navigator.clipboard.read) { ng("このブラウザでは、ボタンからクリップボードを読めません。この画面で Ctrl+V をしてください。"); return; }
+      navigator.clipboard.read().then(async items => {
+        for (const it of items) { const ty = it.types.find(x => /^image\//.test(x)); if (ty) { const b = await it.getType(ty); runPotOcr([new File([b], "clipboard", { type: ty })], k); return; } }
+        ng("クリップボードに画像がありません。ゲームの画面をコピー（スクリーンショット）してから押してください。");
+      }).catch(() => ng("クリップボードを読めませんでした（許可されていないかもしれません）。この画面で Ctrl+V をしてください。"));
+    }
+    else if (a === "rocr-apply") applyRecOcr();
+    else if (a === "rocr-cancel") { V.rocr = null; renderAll(); }
+    else if (a === "rocr-clip") {
+      const ng = m => { V.rocr = { msg: m, ng: true }; renderAll(); };
+      if (!navigator.clipboard || !navigator.clipboard.read) { ng("このブラウザでは、ボタンからクリップボードを読めません。この画面で Ctrl+V をしてください。"); return; }
+      navigator.clipboard.read().then(async items => {
+        for (const it of items) { const ty = it.types.find(x => /^image\//.test(x)); if (ty) { const b = await it.getType(ty); runRecOcr(new File([b], "clipboard", { type: ty })); return; } }
+        ng("クリップボードに画像がありません。ゲームの画面をコピー（スクリーンショット）してから押してください。");
+      }).catch(() => ng("クリップボードを読めませんでした（許可されていないかもしれません）。この画面で Ctrl+V をしてください。"));
+    }
     else if (a.indexOf("cc:") === 0) { V.cc = V.cc || {}; const k = a.slice(3); V.cc[k] = !V.cc[k]; renderAll(); }
     else if (a === "log-open") { renderLog(); $("logDlg").showModal(); }
     else if (a === "log-close") $("logDlg").close();
+    else if (a === "hint") {   // 「使い方」: 欄の説明をポップアップで出す（マウスを重ねる吹き出しは、カーソルと重なって読みにくかった・2026-11-22 ユーザー）
+      const box = t.closest(".box"), ttl = box && box.querySelector("b") ? box.querySelector("b").textContent : "使い方";
+      const items = t.querySelector(".hint-pop").innerHTML.split("<br>").filter(x => x.trim());
+      $("hintBody").innerHTML = `<h2 id="hintDlgT">${esc(ttl)}</h2><ul class="hint-ul">${items.map(x => `<li>${x}</li>`).join("")}</ul><div class="foot"><button class="btn-add pri" data-act="hint-close">閉じる</button></div>`;
+      $("hintDlg").showModal();
+    }
+    else if (a === "hint-close") $("hintDlg").close();
+    else if (a.indexOf("lrpick:") === 0) openLrDlg(a.slice(7));
+    else if (a === "lrp-close") { $("lrDlg").close(); V.lrp = null; }
+    else if (a === "lrp-fold") { V.lrpFold = !V.lrpFold; try { localStorage.setItem("stellasora-sim-lrpfold", V.lrpFold ? "1" : "0"); } catch (e) { /* 無視 */ } renderLrDlg(); }
+    else if (a.indexOf("lrpf:") === 0) {   // しぼり込みのボタン: 押すたびに付け外し。「すべて」は外す
+      const i1 = a.indexOf(":", 5), key = a.slice(5, i1), v = a.slice(i1 + 1), arr = V.lrp[key];
+      if (!v) V.lrp[key] = []; else { const j = arr.indexOf(v); if (j >= 0) arr.splice(j, 1); else arr.push(v); }
+      renderLrDlg();
+    }
+    else if (a.indexOf("lrpset:") === 0) {
+      const [arr, idx] = V.lrp.path.split("."); G[arr] = G[arr] || []; G[arr][+idx] = a.slice(7); delete V.lrEl[V.lrp.path];
+      $("lrDlg").close(); V.lrp = null; save(); renderAll();
+    }
+    else if (a.indexOf("potdesc:") === 0) { const k = a.slice(8); potDesc[k] = !potDesc[k]; try { localStorage.setItem("stellasora-sim-potdesc-" + k, potDesc[k] ? "1" : "0"); } catch (e) { /* 無視 */ } renderAll(); }
     else if (a.indexOf("upf:") === 0) {   // 種類のフィルタ（複数選べる。「すべて」で解除）
       const k = a.slice(4); let f = (V.upF || []).slice();
       if (!k) f = []; else f = f.indexOf(k) >= 0 ? f.filter(x => x !== k) : f.concat(k);

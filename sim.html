@@ -32,8 +32,11 @@
   .panel > h2 .en { font-family: var(--font-en); font-weight: 400; font-size: 13px; letter-spacing: .14em; color: var(--link); }
   /* 手順のタブと共通の倍率（スクロールしても見出しの下に残す） */
   .navp { position: relative; z-index: 25; padding: 10px 14px; }   /* 手順のタブと共通の倍率は、ページと一緒にスクロールする（ユーザーの指定 2026-11-11） */
-  .navp .tabs { margin: 0 0 8px; }
+  .navp .tabs { margin: 0; }
   .mline { display: flex; gap: 10px; align-items: center; }
+  /* 共通の倍率は、結果の欄の上（2026-11-22 ユーザー）。幅が狭いので 3つずつ2段 */
+  .res-mline { flex-direction: column; align-items: stretch; gap: 6px; margin: 0 0 10px; }
+  .res-mline .ml-items { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ml-h { flex: none; display: flex; align-items: center; gap: 8px; }
   .ml-who button { min-height: 26px; padding: 0 9px; }
   .ml-items { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
@@ -136,6 +139,13 @@
   .card-t td:first-child { color: var(--muted); font-weight: 700; }
   .wide { border: 2px solid var(--border); border-radius: 14px; padding: 12px; }
   .wide h3 { margin: 0 0 8px; font-size: 16px; color: var(--indigo); }
+  .add-g { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 24px; margin-top: 8px; }
+  .add-t { font-size: 12px; font-weight: 700; color: var(--muted); margin: 0 0 4px; padding-bottom: 3px; border-bottom: 1px dashed var(--border); }
+  .add-r { display: grid; grid-template-columns: 140px 96px 20px; justify-content: start; align-items: center; gap: 6px; margin: 4px 0; font-size: 13px; font-weight: 700; color: var(--indigo); }
+  .add-r span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .add-r input { width: 100%; min-height: 32px; padding: 0 8px; border-radius: 8px; text-align: right; }
+  .add-r i { font-style: normal; font-size: 12px; color: var(--muted); }
+  @media (max-width: 1280px) { .add-g { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .grid-in { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 14px; }
   .pot { border: 2px solid var(--border); border-radius: 12px; padding: 8px 10px; font-size: 12px; background: var(--surface); }
   .pot.core { border-color: var(--pink-line); }
@@ -150,6 +160,11 @@
   .hint-tip::before { content: "？"; margin-right: 2px; opacity: .7; }
   .hint-pop { display: none; position: absolute; left: 0; top: calc(100% + 6px); z-index: 50; width: 360px; padding: 8px 10px; font-size: 12px; font-weight: 400; line-height: 1.6; color: #fff; background: #333a4d; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
   .hint-tip:hover .hint-pop, .hint-tip:focus .hint-pop { display: block; }
+  button.hint-tip { font-family: inherit; line-height: 1.6; }
+  button.hint-tip .hint-pop, button.hint-tip:hover .hint-pop, button.hint-tip:focus .hint-pop { display: none; }   /* 「使い方」はポップアップ（hintDlg）で出す */
+  .hint-dlg { width: min(560px, calc(100vw - 24px)); }
+  .hint-ul { margin: 10px 0 0; padding-left: 1.2em; line-height: 1.8; font-size: 14px; }
+  .hint-ul li { margin: 0 0 4px; }
   .beta { position: relative; }
   .beta .hint-pop { width: 400px; }
   .beta:hover .hint-pop, .beta:focus .hint-pop { display: block; }
@@ -227,17 +242,21 @@
   .slotbtn { min-height: 34px; padding: 0 12px; border-radius: 10px; border: 2px solid var(--pink-line); background: var(--pink-soft); font-weight: 700; color: var(--text); cursor: pointer; text-align: left; }
   .slotbtn.on, .slotbtn:hover { background: #f8d3db; }
   .picker { border: 2px dashed var(--border-strong); border-radius: 12px; padding: 8px; margin: 6px 0 10px; background: var(--surface-soft); }
-  .emb-line { display: grid; grid-template-columns: 80px 150px 230px 130px 200px; gap: 6px; align-items: center; margin: 5px 0; }
+  .emb-line { display: grid; grid-template-columns: 150px 230px 130px 200px; gap: 6px; align-items: center; margin: 5px 0; }
   .emb-line select { width: 100%; min-height: 34px; padding: 0 8px; border-radius: 8px; font-size: 13px; }
   .emb-line .obtn { width: 100% !important; }
   /* 素質の画面: コア素質・通常素質のカード */
   .pz { display: block; }
   .pz-main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
   .pz-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .pz-h { margin: 0 0 10px; font-size: 17px; font-weight: 900; color: var(--indigo); }
+  .pz-h { margin: 0 0 10px; font-size: 17px; font-weight: 900; color: var(--indigo); display: flex; align-items: center; gap: 8px; }
+  /* 説明の表示スイッチ（コア素質の見出しの右端） */
+  .pz-dsw { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 13px; font-weight: 700; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 2px 0; }
+  /* 説明を隠したとき: 説明（計算の中身も）を隠す。同じ段のカードは、グリッドで高さがそろう。コア素質・通常素質で別々に切り替える */
+  .pz.nodesc-core .pz-core .pz-desc, .pz.nodesc-norm .pz-norm .pz-desc { display: none; }
   .pz-cnt { font-size: 13px; font-weight: 900; padding: 0 10px; border-radius: 999px; margin-left: 6px; background: #EEF0F8; color: #4B5082; }
   .pz-cnt.full { background: #4B5082; color: #fff; }
-  .pz-cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .pz-cgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }   /* コア素質は2列（特化構築1が上の段、2が下の段） */
   .pz-ngrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }   /* コア素質と同じ幅 */
   .pz-sub { grid-column: 1 / -1; font-size: 13px; font-weight: 900; color: var(--muted); margin-top: 4px; }
   .pz-row { display: flex; align-items: center; gap: 10px; width: 100%; }
@@ -266,6 +285,8 @@
   .pz-ctl { display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; font-size: 12px; }
   .pz-c { display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; flex: none; }
   .pz-norm .pz-row { gap: 6px; }
+  .pz-norm > .pz-row:first-child, .pz-core .pz-ctog > .pz-row { min-height: 28px; }
+  .pz-row .pz-c { margin: 0; }   /* 「反映」のチェック: ふつうのラベルの上下の余白を外す（これで名前の行が10高くなっていた） */   /* 名前の行の高さをそろえる（反映のチェック・「火力に影響なし」の札・何もない、で高さが変わり、Lvのボタンの位置がずれていた） */
   .pz-norm .pz-row > .tag-ng { flex: none; white-space: nowrap; margin-left: 0; }
   .pz-ctl input[type=number] { min-height: 28px; padding: 0 6px; border-radius: 6px; }
   @media (max-width: 900px) { .pz-ngrid, .pz-cgrid { grid-template-columns: minmax(0, 1fr); } }
@@ -389,6 +410,48 @@
   .subnav { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .subnav .tabs { border: 0; padding: 0; }
   .subnav .tab { min-height: 36px; }
+  /* 巡遊者ごとの画面: 上に画面のタブ（基本・心相・徽章・素質・その他）、中身の枠の一番上に3人の見出し（2つで切り替える）
+     ほかの画面（読込・ロスレコ）と作りをそろえる: タブは上の手順タブと同じ「背景なし・選んだものを紺で塗る」、中身は区切り（.sec）と同じ白い枠（2026-11-22 ユーザー） */
+  .xn-body { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }   /* 画面のタブは、PCでも中身の枠の上に横1列（スマホと同じ・2026-11-22 ユーザー） */
+  /* 中身の枠の一番上の、3人の見出しの行。基本の3列と同じ幅で並べる */
+  .xn-head { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+  /* 3人の見出し: 「主力」の札・属性の色の点・名前。心相などでは押して切り替え、選んでいる人を紺で塗る（前の上のタブの見た目・2026-11-22 ユーザー）。基本では塗らない */
+  .xh { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 40px; margin: 0; padding: 6px 12px; font: inherit; color: var(--indigo); text-align: left;
+    background: none; border: 0; border-radius: 10px; }
+  .xh b { font-size: 15px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .xh-tag { flex: none; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface-soft); color: var(--muted); white-space: nowrap; }
+  .xh-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--elc); }
+  button.xh { cursor: pointer; }
+  .xh-b { cursor: default; pointer-events: none; }   /* 基本の見出し: PCでは押せない（スマホでは1人を選ぶボタン） */
+  button.xh:hover { background: var(--surface-soft); }
+  .xh.on, button.xh.on:hover { background: var(--indigo-fill); color: #fff; }
+  .xh.on .xh-tag { background: rgba(255,255,255,.22); color: #fff; }
+  .xh.on .xh-dot { box-shadow: 0 0 0 2px #fff; }
+  .xn-side { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .xs { flex: 1 1 0; display: flex; justify-content: center; align-items: center; min-height: 40px; padding: 6px 14px; font: inherit; font-weight: 700; color: var(--indigo); cursor: pointer; border: 0; border-radius: 10px; background: transparent; white-space: nowrap; }
+  .xs b { font-size: 15px; }
+  .xs:hover { background: var(--surface-soft); }
+  .xs.on { background: var(--indigo-fill); color: #fff; }
+
+  .xn-main { flex: 1; min-width: 0; border: 2px solid var(--border); border-radius: 14px; background: var(--surface); padding: 12px 14px; }
+  /* 基本: 3人を横に並べる。列の見出しは巡遊者の画面の見出しと同じ（属性の色の線） */
+  .base3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+  .b3-col { min-width: 0; }
+  .b3-col .fld { grid-template-columns: 96px minmax(0, 1fr); }
+  .b3-col .stp-lab { width: 96px; }
+  .b3-col .stp-list { margin: 10px 0; }
+  .b3-col .box { margin: 0; }
+  .b3-col .stt td, .b3-col .stt th { padding-top: 2px; padding-bottom: 2px; }
+  .b3-col .ch-clr { margin: 0 0 8px; min-height: 28px; }   /* クリアは入力とステータスの表の間。3列で高さがそろうように、高さを決めておく */
+  .b3-col .clr-link { border: 0; background: none; color: var(--danger); text-decoration: underline; text-underline-offset: 3px; padding: 2px 0; font-size: 12px; }
+  .base-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+  .base-foot .ch-clr { margin: 0; }
+  /* 枠の中の見た目をそろえる: 入力の箱（徽章・心相の効果・その他など）は白、スクリーンショットの読み込みだけ色を付けて目立たせる（2026-11-22 ユーザー） */
+  .xn-main .box, .xn-main .emb-card, .xn-main .pot { background: var(--surface); }
+  .wide > .ocr-box:first-child { background: var(--surface-on); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); margin: 0 0 12px; }   /* ロスレコの画面: 読み込みを一番上に（巡遊者の画面と同じ色） */
+  .xn-main .ocr-box { background: var(--surface-on); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); margin: 0 0 14px; }
+  .xn-main > .wide > .box:first-child, .xn-main .pz-main > .box:first-child { margin-top: 0; }
+  @media (max-width: 860px) { .base3 { grid-template-columns: 1fr; } }
   .beta { display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: var(--pink-soft); border: 2px solid var(--pink-line); color: var(--text); font-size: 12px; font-weight: 900; cursor: help; }
   .dlg textarea { width: 100%; min-height: 140px; border: 2px solid var(--border); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; resize: vertical; }
   .dlg .row select, .dlg .row input[type=text].wide { width: 100%; min-height: 40px; border: 2px solid var(--border); border-radius: 10px; padding: 0 10px; }
@@ -467,9 +530,54 @@
   .pot .tag-ok, .pot .tag-ng { margin-left: 0; }
   .pgrid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
   /* ロスレコの枠（徽章と同じ形） */
-  .lr-line { display: grid; grid-template-columns: 52px 64px 60px minmax(160px, 1fr) 84px; gap: 6px; align-items: center; margin: 5px 0; }
+  .lr-line { display: grid; grid-template-columns: 52px minmax(160px, 1fr) 84px; gap: 6px; align-items: center; margin: 5px 0; }
   .lr-line select { width: 100%; min-height: 34px; padding: 0 6px; border-radius: 8px; font-size: 13px; }
   .lr-line .lab { font-size: 12px; font-weight: 700; color: var(--muted); }
+  /* ロスレコの枠: 押すと選ぶ画面が開くボタン（名前・属性の点・★） */
+  .lr-pick { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 34px; padding: 0 10px; font: inherit; font-size: 13px; color: var(--text); text-align: left; cursor: pointer;
+    border: 2px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .lr-pick:hover { border-color: var(--border-strong); }
+  .lr-pick b { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lr-pick small { flex: none; color: var(--muted); font-weight: 700; }
+  .lr-pick.empty b { color: var(--muted); font-weight: 700; }
+  .lr-pick-arr { margin-left: auto; font-size: 10px; color: var(--muted); }
+  .lr-el { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--elc); }
+  /* ロスレコを選ぶ画面 */
+  /* 高さは固定（件数で高さが変わると、画面が上下に動いて、しぼり込みのボタンが押しにくい・2026-11-22 ユーザー）。カードの一覧の中だけスクロール */
+  .lr-dlg { width: min(1180px, calc(100vw - 24px)); height: min(900px, calc(100vh - 40px)); overflow: hidden; }
+  .lr-dlg #lrBody { display: flex; flex-direction: column; height: 100%; }
+  .lr-dlg .lrp-grid { flex: 1 1 auto; min-height: 0; max-height: none; align-content: start; }
+  .lr-dlg .foot { flex: none; }
+  /* ポップアップを開いている間は、後ろのページをスクロールさせない（一覧の端まで来ると後ろが動いていた・2026-11-22 ユーザー） */
+  html:has(dialog[open]) { overflow: hidden; }
+  .dlg, .lrp-grid, .lr-dlg #lrBody { overscroll-behavior: contain; }
+  .lrp-f { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 6px 0; position: relative; padding-left: 48px; }
+  /* ラベル（★・属性…）は左の決まった場所に置き、ボタンが2行目に回っても、ラベルの下には来ないようにする（2026-11-22 ユーザー） */
+  .lrp-f > .lrp-l { position: absolute; left: 0; top: 0; height: 30px; display: flex; align-items: center; }
+  .lrp-f:has(input) > .lrp-l { height: 34px; }
+  .lr-dlg h2 { flex: none; }
+  .lrp-fs { flex: none; }
+  .lrp-fold { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; font: inherit; font-size: 13px; font-weight: 700; color: var(--indigo);
+    background: var(--surface-soft); border: 2px solid var(--border); border-radius: 999px; cursor: pointer; }
+  .lrp-fold.on { border-color: var(--indigo-fill); }
+  .lrp-fold b { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--indigo-fill); color: #fff; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+  .lrp-fold span { font-size: 10px; color: var(--muted); }
+  .lrp-l { width: 40px; flex: none; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .lrp-chip { min-height: 30px; padding: 0 12px; font: inherit; font-size: 13px; font-weight: 700; color: var(--indigo); background: var(--surface-soft); border: 0; border-radius: 999px; cursor: pointer; }
+  .lrp-chip.on { background: var(--indigo-fill); color: #fff; }
+  .lrp-f input[type=search] { flex: 1; min-width: 200px; min-height: 34px; border: 2px solid var(--border); border-radius: 8px; padding: 0 10px; font: inherit; }
+  .lrp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; max-height: 58vh; overflow-y: auto; padding: 2px; margin-top: 4px; }
+  .lrp-card { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+    background: var(--surface); border: 2px solid var(--border); border-left: 5px solid var(--elc); border-radius: 12px; }
+  .lrp-card:hover { border-color: var(--border-strong); border-left-color: var(--elc); }
+  .lrp-card.cur { background: var(--surface-on); }
+  .lrp-h { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .lrp-h b { font-size: 15px; } .lrp-h small { color: var(--muted); font-weight: 700; }
+  .lrp-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .lrp-src { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--tag-bg); color: var(--tag-text); }
+  .lrp-tags span { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface-soft); color: var(--muted); }
+  .lrp-core { font-size: 12px; line-height: 1.6; }
+  .lrp-st { font-size: 11px; color: var(--muted); }
   /* ビルド検証の表: 項目・上下・与ダメ寄与率 */
   .decG { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 10px; }   /* 狭いときは2列・1列に折り返す */
   .decT td { white-space: normal; }
@@ -555,19 +663,43 @@
     .mchar { gap: 6px; margin-bottom: 8px; }
     .mchar .tab { flex: 1; }
     .pgrid { grid-template-columns: minmax(0, 1fr) !important; }
+    /* 巡遊者ごとの画面（スマホ）: 左のタブを中身の上に横1列で並べ、見出しは1人ずつの切り替えにする。基本も1人ずつ */
+    .xs { flex: 1 0 auto; padding: 8px 10px; }
+    .xs b { font-size: 14px; }
+    .xn-main { min-height: 0; padding: 10px; border-radius: 12px; }
+    .xn-head { gap: 4px; margin: 0 0 10px; padding-bottom: 8px; }
+    .xh { flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 8px; min-height: 0; }
+    .xh b { font-size: 13px; max-width: 100%; }
+    .xh-dot { display: none; }
+    .xh-b { pointer-events: auto; cursor: pointer; }
+    .xh-b.m-on { background: var(--indigo-fill); color: #fff; }
+    .xh-b.m-on .xh-tag { background: rgba(255,255,255,.22); color: #fff; }
+    .base3 > .m-hide { display: none; }
+    .b3-col .fld { grid-template-columns: 88px minmax(0, 1fr); }
+    .b3-col .stp-lab, .stp-lab { width: 88px; }
+    .stp-row { flex-wrap: wrap; }
+    .base-foot { flex-wrap: wrap; }
+    .pz-cgrid { grid-template-columns: minmax(0, 1fr); }
+    .add-g { grid-template-columns: minmax(0, 1fr); }
+    .add-r { grid-template-columns: minmax(0, 1fr) 96px 20px; }
+    .adj-t input { width: 72px !important; } .adj-t td .muted { display: block; }   /* 補正の耐性の表: スマホの幅に収める */
     .pot .pd { -webkit-line-clamp: 2; }
     /* 徽章の枠: 1段目に クリア・区分・項目、2段目に 値・対象の素質 */
-    .emb-line { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr); margin: 6px 0 10px; }
-    .emb-line > .obtn { white-space: nowrap; padding: 0 4px; }
-    .emb-line > :nth-child(4) { grid-column: 1 / span 2; }
-    .emb-line > :nth-child(5) { grid-column: 3; }
+    .emb-line { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin: 6px 0 10px; }
     .lr-cols { grid-template-columns: minmax(0, 1fr); }
     .secg, .lr-g { grid-template-columns: minmax(0, 1fr); }
     .cnt-grid .fld { grid-template-columns: 150px minmax(0, 1fr); }
     /* ロスレコの枠: 1段目に 枠名・クリア・属性・突破、2段目に名前（横いっぱい） */
-    .lr-line { grid-template-columns: 52px 64px minmax(0, 1fr) 96px; grid-template-areas: "lab clr el rk" "nm nm nm nm"; row-gap: 4px; margin: 6px 0 10px; }
-    .lr-line > :nth-child(1) { grid-area: lab; } .lr-line > :nth-child(2) { grid-area: clr; } .lr-line > :nth-child(3) { grid-area: el; }
-    .lr-line > :nth-child(4) { grid-area: nm; } .lr-line > :nth-child(5) { grid-area: rk; }
+    .lr-line { grid-template-columns: 44px minmax(0, 1fr) 84px; margin: 6px 0; }
+    .lrp-grid { grid-template-columns: minmax(0, 1fr); }
+    /* スマホ: しぼり込みは1行ずつ横にスクロール、画面全体を縦にスクロール（一覧の欄が潰れないように） */
+    .lr-dlg { padding: 12px; }
+    .lr-dlg #lrBody { overflow-y: auto; }
+    .lr-dlg .lrp-grid { flex: none; overflow: visible; }
+    .lrp-f { flex: none; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .lrp-f { padding-left: 0; } .lrp-f > .lrp-l { position: static; height: auto; }   /* スマホは1行で横にスクロールするので、ラベルはふつうに並べる */   /* flex: none がないと、縦に並べた中で高さが潰れる */
+    .lrp-chip { flex: none; }
+    .lrp-f .muted { display: none; }
     /* カードの余白を少し詰める */
     .secg { gap: 8px; } .sec-col { gap: 8px; }
     .sec { padding: 10px; }
@@ -685,14 +817,16 @@
 <dialog id="pickDlg" class="dlg pick-dlg" aria-labelledby="pickDlgT"><div id="pickBody"></div></dialog>
 <dialog id="reportDlg" class="dlg" aria-labelledby="reportDlgT"><div id="reportBody"></div></dialog>
 <dialog id="logDlg" class="dlg" aria-labelledby="logDlgT"><div id="logBody"></div></dialog>
+<dialog id="hintDlg" class="dlg hint-dlg" aria-labelledby="hintDlgT"><div id="hintBody"></div></dialog>
+<dialog id="lrDlg" class="dlg lr-dlg" aria-labelledby="lrDlgT"><div id="lrBody"></div></dialog>
 <div class="app">
   <div id="left">
     <!-- 手順のタブと共通の倍率は、スクロールしても上に残す -->
-    <div class="panel navp" id="navp"><div class="tabs" id="selectors" role="tablist"></div><div class="mline" id="mline"></div></div>
+    <div class="panel navp" id="navp"><div class="tabs" id="selectors" role="tablist"></div></div>
     <div class="panel"><div id="display"></div></div>
   </div>
   <div id="right">
-    <div class="panel"><h2 class="res-h"><span class="en">RESULT</span>結果<span style="flex:1"></span><span id="cmpbar" class="cmpbar"></span><span id="unitbar" class="unitbar" role="group" aria-label="ダメージの表記"></span></h2><div id="result"></div></div>
+    <div class="panel"><h2 class="res-h"><span class="en">RESULT</span>結果<span style="flex:1"></span><span id="cmpbar" class="cmpbar"></span><span id="unitbar" class="unitbar" role="group" aria-label="ダメージの表記"></span></h2><div class="mline res-mline" id="mline"></div><div id="result"></div></div>
   </div>
 </div>
 <footer class="site-footer about"><div class="wrap">
