@@ -441,6 +441,16 @@
     { id: "love", skill: "main", idx: 1, n: 2, k: "W", to: "self", mul: 3, nodict: true, txt: v => `愛のしるし3つ：自身の水属性ダメージ +${Math.round(v * 3 * 10) / 10}%（1つ +${v}%。母の愛で増える4・5つ目は素質の側で足す）` },
     { id: "ult", skill: "ult", idx: 3, n: 1, k: "atkPct", to: "self", nodict: true, txt: v => `一掃のおしおきモード：自身の攻撃力 +${v}%（15秒）` },
   ];
+  // スグハの主力スキル: アースウェーブ・観測点の弾丸が地属性の印を発動でき、印ダメージは攻撃力の 61%（スキルLvで変わらない。Lv6 の画面と Lv10 のプレビュー・2026-11-16）。
+  //   敵に地属性の印が付いているときだけ出るので既定はオフ。回数は主力スキル1回につき1回（仮・未確認）
+  //   トータルステーションのときは、グランドアンカー1回につき1回も足す（2026-11-18 ユーザーの戦闘: 印ダメージはアンカーのあと、間隔は約90フレーム・60フレームで3回続くことも）。
+  //   アンカーで発動したときの倍率も 61% とみた（仮・未確認）。約90フレームの間隔は、印の付与が間に合っていないだけかもしれないので、アンカーの回数は上限
+  S.SKILL_FX.suguha = [
+    { id: "mark", skill: "main", idx: 1, n: 0, k: "hit", off: true, nodict: true,
+      hits: [{ group: "main", fixed: 61, c: 1, t: "mark", name: "印ダメージ（地属性の印・主力スキル）" },
+        { group: "basic", fixed: 61, c: 1, t: "mark", name: "印ダメージ（地属性の印・グランドアンカー）", perTag: "gAnchor" }],
+      txt: () => "敵に地属性の印が付いているとき、地属性の印を発動：攻撃力の 61% の印ダメージ（スキルLvで変わらない）。主力スキル1回につき1回、トータルステーションのときはグランドアンカー1回につき1回も足す（回数・アンカーのときの倍率は仮。敵に印を付けるのが間に合わないと、実際はこれより少ない）" },
+  ];
   // クルニス（華服）の支援スキル: ローゼンアンプル6つのうち、同じ敵に当たる数（既定1。2〜3個当たることが多い・ユーザーの観察 2026-11-18）。
   //   ローゼンアンプルのヒットと、ローゼンアンプルのタグの追加ヒット（追加処方の消滅のダメージ）をこの数倍にする。k: "cnt" は入力の数（G.skN）
   S.SKILL_FX.springseek_coronis = [
@@ -463,6 +473,11 @@
         const key = id + ":" + fx.id;
         const on = (G.skOn || {})[key] == null ? !fx.off : G.skOn[key];
         if (!on) return;
+        if (fx.k === "hit") {   // 追加のヒット（Lv で変わらない固定の倍率）
+          const a = out[id];
+          if (a) fx.hits.forEach((h, hi) => a.xhits.push({ group: h.group, name: h.name, m: h.fixed, c: h.c, t: h.t, tags: [], perGlow: false, perTag: h.perTag || null, tagDiv: 0, tagAdd: 0, tagMul: 0, tagBonus: null, lvOf: null, owner: id, key: "sk:" + key + "#" + hi }));
+          return;
+        }
         if (fx.k === "cnt") {   // 当たる数（入力）で、そのヒットとタグの追加ヒットを何倍かに
           const a = out[id], n = S.skillCnt(G, id, fx);
           if (a && n !== 1) { a.countMul[fx.hit] = (a.countMul[fx.hit] || 1) * n; a.xhits.forEach(x => { if (x.owner === id && (x.tags || []).indexOf(fx.tag) >= 0 && !x.perTag) x.c *= n; }); }

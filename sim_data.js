@@ -167,7 +167,7 @@ window.SIM = window.SIM || {};
   patchCh("gerie", c => {
     c.talentBonus = { skill: 0.021 };   // 心相ステータスボーナス: スキルダメージ +21%（心相50）
     // 支援スキルで地の印を発動: 攻撃力の125%（スキルLvで変わらない）。スキル1撃目 → 印 → スキル2撃目の順（実測）
-    c.hits.support.push({ s: -1, fixed: 125, c: 1, t: "mark", name: "印ダメージ（岩錐）", tags: [] });
+    c.hits.support.push({ s: -1, fixed: 125, c: 1, t: "mark", name: "印ダメージ（岩錐）", id: "gMark", tags: [] });   // 魂の解放（Sin-Bound Echo）で +6回（data/spec_user.js）
     // 支援スキルの2ヒットは「震動波」（鳴動する重罪の +32% の対象）
     c.hits.support.forEach(h => { if (h.t === "skill") h.tags = (h.tags || []).concat("wave"); });
     // 主力スキルの3つ目（毎秒のヒット）は「鉄の牢獄」（肉を喰む鎖・緋色の私刑の対象）
