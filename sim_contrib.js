@@ -44,13 +44,16 @@
   ];
   const catOfKey = key => { const c = EMB_CATS.find(x => x[1].indexOf(key) >= 0); return c ? c[0] : ""; };
   // 素質のレベル上昇の対象の候補（英語名の一覧）
+  // 2026-11-22 ゲームの徽章一覧で、レイセンの「収穫を守る決意」「気合い農法」（主力の汎用の素質）が「主力素質」と出ていた。
+  //   なので、主力素質 = 主力の一覧にだけある素質（汎用も含む）、支援素質 = 支援の一覧にだけある素質、汎用素質 = 主力と支援の両方の一覧にある素質
+  //   （前は 主力素質・支援素質 = 特化構築の素質だけ、汎用素質 = 編成の位置の汎用の素質 にしていて、主力の汎用の素質が候補に出なかった）
   function potTargets(G, id, key) {
     const t = TK(chOf(id).en);
     if (!t || !t.potentials) return [];
-    // 汎用素質は、主力と支援で一覧が違う（シアの「月の海の兎たち」は支援だけ）ので、編成の位置で決める
-    const role = key === "potSupport" ? "support" : key === "potCommon" ? (G.team.main === id ? "main" : "support") : "main";
-    const groups = (t.potentials[role] || []).filter(g => key === "potCommon" ? /Generic/i.test(g.title) : !/Generic/i.test(g.title));
-    return groups.reduce((a, g) => a.concat(g.potentials.map(x => ({ en: x.name, core: x.type === 1 }))), []).filter(x => !x.core);
+    const subs = role => (t.potentials[role] || []).reduce((a, g) => a.concat(g.potentials.filter(x => x.type !== 1).map(x => x.name)), []);
+    const m = subs("main"), s = subs("support");
+    const list = key === "potMain" ? m.filter(n => s.indexOf(n) < 0) : key === "potSupport" ? s.filter(n => m.indexOf(n) < 0) : m.filter(n => s.indexOf(n) >= 0);
+    return list.filter((n, i) => list.indexOf(n) === i).map(en => ({ en, core: false }));
   }
   const optOf = key => EMBLEM_OPTIONS.find(o => o.key === key);
   const LV_Q = [["gold", "金"], ["rainbow2", "虹"], ["rainbow3", "虹"]];   // スキル・素質レベル上昇は 金 +1／虹 +2・+3
