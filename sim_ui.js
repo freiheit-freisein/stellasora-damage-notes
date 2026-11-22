@@ -680,7 +680,7 @@
     const manOpen = V.manOpen != null ? V.manOpen : manHas;
     // 音符: ゲームと同じく、色と名前 → 数 → 効果 を縦に並べ、1行にする
     const NC = { 強撃: "#E5533D", 幸運: "#F08A24", 爆発: "#8B5CF6", 体力: "#3FB65F", 集中: "#1FB5A8", 器用: "#3B6FE0", 必殺: "#E84D8A", 水: "#2BA6DE", 風: "#55C27A", 光: "#E8B10F", 火: "#E5533D", 地: "#A0703C", 闇: "#6B4FA0" };
-    const STN = { atkPct: "攻撃力", critRate: "会心率", critDmg: "会心ダメージ", hpPct: "最大HP", basicDmg: "通常攻撃ダメージ", skillDmg: "スキルダメージ", ultDmg: "必殺技ダメージ" };
+    const STN = { atkPct: "攻撃力", critRate: "会心率", critDmg: "会心ダメ", hpPct: "最大HP", basicDmg: "通常攻撃ダメ", skillDmg: "スキルダメ", ultDmg: "必殺技ダメ" };   // 「ダメージ」は「ダメ」に（欄の幅を詰めて、ステータスの音符7つを1段に入れる）
     S.notesToTotal(G);   // 前の形（獲得した分）のビルドは、ここで合計の形にする
     const tot = S.notesTotal(G);
     const r1 = x => (Math.round(x * 1000) / 10).toFixed(1);
@@ -689,7 +689,7 @@
     // 1枚: 名前 → 合計（ゲームのロスレコスキル画面の数をそのまま入れる）→ 効果。サブのロスレコの初期の音符は、マウスを重ねると出る
     const noteCell = n => {
       const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, from = subFrom(n);
-      const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメージ") : "";
+      const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメ") : "";
       const tip = from.length ? "サブのロスレコの初期: " + from.join("・") + "（合計に入っている数）" : "サブのロスレコの初期: なし";
       return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>
         <div class="note-tot"><input type="number" data-p="notes.${n}" data-t="n" min="0" max="99" step="1" value="${t}" title="${esc(tip)}" aria-label="${esc(s)}の音符の数"></div>
