@@ -394,7 +394,8 @@
     G.lrMain = G.lrMain || [];
     res.lrs.slice(0, 3).forEach((x, i) => { if (x.id) { G.lrMain[i] = x.id; delete V.lrEl["lrMain." + i]; } });
     S.notesToTotal(G);
-    G.notes = G.notes || {};
+    // 画面に出ていない音符（属性の音符は、出ていないものがある）は 0 にする。前のビルドの数が残らないように（2026-11-22 水3・風7 が残って記録Lvが1つ上がった）
+    if (res.notes.some(x => x.note)) G.notes = {};
     res.notes.forEach(x => { if (x.note) G.notes[x.note] = Math.max(0, x.n); });
     V.rocr = { msg: "入れました。違うところがあれば、下の枠で直してください。" };
     save(); renderAll();
