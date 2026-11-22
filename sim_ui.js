@@ -692,7 +692,7 @@
       const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメ") : "";
       const tip = from.length ? "サブのロスレコの初期: " + from.join("・") + "（合計に入っている数）" : "サブのロスレコの初期: なし";
       return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>
-        <div class="note-tot"><input type="number" data-p="notes.${n}" data-t="n" min="0" max="99" step="1" value="${t}" title="${esc(tip)}" aria-label="${esc(s)}の音符の数"></div>
+        <div class="note-tot" title="${esc(tip)}">${stepper(`notes.${n}`, 0, 99, 0, "sm")}</div>
         <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div></div>`;
     };
     // 1段目: ステータスの音符、2段目: 属性の音符（6属性）
