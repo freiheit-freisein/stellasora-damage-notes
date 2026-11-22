@@ -361,20 +361,22 @@
       .catch(e => { V.ocr = { id, msg: e.message || "読み取れませんでした", ng: true }; renderAll(); });
   }
   // ---- ロスレコスキル画面のスクリーンショットから、メインのロスレコと音符を読み込む（sim_ocr.js の S.ocrRecord）----
-  // 画面の音符は、獲得した分だけ（サブのロスレコの初期の音符は入っていない）。2026-11-22 ユーザーのスクショで確認: 画面の体力10・幸運2 に対し、
-  //   サブ（レモネードと紅茶）の初期だけで体力11・幸運3。なので、読んだ数をそのまま「獲得」に入れる（初期の分は計算のときに S.notesTotal で足す）
+  // 画面の音符は合計（サブのロスレコの初期の音符も入った数）なので、入れるときは、いま選んでいるサブの初期の分を引いて「獲得」に入れる
+  const subIni = () => { const t = {}; (G.lrSub || []).filter(Boolean).forEach(id => { const r = LOSTRECORDS.find(x => x.id === id); ((r && r.sub && r.sub.startNotes) || []).forEach(n => { t[n.note] = (t[n.note] || 0) + n.lv; }); }); return t; };
   function recOcrBox() {
     const st = V.rocr || {};
     let res = "";
     if (st.res) {
-      const { notes, lrs, warn } = st.res;
+      const { notes, lrs, warn } = st.res, ini = subIni();
       const lrTxt = lrs.map((x, i) => { const r = x.id && LOSTRECORDS.find(y => y.id === x.id);
         return `<div>メイン${i + 1}：${r ? esc(r.name) : `<span class="tag-ng">読めませんでした</span>（${esc(x.read || "文字なし")}。この枠は入れません。下の枠で選んでください）`}${x.other ? ' <span class="tag-ng">要確認</span>' : ""}</div>`; }).join("");
-      const ntTxt = notes.map(x => { const nm = x.note ? x.note.replace("の音符", "") : "？";
-        return `<span style="margin-right:10px">${esc(nm)} ${x.n}${x.elem ? ' <span class="tag-ng">色で判定</span>' : ""}</span>`; }).join("");
+      const ntTxt = notes.map(x => { const nm = x.note ? x.note.replace("の音符", "") : "？", own = x.note ? Math.max(0, x.n - (ini[x.note] || 0)) : null;
+        return `<span style="margin-right:10px">${esc(nm)} ${x.n}${x.note && ini[x.note] ? `（獲得 ${own}）` : ""}${x.elem ? ' <span class="tag-ng">色で判定</span>' : ""}</span>`; }).join("");
+      const short = notes.filter(x => x.note && (ini[x.note] || 0) > x.n);
       res = `<div class="ocr-res" style="grid-template-columns:1fr"><div>${lrTxt}</div><div>音符：${ntTxt}</div></div>
         ${warn.map(t => `<p class="msg ng">${esc(t)}</p>`).join("")}
 
+        ${short.length ? `<p class="msg ng">${short.map(x => esc(x.note.replace("の音符", ""))).join("・")}の音符が、選んでいるサブのロスレコの初期の数より少なく読めました。サブのロスレコが合っているか確かめてください。</p>` : ""}
         <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="rocr-apply">この内容で入れる</button><button class="btn-add" data-act="rocr-cancel">やめる</button></div>`;
     }
     return `<div class="box ocr-box"><b>ロスレコスキル画面のスクリーンショットから読み込む</b> <button type="button" class="hint-tip" data-act="hint" aria-haspopup="dialog">使い方<span class="hint-pop" hidden>メインのロスレコ（アシスト効果の名前から）と、音符の数を読みます。<br>音符効果とアシスト効果が全部映るように撮ってください。画面の大きさや切り取り方は問いません。<br>画面の音符は合計（サブのロスレコの初期の音符を含む）なので、いま選んでいるサブのロスレコの初期の分を引いて「獲得」に入れます。サブのロスレコは画面に出ないので、先に選んでおいてください。<br>属性の音符は、アイコンの色で見分けています。<br>この画面で Ctrl+V しても読み込めます。<br>PCの場合は「Alt＋PrintScreen」で、いま選んでいるウィンドウのスクリーンショットを撮れます。または「Windows＋Shift＋S」で、画面の一部だけを撮れます。<br>画像はお使いのブラウザの中で処理され、どこにも送信されません。</span></button>
@@ -394,8 +396,9 @@
     if (!res) return;
     G.lrMain = G.lrMain || [];
     res.lrs.slice(0, 3).forEach((x, i) => { if (x.id) { G.lrMain[i] = x.id; delete V.lrEl["lrMain." + i]; } });
+    const ini = subIni();
     G.notes = G.notes || {};
-    res.notes.forEach(x => { if (x.note) G.notes[x.note] = Math.max(0, x.n); });
+    res.notes.forEach(x => { if (x.note) G.notes[x.note] = Math.max(0, x.n - (ini[x.note] || 0)); });
     V.rocr = { msg: "入れました。違うところがあれば、下の枠で直してください。" };
     save(); renderAll();
   }
