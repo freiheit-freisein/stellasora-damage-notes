@@ -606,6 +606,9 @@
   .note-nm { font-size: 12px; font-weight: 900; color: var(--indigo); }
   .note-cell input[type=number] { width: 100%; text-align: center; min-height: 34px; font-weight: 900; font-size: 16px; padding: 0 4px; margin: 2px 0; }
   /* 初期 ＋ 獲得 ＝ 合計: 5列×3段。中の段の3つの数字は、同じ大きさ・同じ高さ（28px）で1行にそろえる。列は固定幅で真ん中に寄せ、数字と＋・＝の間はどこも同じ4px */
+  .note-tot { margin: 4px 0; display: flex; justify-content: center; }
+  .note-cell .note-tot input[type=number] { width: 56px; height: 30px; min-height: 0; margin: 0; padding: 0; border: 2px solid var(--border); border-radius: 6px; text-align: center; font-family: var(--font-en); font-size: 17px; font-weight: 900; line-height: 26px; -moz-appearance: textfield; }
+  .note-tot input::-webkit-outer-spin-button, .note-tot input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .note-eq { display: grid; grid-template-columns: 26px 12px 44px 12px 26px; grid-template-rows: 22px 28px 22px; row-gap: 2px; align-items: center; justify-items: center; justify-content: center; column-gap: 4px; margin: 4px 0; }
   .ne-l:first-child { justify-self: end; }
   .note-eq .ne-l:last-of-type { justify-self: start; }

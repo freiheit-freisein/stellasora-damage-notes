@@ -12,15 +12,26 @@
   addRec({ id: "anaaki", name: "穴あきおサボり", rarity: 5, element: "光", level: 90, levelMax: 90, stats: { baseAtk: 1582, elemDmg: 0.15 }, core: { name: "穴あきおサボり", rank: "?" }, sub: { startNotes: [{ note: "光の音符", lv: 11 }, { note: "幸運の音符", lv: 3 }] } });
   addRec({ id: "kakegae", name: "かけがえのない時間", rarity: 5, element: "光", level: 90, levelMax: 90, stats: { baseAtk: 1533, elemDmg: 0.12 }, core: { name: "かけがえのない時間", rank: "?" }, sub: { startNotes: [{ note: "体力の音符", lv: 11 }, { note: "幸運の音符", lv: 3 }] } });
   addRec({ id: "nitamono", name: "似たもの同士", rarity: 5, element: "光", level: 90, levelMax: 90, stats: { baseAtk: 1533, elemDmg: 0.12 }, core: { name: "似たもの同士", rank: "?" }, sub: { startNotes: [{ note: "集中の音符", lv: 7 }, { note: "必殺の音符", lv: 7 }] } });
-  // 音符の合計 = 探索で獲得した分（入力） + サブのロスレコの初期音符
-  S.notesTotal = G => {
-    const t = Object.assign({}, G.notes || {});
+  // 音符: G.notesTot が true なら、G.notes は合計（ゲームのロスレコスキル画面の数。サブのロスレコの初期の音符も入った数）。
+  //   2026-11-22 から音符の欄は合計だけを入れる形にした（スクショの読み取りがそのまま入るように）。音符は探索中に減ることもあり、初期より少なくなる
+  //   G.notesTot がない前のビルド・共有コードは、G.notes が獲得した分だけなので、サブのロスレコの初期の音符を足して合計にする
+  S.noteIni = G => {
+    const t = {};
     (G.lrSub || []).filter(Boolean).forEach(id => {
       const r = L.find(x => x.id === id);
       ((r && r.sub && r.sub.startNotes) || []).forEach(n => { t[n.note] = (t[n.note] || 0) + n.lv; });
     });
     return t;
   };
+  S.notesTotal = G => {
+    const t = Object.assign({}, G.notes || {});
+    if (G.notesTot) return t;
+    const ini = S.noteIni(G);
+    Object.keys(ini).forEach(n => { t[n] = (+t[n] || 0) + ini[n]; });
+    return t;
+  };
+  // 前の形（獲得した分）を合計の形に直す（音符の欄を出すとき・読み取りで入れるとき）
+  S.notesToTotal = G => { if (G.notesTot) return; G.notes = S.notesTotal(G); G.notesTot = true; };
   addRec({ id: "hakubo", name: "薄暮", rarity: 3, element: "なし", level: 1, levelMax: 10, stats: { baseHp: 50, baseAtk: 233 }, core: { name: "薄暮", rank: "VI" }, sub: { startNotes: [] } });
   addRec({ id: "nodoka", name: "長閑", rarity: 3, element: "なし", level: 1, levelMax: 10, stats: { baseHp: 50, baseAtk: 233 }, core: { name: "長閑", rank: "VI" }, sub: { startNotes: [] } });
 

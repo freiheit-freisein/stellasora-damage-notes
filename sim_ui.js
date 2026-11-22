@@ -361,22 +361,19 @@
       .catch(e => { V.ocr = { id, msg: e.message || "読み取れませんでした", ng: true }; renderAll(); });
   }
   // ---- ロスレコスキル画面のスクリーンショットから、メインのロスレコと音符を読み込む（sim_ocr.js の S.ocrRecord）----
-  // 画面の音符は合計（サブのロスレコの初期の音符も入った数）なので、入れるときは、いま選んでいるサブの初期の分を引いて「獲得」に入れる
-  const subIni = () => { const t = {}; (G.lrSub || []).filter(Boolean).forEach(id => { const r = LOSTRECORDS.find(x => x.id === id); ((r && r.sub && r.sub.startNotes) || []).forEach(n => { t[n.note] = (t[n.note] || 0) + n.lv; }); }); return t; };
+  // 画面の音符は合計（サブのロスレコの初期の音符も入った数。探索中に減ることもあり、初期より少ないこともある）。そのまま合計として入れる
   function recOcrBox() {
     const st = V.rocr || {};
     let res = "";
     if (st.res) {
-      const { notes, lrs, warn } = st.res, ini = subIni();
+      const { notes, lrs, warn } = st.res;
       const lrTxt = lrs.map((x, i) => { const r = x.id && LOSTRECORDS.find(y => y.id === x.id);
         return `<div>メイン${i + 1}：${r ? esc(r.name) : `<span class="tag-ng">読めませんでした</span>（${esc(x.read || "文字なし")}。この枠は入れません。下の枠で選んでください）`}${x.other ? ' <span class="tag-ng">要確認</span>' : ""}</div>`; }).join("");
-      const ntTxt = notes.map(x => { const nm = x.note ? x.note.replace("の音符", "") : "？", own = x.note ? Math.max(0, x.n - (ini[x.note] || 0)) : null;
-        return `<span style="margin-right:10px">${esc(nm)} ${x.n}${x.note && ini[x.note] ? `（獲得 ${own}）` : ""}${x.elem ? ' <span class="tag-ng">色で判定</span>' : ""}</span>`; }).join("");
-      const short = notes.filter(x => x.note && (ini[x.note] || 0) > x.n);
+      const ntTxt = notes.map(x => { const nm = x.note ? x.note.replace("の音符", "") : "？";
+        return `<span style="margin-right:10px">${esc(nm)} ${x.n}${x.elem ? ' <span class="tag-ng">色で判定</span>' : ""}</span>`; }).join("");
       res = `<div class="ocr-res" style="grid-template-columns:1fr"><div>${lrTxt}</div><div>音符：${ntTxt}</div></div>
         ${warn.map(t => `<p class="msg ng">${esc(t)}</p>`).join("")}
 
-        ${short.length ? `<p class="msg ng">${short.map(x => esc(x.note.replace("の音符", ""))).join("・")}の音符が、選んでいるサブのロスレコの初期の数より少なく読めました。サブのロスレコが合っているか確かめてください。</p>` : ""}
         <div class="foot" style="justify-content:flex-start"><button class="btn-add pri" data-act="rocr-apply">この内容で入れる</button><button class="btn-add" data-act="rocr-cancel">やめる</button></div>`;
     }
     return `<div class="box ocr-box"><b>ロスレコスキル画面のスクリーンショットから読み込む</b> <button type="button" class="hint-tip" data-act="hint" aria-haspopup="dialog">使い方<span class="hint-pop" hidden>メインのロスレコ（アシスト効果の名前から）と、音符の数を読みます。<br>音符効果とアシスト効果が全部映るように撮ってください。画面の大きさや切り取り方は問いません。<br>画面の音符は合計（サブのロスレコの初期の音符を含む）なので、いま選んでいるサブのロスレコの初期の分を引いて「獲得」に入れます。サブのロスレコは画面に出ないので、先に選んでおいてください。<br>属性の音符は、アイコンの色で見分けています。<br>この画面で Ctrl+V しても読み込めます。<br>PCの場合は「Alt＋PrintScreen」で、いま選んでいるウィンドウのスクリーンショットを撮れます。または「Windows＋Shift＋S」で、画面の一部だけを撮れます。<br>画像はお使いのブラウザの中で処理され、どこにも送信されません。</span></button>
@@ -396,9 +393,9 @@
     if (!res) return;
     G.lrMain = G.lrMain || [];
     res.lrs.slice(0, 3).forEach((x, i) => { if (x.id) { G.lrMain[i] = x.id; delete V.lrEl["lrMain." + i]; } });
-    const ini = subIni();
+    S.notesToTotal(G);
     G.notes = G.notes || {};
-    res.notes.forEach(x => { if (x.note) G.notes[x.note] = Math.max(0, x.n - (ini[x.note] || 0)); });
+    res.notes.forEach(x => { if (x.note) G.notes[x.note] = Math.max(0, x.n); });
     V.rocr = { msg: "入れました。違うところがあれば、下の枠で直してください。" };
     save(); renderAll();
   }
@@ -684,24 +681,18 @@
     // 音符: ゲームと同じく、色と名前 → 数 → 効果 を縦に並べ、1行にする
     const NC = { 強撃: "#E5533D", 幸運: "#F08A24", 爆発: "#8B5CF6", 体力: "#3FB65F", 集中: "#1FB5A8", 器用: "#3B6FE0", 必殺: "#E84D8A", 水: "#2BA6DE", 風: "#55C27A", 光: "#E8B10F", 火: "#E5533D", 地: "#A0703C", 闇: "#6B4FA0" };
     const STN = { atkPct: "攻撃力", critRate: "会心率", critDmg: "会心ダメージ", hpPct: "最大HP", basicDmg: "通常攻撃ダメージ", skillDmg: "スキルダメージ", ultDmg: "必殺技ダメージ" };
+    S.notesToTotal(G);   // 前の形（獲得した分）のビルドは、ここで合計の形にする
     const tot = S.notesTotal(G);
     const r1 = x => (Math.round(x * 1000) / 10).toFixed(1);
     // サブのロスレコごとの初期の音符（マウスを重ねたときに、どのロスレコの分か出す）
     const subFrom = n => (G.lrSub || []).filter(Boolean).map(id => { const r = LOSTRECORDS.find(x => x.id === id), x = ((r && r.sub && r.sub.startNotes) || []).find(q => q.note === n); return x ? `${r.name} ${x.lv}` : ""; }).filter(Boolean);
-    // 「初期 ＋ 獲得 ＝ 合計」: 3段の表（上: 見出しと▲、中: 数字、下: ▼）にして、3つの数字を同じ高さ・同じ大きさで1行にそろえる
-    const noteEq = (path, ini, t, tip) => {
-      const v = getPath(path), cur = v == null || v === "" ? 0 : +v;
-      const b = (d, ch, dis) => `<button type="button" class="stp-b vs-b" data-act="stp|${d}|0|99|0|${path}"${dis ? " disabled" : ""} aria-label="${d > 0 ? "1つ上げる" : "1つ下げる"}">${ch}</button>`;
-      return `<div class="note-eq"><small class="ne-l">初期</small><span></span>${b(1, "▲", cur >= 99)}<span></span><small class="ne-l">合計</small>
-        <b class="ne-n ne-ini${ini ? "" : " zero"}" title="${esc(tip)}">${ini}</b><span class="ne-op">＋</span><input type="number" data-p="${path}" data-t="n" min="0" max="99" step="1" value="${cur}" aria-label="獲得した数"><span class="ne-op">＝</span><b class="ne-n ne-tot">${t}</b>
-        <span></span><span></span>${b(-1, "▼", cur <= 0)}<span></span><span></span></div>`;
-    };
-    // 1枚: 名前 → 初期（サブ）＋ 獲得（▲▼で入力）＝ 合計 → 効果（合計で計算）
+    // 1枚: 名前 → 合計（ゲームのロスレコスキル画面の数をそのまま入れる）→ 効果。サブのロスレコの初期の音符は、マウスを重ねると出る
     const noteCell = n => {
-      const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, own = +((G.notes || {})[n] || 0), ini = t - own, from = subFrom(n);
+      const s = n.replace("の音符", ""), d = NOTES[n], t = tot[n] || 0, from = subFrom(n);
       const stat = d ? (STN[d.stat] || d.stat.replace("elemDmg:", "") + "属性ダメージ") : "";
+      const tip = from.length ? "サブのロスレコの初期: " + from.join("・") + "（合計に入っている数）" : "サブのロスレコの初期: なし";
       return `<div class="note-cell" style="--nc:${NC[s] || "#8a8fb8"}"><div class="note-ic">♪</div><div class="note-nm">${esc(s)}</div>
-        ${noteEq(`notes.${n}`, ini, t, from.length ? "サブのロスレコの初期: " + from.join("・") : "サブのロスレコの初期: なし")}
+        <div class="note-tot"><input type="number" data-p="notes.${n}" data-t="n" min="0" max="99" step="1" value="${t}" title="${esc(tip)}" aria-label="${esc(s)}の音符の数"></div>
         <div class="note-fx">${stat}<br><b>+${d ? r1(t * d.perLv) : "0.0"}%</b></div></div>`;
     };
     // 1段目: ステータスの音符、2段目: 属性の音符（6属性）
@@ -750,7 +741,7 @@
         <section class="sec"><h3>効果の数</h3><div class="muted help" style="margin:0 0 6px">暁光・星願など。戦闘中のある時点を想定して入力します。</div>
           ${counts ? `<div class="cnt-list">${counts}</div>` : '<p class="muted" style="margin:0">選んでいるメインのロスレコには、数を入れる効果はありません。</p>'}</section>
       </div>
-      <section class="sec full"><h3>音符<span class="h-sub">初期（サブのロスレコ）＋ 獲得（探索で獲得した数を入力）＝ 合計。効果は合計で計算します</span></h3>${noteIn}</section>
+      <section class="sec full"><h3>音符<span class="h-sub">ゲームの記録の「ロスレコスキル」画面の数を、そのまま入れます（サブのロスレコの初期の音符も入った数）</span></h3>${noteIn}</section>
       <section class="sec full"><h3>メインのロスレコの効果</h3>
         <div class="grid-in" style="grid-template-columns:1fr">${fxHtml || '<span class="muted">メインのロスレコを選ぶと、効果が出ます</span>'}</div></section>
       <section class="sec full"><h3>一覧にないロスレコ・サブの合計（手入力）<button type="button" class="help-btn" data-act="manopen" aria-expanded="${manOpen}">${manOpen ? "閉じる" : "開く"}</button>${manHas ? '<span class="tag-ok">入力あり</span>' : ""}</h3>
@@ -977,12 +968,12 @@
       txt(n, 56, yy, 19, "#D9DCED", { w: 500 });
       [0, 1, 2].forEach(j => txt(lrn((arr || [])[j]), 140 + j * 250, yy, 20, "#FFFFFF", { max: 236 }));
     });
-    const total = S.NOTE_ALL.reduce((a, n) => a + (+(G.notes || {})[n] || 0), 0);
+    const ntc = S.notesTotal(G), total = S.NOTE_ALL.reduce((a, n) => a + (+ntc[n] || 0), 0);
     txt(`音符（合計 ${total}）`, 930, by + 42, 18, "#D9DCED");
-    const nv = n => +(G.notes || {})[n] || 0;
+    const nv = n => +ntc[n] || 0;
     const elShow = S.NOTE_ELEM.filter(n => nv(n) > 0).sort((a, b) => nv(b) - nv(a)).slice(0, 3);
     S.NOTE_BASE.concat(elShow).forEach((n, i) => {
-      const nx = 930 + (i % 5) * 162, ny = by + 80 + Math.floor(i / 5) * 34, v = (G.notes || {})[n] || 0;
+      const nx = 930 + (i % 5) * 162, ny = by + 80 + Math.floor(i / 5) * 34, v = ntc[n] || 0;
       txt(n.replace("の音符", ""), nx, ny, 19, "#D9DCED", { w: 500 });
       txt(String(v), nx + 128, ny, 22, v ? "#FFFFFF" : "#8A90BE", { align: "right", w: 900 });
     });

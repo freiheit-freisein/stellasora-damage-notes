@@ -212,14 +212,14 @@
       add("ロスレコ", `${r.name}：突破${S.lrRoman(now)} → ${S.lrRoman(now + 1)}${arr === "lrSub" ? "（サブ）" : ""}`, g => { g.lrRank = Object.assign({}, g.lrRank, { [rid]: now + 1 }); });
     }));
     // 音符の付け替え（減らす音符は自分で取ったものだけ。1個は残す）。動かす数は 1・5・10・15（できる分まで）を試して、いちばん伸びるもの
-    const own = G.notes || {}, names = S.NOTE_ALL || Object.keys(own);
+    const own = G.notes || {}, names = S.NOTE_ALL || Object.keys(own), ini = G.notesTot ? S.noteIni(G) : {};   // 合計の形のときは、初期の分を除いた数が自分で取った分
     names.forEach(a => {
-      const na = +own[a] || 0; if (na <= 1) return;
+      const na = (+own[a] || 0) - (ini[a] || 0), ta = +own[a] || 0; if (na <= 1) return;
       names.forEach(b => {
         if (a === b) return;
         let best = null;
         [1, 5, 10, 15].map(n => Math.min(n, na - 1)).filter((n, i, xs) => xs.indexOf(n) === i).forEach(n => {
-          const fn = g => { g.notes = Object.assign({}, g.notes); g.notes[a] = na - n; g.notes[b] = (+g.notes[b] || 0) + n; };
+          const fn = g => { g.notes = Object.assign({}, g.notes); g.notes[a] = ta - n; g.notes[b] = (+g.notes[b] || 0) + n; };
           const gain = tryG(fn);
           if (!best || gain > best.gain) best = { n, gain, fn };
         });
@@ -265,7 +265,7 @@
   function recommendLR(G) {
     const els = new Set(SLOTS.map(([k]) => chOf(G.team[k]).el).concat(["なし"]));
     const base = clone(G);
-    base.notes = {}; base.lrMain = ["", "", ""]; base.lrSub = ["", "", ""]; base.lrRank = {};
+    base.notes = {}; delete base.notesTot; base.lrMain = ["", "", ""]; base.lrSub = ["", "", ""]; base.lrRank = {};
     SLOTS.forEach(([k]) => { const cs = base.chars[base.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
     const t0 = sum3(dmgParts(base));
     return (window.LOSTRECORDS || []).filter(r => els.has(r.element)).map(r => {
@@ -278,7 +278,7 @@
   // 持っているロスレコから、メイン3枚・サブ3枚を選ぶ（1枚ずつ、入れたときにいちばんダメージが伸びるものを足していく。突破I・素質なし・音符なし）
   function pickLR(G, owned) {
     const g = clone(G);
-    g.notes = {}; g.lrMain = ["", "", ""]; g.lrSub = ["", "", ""]; g.lrRank = {};
+    g.notes = {}; delete g.notesTot; g.lrMain = ["", "", ""]; g.lrSub = ["", "", ""]; g.lrRank = {};
     SLOTS.forEach(([k]) => { const cs = g.chars[g.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
     owned.forEach(rid => { g.lrRank[rid] = 1; });
     const left = owned.slice();
@@ -296,7 +296,7 @@
     if (opts.owned) Object.assign(opts, pickLR(G, opts.owned));
     g.recordLv = opts.recordLv; g.recordAuto = false; g.lrMain = (opts.lrMain || []).concat(["", "", ""]).slice(0, 3); g.lrSub = (opts.lrSub || []).concat(["", "", ""]).slice(0, 3);
     g.lrRank = {}; g.lrMain.concat(g.lrSub).filter(Boolean).forEach(rid => { g.lrRank[rid] = 1; });   // 突破は I から（持っている突破は分からないので）
-    g.notes = {};
+    g.notes = {}; delete g.notesTot;   // ビルドを作るときは、獲得した分（初期の音符は計算で足す）
     SLOTS.forEach(([k]) => { const cs = g.chars[g.team[k]]; cs.pots2 = {}; cs.pots = {}; cs.sup = {}; });
     // アシスト効果の条件付きの効果（「必殺技の発動時から」など）は、既定ではオフ。ビルドを作るときは、条件を満たしている前提でオンにして選ぶ
     g.lrOn = Object.assign({}, g.lrOn);
